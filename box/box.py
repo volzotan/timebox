@@ -1,8 +1,13 @@
 #!/bin/python
 
 import gphoto2 as gp
+import schedule 
+
 import logging
 import os
+import subprocess
+import time
+import sys
 
 LOG_FILENAME_DEBUG        = "debug.log"
 LOG_FILENAME_INFO         = "info.log"
@@ -87,8 +92,38 @@ def take_image(filename):
     gp.check_result(gp.gp_camera_exit(camera, context))
 
 
+def convert_raw_to_jpeg(rawfile_path):
+    # well, actually we just extract the thumbnail JPEG of the RAW
+    # dcraw does not support export as JPEG and output as TIFF
+    # and conversion to JPEG is unnecessary work
+
+    subprocess.call(["dcraw", "-e", format(rawfile_path)])
+
+    # TODO: check for success: does the file exist?
+
+
+def read_temperature():
+    pass
+
+def foo():
+    log.info("narf")
+
+
 if __name__ == "__main__":
     initLog()
     log.info(" --- timebox start ------------------------------------------------------")
     selftest()
-    take_image("foo_42.arw")
+    #take_image("foo_42.arw")
+
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        log.info("TEST")
+        # ...
+        sys.exit(0)
+
+    schedule.every(10).seconds.do(foo)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+    log.info("program exited")
