@@ -8,17 +8,25 @@ import os
 import subprocess
 import time
 import sys
+import datetime
 
 LOG_FILENAME_DEBUG        = "debug.log"
 LOG_FILENAME_INFO         = "info.log"
+LOG_FILENAME_TEMP         = "temp.log"
 LOG_LEVEL_CONSOLE         = logging.DEBUG   
 
-OUTPUT_DIR_RAW            = "raws"
+OUTPUT_DIR_RAW            = "RAWS"
+OUTPUT_DIR_JPEG           = "JPEGS"
+OUTPUT_DIR_TEST           = "TEST"
+
+FILE_EXTENSION            = ".arw"
 
 log = None    
+logTemp = None
 
 def initLog():
     global log
+    global logTemp
 
     # create logger
     log = logging.getLogger()
@@ -43,6 +51,12 @@ def initLog():
     fileHandlerInfo.setFormatter(formatter)
     log.addHandler(fileHandlerInfo)
 
+    logTemp = logging.getLogger("Temp")
+    fileHandlerTemp = logging.FileHandler(LOG_FILENAME_TEMP, mode="a", encoding="UTF-8")
+    fileHandlerTemp.setLevel(logging.DEBUG)
+    fileHandlerTemp.setFormatter(formatter)
+    logTemp.addHandler(fileHandlerTemp)
+
 
 def exit(code = 0):
     log.info("exiting")
@@ -64,15 +78,35 @@ def _check_dir(path):
 def selftest():
     # check if output directories are present
     _check_dir(OUTPUT_DIR_RAW)
+    _check_dir(OUTPUT_DIR_JPEG)
+    _check_dir(OUTPUT_DIR_TEST)
 
     log.info("selftest finished")
 
 
-def take_image(filename):
-    # context = gp.Context()
-    # camera = gp.Camera()
-    # camera.init(context)
-    # camera.exit(context)
+def acquire_filename(path):
+    name = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    name_plus_extension = name + FILE_EXTENSION
+
+    full_name = os.path.join(path, name_plus_extension)
+
+    if os.path.exists(full_name):
+        full_name = None
+        for i in range(0, 999):
+            new_full_name = os.path.join(path, name + "_" + i + FILE_EXTENSION)
+            if not os.path.exists(new_full_name):
+                full_name = new_full_name
+                break;
+
+    return full_name
+
+
+def take_image(path):
+
+    filename = acquire_filename(path)
+    if filename is None:
+        log.error("no filename could be acquired [{}]".format(path))
+        return
 
     gp.check_result(gp.use_python_logging())
     context = gp.gp_context_new()
@@ -82,13 +116,12 @@ def take_image(filename):
     file_path = gp.check_result(gp.gp_camera_capture(
         camera, gp.GP_CAPTURE_IMAGE, context))
     print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-    target = os.path.join(OUTPUT_DIR_RAW, filename)
+    target = os.path.join(path, filename)
     print('Copying image to', target)
     camera_file = gp.check_result(gp.gp_camera_file_get(
             camera, file_path.folder, file_path.name,
             gp.GP_FILE_TYPE_NORMAL, context))
     gp.check_result(gp.gp_file_save(camera_file, target))
-    subprocess.call(['xdg-open', target])
     gp.check_result(gp.gp_camera_exit(camera, context))
 
 
@@ -102,11 +135,21 @@ def convert_raw_to_jpeg(rawfile_path):
     # TODO: check for success: does the file exist?
 
 
+def test():
+    take_image(OUTPUT_DIR_TEST, "test.arw")
+
 def read_temperature():
     pass
 
 def foo():
-    log.info("narf")
+    log.info("foo")
+
+
+
+# TODO:
+#
+# Aus irgendeinem grunde funktioniert das erzeugen fehlender directories noch nicht und das logging in dieser methode ebenfalls nicht
+#
 
 
 if __name__ == "__main__":
@@ -117,8 +160,11 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         log.info("TEST")
-        # ...
+        test()
         sys.exit(0)
+
+    foo()
+    sys.exit(0)
 
     schedule.every(10).seconds.do(foo)
 
