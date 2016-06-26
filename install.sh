@@ -6,6 +6,8 @@
 
 # generate keypair and add to reversessh@grinzold
 
+ASSETS_DIR="assets"
+
 if [ $USER != "pi" ]; then
     echo "NOT RUNNING ON PI (as user pi)"
     exit
@@ -18,4 +20,13 @@ pip install gphoto2
 
 # tell supervisor to run autossh at startup
 # autossh -R 22322:localhost:22 -N grinzold.de -p 2222 -l reversessh -i /home/pi/.ssh/reversessh.key
-cp autossh.conf /etc/supervisor/conf.d
+cp $ASSETS_DIR/autossh.conf /etc/supervisor/conf.d
+
+# disable sleep mode for the realtek wifi dongle
+echo "options 8192cu rtw_power_mgnt=0 rtw_enusbss=0" | sudo tee /etc/modprobe.d/8192cu.conf
+
+# overwrite MOTD
+
+### temperature sensor
+# load kernel modules
+sudo cp $ASSETS_DIR/modules.file /etc/modules
