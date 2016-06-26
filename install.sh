@@ -29,4 +29,4 @@ echo "options 8192cu rtw_power_mgnt=0 rtw_enusbss=0" | sudo tee /etc/modprobe.d/
 
 ### temperature sensor
 # load kernel modules
-sudo cp $ASSETS_DIR/modules.file /etc/modules
+sudo cp $ASSETS_DIR/bootconfig.txt /boot/config.txt
