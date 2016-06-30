@@ -2,6 +2,7 @@
 
 # change default password
 # expand filesystem
+# set timezone
 # install zsh / ohmyzsh
 
 # generate keypair and add to reversessh@grinzold
