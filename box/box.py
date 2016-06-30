@@ -16,6 +16,8 @@ LOG_FILENAME_INFO         = "info.log"
 LOG_FILENAME_TEMP         = "temp.log"
 LOG_LEVEL_CONSOLE         = logging.DEBUG   
 
+AUTOSTART_FILE            = "autostart.cmd"
+
 OUTPUT_DIR_RAW            = "RAWS"
 OUTPUT_DIR_JPEG           = "JPEGS"
 OUTPUT_DIR_TEST           = "TEST"
@@ -63,6 +65,11 @@ def exit(code = 0):
     log.info("exiting")
     system.exit(code)
 
+def _expand_path(base_dir, input_path):
+    if not (input_path.startswith("/") or input_path.startswith("~")):
+        return os.path.join(base_dir, input_path)
+
+    return input_path
 
 def _check_dir(path):
     if os.path.exists(OUTPUT_DIR_RAW):
@@ -77,6 +84,19 @@ def _check_dir(path):
 
 
 def selftest():
+    global AUTOSTART_FILE
+    global OUTPUT_DIR_RAW
+    global OUTPUT_DIR_JPEG
+    global OUTPUT_DIR_TEST
+
+    # expand directories
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    AUTOSTART_FILE = _expand_path(base_dir, AUTOSTART_FILE)
+    OUTPUT_DIR_RAW = _expand_path(base_dir, OUTPUT_DIR_RAW)
+    OUTPUT_DIR_JPEG = _expand_path(base_dir, OUTPUT_DIR_JPEG)
+    OUTPUT_DIR_TEST = _expand_path(base_dir, OUTPUT_DIR_TEST)
+
     # check if output directories are present
     _check_dir(OUTPUT_DIR_RAW)
     _check_dir(OUTPUT_DIR_JPEG)
@@ -171,6 +191,11 @@ if __name__ == "__main__":
         test()
         log.info("Temperature: {}".format(read_temperature()))
         sys.exit(0)
+
+    if not os.path.exists(AUTOSTART_FILE):
+        log.info("autostart file not found. sleep.")
+        while True:
+            time.sleep(3)
 
     foo()
     sys.exit(0)
