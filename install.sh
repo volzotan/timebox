@@ -20,14 +20,16 @@ sudo apt-get install python-pip python-dev gphoto2 libgphoto2-dev dcraw supervis
 pip install gphoto2
 
 # tell supervisor to run autossh at startup
-# autossh -R 22322:localhost:22 -N grinzold.de -p 2222 -l reversessh -i /home/pi/.ssh/reversessh.key
 cp $ASSETS_DIR/autossh.conf /etc/supervisor/conf.d
 
 # disable sleep mode for the realtek wifi dongle
 echo "options 8192cu rtw_power_mgnt=0 rtw_enusbss=0" | sudo tee /etc/modprobe.d/8192cu.conf
 
 # overwrite MOTD
+# TODO
 
-### temperature sensor
-# load kernel modules
+# temperature sensor, load kernel modules
 sudo cp $ASSETS_DIR/bootconfig.txt /boot/config.txt
+
+# eduroam access
+sudo cp $ASSETS_DIR/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
