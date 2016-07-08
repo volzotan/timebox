@@ -86,13 +86,13 @@ def determine_environment():
     TODO: maybe check "cat /etc/debian_version" ?
     """
 
-    output = subprocess.check_output(["uname", "-a"])
+    output = subprocess.check_output(["uname", "-a"]).lower()
 
-    if "Darwin" in output:
+    if "darwin" in output:
         PLATFORM = "OSX"
     elif "raspberrypi" in output:
         PLATFORM = "PI"
-    elif "Linux" in output:
+    elif "linux" in output:
         PLATFORM = "LINUX"
     else:
         PLATFORM = "UNKNOWN"
@@ -229,7 +229,8 @@ def camera_switch_on(power_on):
 def read_temperature():
     if not os.path.exists('/sys/devices/w1_bus_master1/w1_master_slaves'):
         log.error("no temperature sensor found")
-        return None
+        log.info("temp job will be cancelled")
+        return schedule.CancelJob
 
     # 1-Wire Slave-List read
     file = open('/sys/devices/w1_bus_master1/w1_master_slaves')
@@ -328,9 +329,14 @@ if __name__ == "__main__":
             log.info("autostart file found")
 
     schedule.every(10).seconds.do(run)
+    schedule.every().minute.do(read_temperature)
 
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt as e:
+            log.info("manual exit in between jobs")
+            exit(0)
 
     exit(0)
