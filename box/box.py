@@ -107,15 +107,15 @@ def _expand_path(base_dir, input_path):
 
 
 def _check_dir(path):
-    if os.path.exists(OUTPUT_DIR_RAW):
-        if os.path.isdir(OUTPUT_DIR_RAW):
+    if os.path.exists(path):
+        if os.path.isdir(path):
             pass # OK
         else:
-            log.error("output dir \"{}\" is actually a file. abort.".format(OUTPUT_DIR_RAW))
+            log.error("output dir \"{}\" is actually a file. abort.".format(path))
             exit()
     else:
-        log.warn("output dir \"{}\" is missing. create directory...".format(OUTPUT_DIR_RAW))
-        os.makedirs(OUTPUT_DIR_RAW)
+        log.warn("output dir \"{}\" is missing. create directory...".format(path))
+        os.makedirs(path)
 
 
 def selftest():
@@ -178,38 +178,58 @@ def take_image(path):
         file_path = gp.check_result(gp.gp_camera_capture(
             camera, gp.GP_CAPTURE_IMAGE, context))
         print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-        target = os.path.join(path, filename)
-        print('Copying image to', target)
+        print('Copying image to', full_name)
         camera_file = gp.check_result(gp.gp_camera_file_get(
                 camera, file_path.folder, file_path.name,
                 gp.GP_FILE_TYPE_NORMAL, context))
-        gp.check_result(gp.gp_file_save(camera_file, target))
+        gp.check_result(gp.gp_file_save(camera_file, full_name))
         gp.check_result(gp.gp_camera_exit(camera, context))
 
-        return target
+        return filename
     except Exception as e:
         log.error(e)
+        raise Exception("camera failed")
 
 
-def convert_raw_to_jpeg(rawfile_full_name, jpeg_path):
+def convert_raw_to_jpeg(rawfile_path, rawfile_name, jpeg_path):
     # well, actually we just extract the thumbnail JPEG of the RAW
     # dcraw does not support export as JPEG and output as TIFF
     # and conversion to JPEG is unnecessary work
 
-    subprocess.call(["dcraw", "-e", format(rawfile_path)])
+    rawfile_full_name   = os.path.join(rawfile_path, rawfile_name)
+    thumb               = rawfile_name[:-4] + ".thumb" + ".jpg"
+    thumb_full_name     = os.path.join(rawfile_path, thumb)
+    jpeg_full_name      = os.path.join(jpeg_path, rawfile_name[:-4] + ".jpg")
 
-    # TODO: output path
-
-    # TODO: check for success: does the file exist?
+    subprocess.call(["dcraw", "-e", format(rawfile_full_name)])     
+    os.rename(thumb_full_name, jpeg_full_name)
 
 
 def exit(code):
-    GPIO.cleanup()
+    if PLATFORM == "PI":
+        GPIO.cleanup()
     log.info("program exited")
     sys.exit(code)
 
 
+def camera_switch_on(power_on):
+    if PLATFORM != "PI":
+        log.warn("camera could not be switched, no GPIO pins on this platform")
+        return
+
+    if power_on:
+        GPIO.output(CAMERA_ENABLE_PIN, GPIO.HIGH)
+        time.sleep(10)
+    else:
+        time.sleep(2)
+        GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
+
+
 def read_temperature():
+    if not os.path.exists('/sys/devices/w1_bus_master1/w1_master_slaves'):
+        log.error("no temperature sensor found")
+        return None
+
     # 1-Wire Slave-List read
     file = open('/sys/devices/w1_bus_master1/w1_master_slaves')
     w1_slaves = file.readlines()
@@ -235,43 +255,29 @@ def read_temperature():
 def test():
     log.info("Temperature: {}".format(read_temperature()))
 
-    # power on
-    GPIO.output(CAMERA_ENABLE_PIN, GPIO.HIGH)
-    time.sleep(10)
+    camera_switch_on(True)
 
-    img_path = take_image(OUTPUT_DIR_TEST)
-    log.info("test image saved to {}".format(img_path))
+    filename = take_image(OUTPUT_DIR_TEST)
+    log.info("test image saved to {}".format(os.path.join(OUTPUT_DIR_TEST, filename)))
+    convert_raw_to_jpeg(OUTPUT_DIR_TEST, filename, OUTPUT_DIR_TEST)
 
-    # power off
-    time.sleep(2)
-    GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
+    camera_switch_on(False)
 
 
 def run():
     log.debug("taking picture")
 
-    # power on
-    GPIO.output(CAMERA_ENABLE_PIN, GPIO.HIGH)
-    time.sleep(10)
+    camera_switch_on(True)
 
-    full_name = acquire_filename(OUTPUT_DIR_RAW)
-    take_image(full_name)
+    filename = take_image(OUTPUT_DIR_RAW)
     try:
-        convert_raw_to_jpeg(rawfile_path, OUTPUT_DIR_JPEG)
+        convert_raw_to_jpeg(OUTPUT_DIR_RAW, filename, OUTPUT_DIR_JPEG)
     except Exception as e:
         log.e("jpeg conversion failed: " + str(e))
 
-    # power off
-    time.sleep(2)
-    GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
+    camera_switch_on(False)
 
-
-
-# TODO:
-#
-# Aus irgendeinem grunde funktioniert das erzeugen fehlender directories noch nicht und das logging in dieser methode ebenfalls nicht
-#
-
+# ---------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     initLog()
@@ -300,6 +306,10 @@ if __name__ == "__main__":
             print read_temperature()
 
         exit(0)
+
+
+    convert_raw_to_jpeg(OUTPUT_DIR_RAW, "test.ARW", OUTPUT_DIR_TEST)
+    exit(0)
 
     if not os.path.exists(AUTOSTART_FILE):
         log.info("autostart file not found. sleep.")
