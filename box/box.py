@@ -140,32 +140,37 @@ def selftest():
     log.info("selftest finished")
 
 
+# returns (path, filename)
 def acquire_filename(path):
     name = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
-    name_plus_extension = name + FILE_EXTENSION
+    filename = name + FILE_EXTENSION
 
-    full_name = os.path.join(path, name_plus_extension)
-
-    if os.path.exists(full_name):
-        full_name = None
+    if os.path.exists(os.path.join(path, filename)):
+        filename = None
         for i in range(0, 999):
-            new_full_name = os.path.join(path, name + "_" + i + FILE_EXTENSION)
-            if not os.path.exists(new_full_name):
-                full_name = new_full_name
+            testname = name + "_" + i + FILE_EXTENSION
+            if not os.path.exists(os.path.join(path, testname)):
+                filename = testname
                 break;
 
-    return full_name
+    return (path, filename)
 
-# returns full path to image, including name
+
+# returns full filename of image, without path
 def take_image(path):
 
-    filename = acquire_filename(path)
+    (path, filename) = acquire_filename(path)
     if filename is None:
         log.error("no filename could be acquired [{}]".format(path))
         return
+    full_name = os.path.join(path, filename)
 
     try: 
-        gp.check_result(gp.use_python_logging())
+        gp.check_result(gp.use_python_logging(mapping={
+            gp.GP_LOG_ERROR   : logging.ERROR,
+            gp.GP_LOG_VERBOSE : logging.INFO,
+            gp.GP_LOG_DEBUG   : logging.DEBUG - 3,
+            gp.GP_LOG_DATA    : logging.DEBUG - 6}))
         context = gp.gp_context_new()
         camera = gp.check_result(gp.gp_camera_new())
         gp.check_result(gp.gp_camera_init(camera, context))
