@@ -198,6 +198,12 @@ def convert_raw_to_jpeg(rawfile_full_name, jpeg_path):
     # TODO: check for success: does the file exist?
 
 
+def exit(code):
+    GPIO.cleanup()
+    log.info("program exited")
+    sys.exit(code)
+
+
 def read_temperature():
     # 1-Wire Slave-List read
     file = open('/sys/devices/w1_bus_master1/w1_master_slaves')
@@ -275,7 +281,6 @@ if __name__ == "__main__":
         GPIO.setup(CAMERA_ENABLE_PIN, GPIO.OUT)  # Pin 11 (GPIO 17) 
 
     selftest()
-    #take_image("foo_42.arw")
 
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
@@ -289,7 +294,7 @@ if __name__ == "__main__":
             log.info("command: TEMP")
             print read_temperature()
 
-        sys.exit(0)
+        exit(0)
 
     if not os.path.exists(AUTOSTART_FILE):
         log.info("autostart file not found. sleep.")
@@ -298,8 +303,7 @@ if __name__ == "__main__":
     else:
         log.info("autostart file found")
 
-    foo()
-    sys.exit(0)
+    exit(0)
 
     schedule.every(10).seconds.do(run)
 
@@ -307,4 +311,4 @@ if __name__ == "__main__":
         schedule.run_pending()
         time.sleep(1)
 
-    log.info("program exited")
+    exit(0)
