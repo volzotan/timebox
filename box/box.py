@@ -11,12 +11,14 @@ import time
 import sys
 import datetime
 
+PLATFORM                  = None
+
 LOG_FILENAME_DEBUG        = "debug.log"
 LOG_FILENAME_INFO         = "info.log"
 LOG_FILENAME_TEMP         = "temp.log"
 LOG_LEVEL_CONSOLE         = logging.DEBUG   
 
-AUTOSTART_FILE            = "autostart.cmd"
+AUTOSTART_FILE            = "AUTOSTART.CMD"
 
 OUTPUT_DIR_RAW            = "RAWS"
 OUTPUT_DIR_JPEG           = "JPEGS"
@@ -24,8 +26,18 @@ OUTPUT_DIR_TEST           = "TEST"
 
 FILE_EXTENSION            = ".arw"
 
+CAMERA_ENABLE_PIN         = 11
+
 log = None    
 logTemp = None
+
+"""
+Naming Conventions
+path      : foo/bar
+name      : image.img
+full_name : foo/bar/image.img
+
+"""
 
 def initLog():
     global log
@@ -65,11 +77,34 @@ def exit(code = 0):
     log.info("exiting")
     system.exit(code)
 
+
+def determine_environment():
+    global PLATFORM
+
+    """
+    TODO: maybe check "cat /etc/debian_version" ?
+    """
+
+    output = subprocess.check_output(["uname", "-a"])
+
+    if "Darwin" in output:
+        PLATFORM = "OSX"
+    elif "raspberrypi" in output:
+        PLATFORM = "PI"
+    elif "Linux" in output:
+        PLATFORM = "LINUX"
+    else:
+        PLATFORM = "UNKNOWN"
+
+    log.debug("platform: {}".format(PLATFORM))
+
+
 def _expand_path(base_dir, input_path):
     if not (input_path.startswith("/") or input_path.startswith("~")):
         return os.path.join(base_dir, input_path)
 
     return input_path
+
 
 def _check_dir(path):
     if os.path.exists(OUTPUT_DIR_RAW):
@@ -151,26 +186,73 @@ def take_image(path):
         log.error(e)
 
 
-def convert_raw_to_jpeg(rawfile_path):
+def convert_raw_to_jpeg(rawfile_full_name, jpeg_path):
     # well, actually we just extract the thumbnail JPEG of the RAW
     # dcraw does not support export as JPEG and output as TIFF
     # and conversion to JPEG is unnecessary work
 
     subprocess.call(["dcraw", "-e", format(rawfile_path)])
 
+    # TODO: output path
+
     # TODO: check for success: does the file exist?
 
 
+def read_temperature():
+    # 1-Wire Slave-List read
+    file = open('/sys/devices/w1_bus_master1/w1_master_slaves')
+    w1_slaves = file.readlines()
+    file.close()
+
+    line = w1_slaves[0]
+    # extract 1-wire Slave
+    w1_slave = line.split("\n")[0]
+    # 1-wire Slave file read
+    file = open('/sys/bus/w1/devices/' + str(w1_slave) + '/w1_slave')
+    filecontent = file.read()
+    file.close()
+
+    # read and convert
+    stringvalue = filecontent.split("\n")[1].split(" ")[9]
+    temperature = float(stringvalue[2:]) / 1000
+
+    logTemp.info(temperature)
+
+    return temperature
+
+
 def test():
+    log.info("Temperature: {}".format(read_temperature()))
+
+    # power on
+    GPIO.output(CAMERA_ENABLE_PIN, GPIO.HIGH)
+    time.sleep(10)
+
     img_path = take_image(OUTPUT_DIR_TEST)
     log.info("test image saved to {}".format(img_path))
 
-def read_temperature():
-    logTemp.info("foo")
-    return 130
+    # power off
+    time.sleep(2)
+    GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
 
-def foo():
-    log.info("foo")
+
+def run():
+    log.debug("taking picture")
+
+    # power on
+    GPIO.output(CAMERA_ENABLE_PIN, GPIO.HIGH)
+    time.sleep(10)
+
+    full_name = acquire_filename(OUTPUT_DIR_RAW)
+    take_image(full_name)
+    try:
+        convert_raw_to_jpeg(rawfile_path, OUTPUT_DIR_JPEG)
+    except Exception as e:
+        log.e("jpeg conversion failed: " + str(e))
+
+    # power off
+    time.sleep(2)
+    GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
 
 
 
@@ -182,25 +264,44 @@ def foo():
 
 if __name__ == "__main__":
     initLog()
+
     log.info(" --- timebox start ------------------------------------------------------")
+
+    determine_environment()
+
+    if PLATFORM == "PI":
+        import RPi.GPIO as GPIO
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(CAMERA_ENABLE_PIN, GPIO.OUT)  # Pin 11 (GPIO 17) 
+
     selftest()
     #take_image("foo_42.arw")
 
-    if len(sys.argv) > 1 and sys.argv[1] == "test":
-        log.info("TEST")
-        test()
-        log.info("Temperature: {}".format(read_temperature()))
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+        if cmd == "test":
+            log.info("command: TEST")
+            test()
+        if cmd == "shutdown":
+            log.info("command: SHUTDOWN")
+            GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
+        if cmd == "temp":
+            log.info("command: TEMP")
+            print read_temperature()
+
         sys.exit(0)
 
     if not os.path.exists(AUTOSTART_FILE):
         log.info("autostart file not found. sleep.")
         while True:
             time.sleep(3)
+    else:
+        log.info("autostart file found")
 
     foo()
     sys.exit(0)
 
-    schedule.every(10).seconds.do(foo)
+    schedule.every(10).seconds.do(run)
 
     while True:
         schedule.run_pending()

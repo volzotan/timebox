@@ -17,7 +17,7 @@ fi
 echo "INSTALLING DEPENDENCIES"
 
 sudo apt-get install python-pip python-dev gphoto2 libgphoto2-dev dcraw supervisor autossh
-pip install gphoto2
+pip install gphoto2 schedule
 
 # tell supervisor to run autossh at startup
 cp $ASSETS_DIR/autossh.conf /etc/supervisor/conf.d
