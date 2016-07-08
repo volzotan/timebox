@@ -18,7 +18,8 @@ LOG_FILENAME_INFO         = "info.log"
 LOG_FILENAME_TEMP         = "temp.log"
 LOG_LEVEL_CONSOLE         = logging.DEBUG   
 
-AUTOSTART_FILE            = "AUTOSTART.CMD"
+LOOK_FOR_AUTOSTART_FILE   = False
+AUTOSTART_FILE            = "AUTOSTART"
 
 OUTPUT_DIR_RAW            = "RAWS"
 OUTPUT_DIR_JPEG           = "JPEGS"
@@ -188,7 +189,7 @@ def take_image(path):
         return filename
     except Exception as e:
         log.error(e)
-        raise Exception("camera failed")
+        raise RuntimeError("camera failed")
 
 
 def convert_raw_to_jpeg(rawfile_path, rawfile_name, jpeg_path):
@@ -269,13 +270,16 @@ def run():
 
     camera_switch_on(True)
 
-    filename = take_image(OUTPUT_DIR_RAW)
     try:
+        filename = take_image(OUTPUT_DIR_RAW)
         convert_raw_to_jpeg(OUTPUT_DIR_RAW, filename, OUTPUT_DIR_JPEG)
+    except RuntimeError as re:
+        # gphoto raised an error
+        log.warn("run failed")
     except Exception as e:
         log.e("jpeg conversion failed: " + str(e))
-
-    camera_switch_on(False)
+    finally:
+        camera_switch_on(False)
 
 # ---------------------------------------------------------------------------------------
 
@@ -308,17 +312,20 @@ if __name__ == "__main__":
         exit(0)
 
 
-    convert_raw_to_jpeg(OUTPUT_DIR_RAW, "test.ARW", OUTPUT_DIR_TEST)
-    exit(0)
+    #convert_raw_to_jpeg(OUTPUT_DIR_RAW, "test.ARW", OUTPUT_DIR_TEST)
+    #exit(0)
 
-    if not os.path.exists(AUTOSTART_FILE):
-        log.info("autostart file not found. sleep.")
-        while True:
-            time.sleep(3)
-    else:
-        log.info("autostart file found")
-
-    exit(0)
+    if LOOK_FOR_AUTOSTART_FILE:
+        if not os.path.exists(AUTOSTART_FILE):
+            log.info("autostart file not found. sleep.")
+            while True:
+                try:
+                    time.sleep(3)
+                except KeyboardInterrupt as e:
+                    log.info("manual exit while sleeping")
+                    exit(0)
+        else:
+            log.info("autostart file found")
 
     schedule.every(10).seconds.do(run)
 
