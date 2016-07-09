@@ -13,9 +13,10 @@ import datetime
 
 PLATFORM                  = None
 
-LOG_FILENAME_DEBUG        = "debug.log"
-LOG_FILENAME_INFO         = "info.log"
-LOG_FILENAME_TEMP         = "temp.log"
+LOG_BASE_DIR              = "/var/log/timebox/"
+LOG_FILENAME_DEBUG        = LOG_BASE_DIR + "debug.log"
+LOG_FILENAME_INFO         = LOG_BASE_DIR + "info.log"
+LOG_FILENAME_TEMP         = LOG_BASE_DIR + "temp.log"
 LOG_LEVEL_CONSOLE         = logging.DEBUG   
 
 LOOK_FOR_AUTOSTART_FILE   = False
