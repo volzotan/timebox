@@ -29,6 +29,7 @@ OUTPUT_DIR_TEST           = "TEST"
 FILE_EXTENSION            = ".arw"
 
 CAMERA_ENABLE_PIN         = 11
+USB_CHIP                  = "/sys/devices/platform/soc/3f980000.usb/buspower"
 
 log = None    
 logTemp = None
@@ -214,17 +215,41 @@ def exit(code):
     sys.exit(code)
 
 
-def camera_switch_on(power_on):
+def camera_switch_on(power_on, wait=True):
     if PLATFORM != "PI":
         log.warn("camera could not be switched, no GPIO pins on this platform")
         return
 
     if power_on:
         GPIO.output(CAMERA_ENABLE_PIN, GPIO.HIGH)
-        time.sleep(10)
-    else:
+
+        usb_switch_on(False)
+        time.sleep(1)
+        usb_switch_on(True)
+
+        if wait:
+            time.sleep(8)
         time.sleep(2)
+    else:
+        if wait:
+            time.sleep(2)
         GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
+        time.sleep(2)
+
+
+def usb_switch_on(power_on):
+    if power_on:
+        f = open(USB_CHIP, "w")
+        f.write("1")
+        f.close()
+        log.debug("usb disabled")
+    else:
+        f = open(USB_CHIP, "w")
+        f.write("0")
+        f.close()
+        log.debug("usb enabled")
+
+    time.sleep(1)
 
 
 def read_temperature():
@@ -310,6 +335,16 @@ if __name__ == "__main__":
         if cmd == "temp":
             log.info("command: TEMP")
             print read_temperature()
+        if cmd == "on":
+            log.info("command: ON")
+            camera_switch_on(True, wait=False)
+        if cmd == "off":
+            log.info("command: OFF")
+            camera_switch_on(False, wait=False)
+        if cmd == "toggleusb":
+            log.info("command: TOGGLE USB")
+            usb_switch_on(False)
+
 
         exit(0)
 
