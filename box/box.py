@@ -46,6 +46,9 @@ def initLog():
     global log
     global logTemp
 
+    # if not os.path.exists(LOG_BASE_DIR):
+    #     os.makedirs(LOG_BASE_DIR)
+
     # create logger
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)
@@ -267,9 +270,16 @@ def read_temperature():
     # extract 1-wire Slave
     w1_slave = line.split("\n")[0]
     # 1-wire Slave file read
-    file = open('/sys/bus/w1/devices/' + str(w1_slave) + '/w1_slave')
-    filecontent = file.read()
-    file.close()
+    filecontent = None
+    try:
+        file = open('/sys/bus/w1/devices/' + str(w1_slave) + '/w1_slave')
+        filecontent = file.read()
+    except Exception as e:
+        log.error("no temperature sensor found")
+        log.info("temp job will be cancelled")
+        return schedule.CancelJob
+    finally:
+        file.close()
 
     # read and convert
     stringvalue = filecontent.split("\n")[1].split(" ")[9]
@@ -364,7 +374,7 @@ if __name__ == "__main__":
         else:
             log.info("autostart file found")
 
-    schedule.every(10).seconds.do(run)
+    #schedule.every(10).seconds.do(run)
     schedule.every().minute.do(read_temperature)
 
     while True:
