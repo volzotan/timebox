@@ -19,8 +19,13 @@ echo "INSTALLING DEPENDENCIES"
 sudo apt-get install python-pip python-dev gphoto2 libgphoto2-dev dcraw supervisor autossh
 pip install gphoto2 schedule
 
+# create logging dirs
+sudo mkdir /var/log/timebox
+sudo chown pi /var/log/timebox
+
 # tell supervisor to run autossh at startup
-cp $ASSETS_DIR/autossh.conf /etc/supervisor/conf.d
+sudo cp $ASSETS_DIR/autossh.conf /etc/supervisor/conf.d
+sudo cp $ASSETS_DIR/timebox.conf /etc/supervisor/conf.d
 
 # disable sleep mode for the realtek wifi dongle
 echo "options 8192cu rtw_power_mgnt=0 rtw_enusbss=0" | sudo tee /etc/modprobe.d/8192cu.conf
