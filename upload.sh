@@ -22,4 +22,4 @@ if [ $USER == "root" ]; then
     DESTINATION="timebox:/home/pi/"
 fi
 
-rsync -arv --delete $SOURCE $DESTINATION
+rsync -arv --exclude 'timebox/box/RAWS' $SOURCE $DESTINATION
