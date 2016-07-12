@@ -19,7 +19,7 @@ LOG_FILENAME_INFO         = LOG_BASE_DIR + "info.log"
 LOG_FILENAME_TEMP         = LOG_BASE_DIR + "temp.log"
 LOG_LEVEL_CONSOLE         = logging.DEBUG   
 
-LOOK_FOR_AUTOSTART_FILE   = False
+LOOK_FOR_AUTOSTART_FILE   = True
 AUTOSTART_FILE            = "AUTOSTART"
 
 OUTPUT_DIR_RAW            = "RAWS"
@@ -285,7 +285,7 @@ def read_temperature():
     stringvalue = filecontent.split("\n")[1].split(" ")[9]
     temperature = float(stringvalue[2:]) / 1000
 
-    logTemp.info(temperature)
+    logTemp.debug(temperature)
 
     return temperature
 
@@ -323,7 +323,7 @@ def run():
 if __name__ == "__main__":
     initLog()
 
-    log.info(" --- timebox start ------------------------------------------------------")
+    log.info(" --- timebox start --- ")
 
     determine_environment()
 
@@ -364,18 +364,21 @@ if __name__ == "__main__":
 
     if LOOK_FOR_AUTOSTART_FILE:
         if not os.path.exists(AUTOSTART_FILE):
-            log.info("autostart file not found. sleep.")
-            while True:
-                try:
-                    time.sleep(3)
-                except KeyboardInterrupt as e:
-                    log.info("manual exit while sleeping")
-                    exit(0)
+            log.info("autostart file not found. exit.")
+            exit(0)
+            # while True:
+            #     try:
+            #         time.sleep(3)
+            #     except KeyboardInterrupt as e:
+            #         log.info("manual exit while sleeping")
+            #         exit(0)
         else:
             log.info("autostart file found")
 
+    run()
+
     #schedule.every(10).seconds.do(run)
-    schedule.every().minute.do(read_temperature)
+    #schedule.every().minute.do(read_temperature)
 
     while True:
         schedule.run_pending()
