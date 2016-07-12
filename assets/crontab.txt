@@ -1,0 +1,3 @@
+*/5 * * * * sudo python /home/pi/timebox/box/box.py test    # camera
+* * * * * sudo python /home/pi/timebox/box/box.py temp      # temp
+* * * * * sh /home/pi/timebox/copy_to_server.sh             # copying

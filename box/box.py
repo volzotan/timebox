@@ -180,16 +180,42 @@ def take_image(path):
         context = gp.gp_context_new()
         camera = gp.check_result(gp.gp_camera_new())
         gp.check_result(gp.gp_camera_init(camera, context))
-        print('Capturing image')
-        file_path = gp.check_result(gp.gp_camera_capture(
-            camera, gp.GP_CAPTURE_IMAGE, context))
-        print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-        print('Copying image to', full_name)
-        camera_file = gp.check_result(gp.gp_camera_file_get(
-                camera, file_path.folder, file_path.name,
-                gp.GP_FILE_TYPE_NORMAL, context))
-        gp.check_result(gp.gp_file_save(camera_file, full_name))
+
+        log.info("Capturing image")
+        
+        image_path = None
+        image_name = None
+
+        try:
+            file_path = gp.check_result(gp.gp_camera_capture(
+                camera, gp.GP_CAPTURE_IMAGE, context))
+            log.debug('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+
+            image_path = file_path.folder
+            image_name = file_path.name
+        except Exception as e:
+            log.debug("taking picture failed. guess image name and try to download")
+            image_path = "//"
+            image_name = "capt0000.arw"
+
+        saving_success = False
+        for i in range(0, 3):
+            try:
+                print('Copying image to: {} try {}'.format(full_name, i+1))
+                camera_file = gp.check_result(gp.gp_camera_file_get(
+                        camera, image_path, image_name,
+                        gp.GP_FILE_TYPE_NORMAL, context))
+                gp.check_result(gp.gp_file_save(camera_file, full_name))
+                saving_success = True
+                break
+            except Exception as e:
+                log.warn(e)
+                time.sleep(10)
+
         gp.check_result(gp.gp_camera_exit(camera, context))
+
+        if not saving_success:
+            raise RuntimeError("downloading image failed")
 
         return filename
     except Exception as e:
@@ -354,7 +380,9 @@ if __name__ == "__main__":
         if cmd == "toggleusb":
             log.info("command: TOGGLE USB")
             usb_switch_on(False)
-
+        if cmd == "rundirectly":
+            log.info("command: RUN")
+            run()
 
         exit(0)
 
