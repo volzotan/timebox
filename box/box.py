@@ -1,7 +1,6 @@
 #!/bin/python
 # -*- coding: utf-8 -*-
 
-import gphoto2 as gp
 import schedule 
 
 import logging
@@ -9,6 +8,7 @@ import os
 import subprocess
 import time
 import sys
+import shutil
 import datetime
 
 PLATFORM                  = None
@@ -171,56 +171,18 @@ def take_image(path):
         return
     full_name = os.path.join(path, filename)
 
-    try: 
-        gp.check_result(gp.use_python_logging(mapping={
-            gp.GP_LOG_ERROR   : logging.ERROR,
-            gp.GP_LOG_VERBOSE : logging.INFO,
-            gp.GP_LOG_DEBUG   : logging.DEBUG - 3,
-            gp.GP_LOG_DATA    : logging.DEBUG - 6}))
-        context = gp.gp_context_new()
-        camera = gp.check_result(gp.gp_camera_new())
-        gp.check_result(gp.gp_camera_init(camera, context))
+    ret_val = subprocess.call(["gphoto2" ,"--capture-image-and-download"])
 
-        log.info("Capturing image")
-        
-        image_path = None
-        image_name = None
+    if ret_val > 0:
+        raise RuntimeError("taking image failed (gphoto2 return value: {})")
 
-        try:
-            file_path = gp.check_result(gp.gp_camera_capture(
-                camera, gp.GP_CAPTURE_IMAGE, context))
-            log.debug('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+    camera_file = "capt0000.arw"
 
-            image_path = file_path.folder
-            image_name = file_path.name
-        except Exception as e:
-            log.debug("taking picture failed. guess image name and try to download")
-            image_path = "//"
-            image_name = "capt0000.arw"
+    shutil.copyfile(camera_file, full_name)
+    os.remove(camera_file)
+    log.debug("image saved: {}".format(filename))
 
-        saving_success = False
-        for i in range(0, 3):
-            try:
-                print('Copying image to: {} try {}'.format(full_name, i+1))
-                camera_file = gp.check_result(gp.gp_camera_file_get(
-                        camera, image_path, image_name,
-                        gp.GP_FILE_TYPE_NORMAL, context))
-                gp.check_result(gp.gp_file_save(camera_file, full_name))
-                saving_success = True
-                break
-            except Exception as e:
-                log.warn(e)
-                time.sleep(10)
-
-        gp.check_result(gp.gp_camera_exit(camera, context))
-
-        if not saving_success:
-            raise RuntimeError("downloading image failed")
-
-        return filename
-    except Exception as e:
-        log.error(e)
-        raise RuntimeError("camera failed")
+    return filename
 
 
 def convert_raw_to_jpeg(rawfile_path, rawfile_name, jpeg_path):
@@ -340,7 +302,7 @@ def run():
         # gphoto raised an error
         log.warn("run failed")
     except Exception as e:
-        log.e("jpeg conversion failed: " + str(e))
+        log.e("jpeg conversion failed")
     finally:
         camera_switch_on(False)
 
