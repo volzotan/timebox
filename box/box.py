@@ -172,7 +172,8 @@ def take_image(path):
     ret_val = subprocess.call(["gphoto2" ,"--capture-image-and-download"])
 
     if ret_val > 0:
-        raise RuntimeError("taking image failed (gphoto2 return value: {})")
+        log.error("nonzero gphoto return value")
+        raise RuntimeError("taking image failed (gphoto2 return value: {})".format(ret_val))
 
     camera_file = "capt0000.arw"
 
@@ -324,7 +325,11 @@ if __name__ == "__main__":
         cmd = sys.argv[1]
         if cmd == "test":
             log.info("command: TEST")
-            test()
+            try:
+                test()
+            except Exception as e:
+                log.error("test failed: " + str(e))
+                exit(1)
         if cmd == "shutdown":
             log.info("command: SHUTDOWN")
             GPIO.output(CAMERA_ENABLE_PIN, GPIO.LOW)
@@ -340,6 +345,8 @@ if __name__ == "__main__":
         if cmd == "toggleusb":
             log.info("command: TOGGLE USB")
             usb_switch_on(False)
+            time.sleep(1)
+            usb_switch_on(True)
         if cmd == "rundirectly":
             log.info("command: RUN")
             run()
