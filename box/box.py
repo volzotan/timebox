@@ -1,8 +1,6 @@
 #!/bin/python
 # -*- coding: utf-8 -*-
 
-import schedule 
-
 import logging
 import os
 import subprocess
@@ -180,7 +178,7 @@ def take_image(path):
 
     shutil.copyfile(camera_file, full_name)
     os.remove(camera_file)
-    log.debug("image saved: {}".format(filename))
+    log.info("image saved to: {}".format(filename))
 
     return filename
 
@@ -233,12 +231,12 @@ def usb_switch_on(power_on):
         f = open(USB_CHIP, "w")
         f.write("1")
         f.close()
-        log.debug("usb disabled")
+        log.debug("usb enabled")
     else:
         f = open(USB_CHIP, "w")
         f.write("0")
         f.close()
-        log.debug("usb enabled")
+        log.debug("usb disabled")
 
     time.sleep(1)
 
@@ -302,7 +300,7 @@ def run():
         # gphoto raised an error
         log.warn("run failed")
     except Exception as e:
-        log.e("jpeg conversion failed")
+        log.error("jpeg conversion failed". str(e))
     finally:
         camera_switch_on(False)
 

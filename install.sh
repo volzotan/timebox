@@ -17,7 +17,6 @@ fi
 echo "INSTALLING DEPENDENCIES"
 
 sudo apt-get install python-pip python-dev gphoto2 libgphoto2-dev dcraw supervisor autossh
-pip install gphoto2 schedule
 
 # create logging dirs
 sudo mkdir /var/log/timebox
@@ -38,3 +37,5 @@ sudo cp $ASSETS_DIR/bootconfig.txt /boot/config.txt
 
 # eduroam access
 sudo cp $ASSETS_DIR/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+# add cronjobs to crontab

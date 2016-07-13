@@ -4,6 +4,8 @@ SERVER="grinzold:/var/www/timebox/jpegs/"
 SOURCE_TEST="/home/pi/timebox/box/TEST/*"
 SERVER_TEST="grinzold:/var/www/timebox/test/"
 
+# don't run as sudo, problems with the ssh config may occur
+
 if [ "$1" = "sleep" ] 
 then
     echo "sleep 60s"
