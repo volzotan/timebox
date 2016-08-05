@@ -6,8 +6,21 @@
 ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 LiquidCrystal_I2C lcd(0x27,16,2);  
 
-int state = STATE_MENU;
-int menu_selected = false;
+#define DEBUG
+
+int state = STATE_MENU_DETAILS;
+
+int oldPotiSegment  = 0;
+int potiSegment     = oldPotiSegment;
+                    
+// ---------------------------
+
+int optInterval     =       1;
+int optIterations   =     100;
+
+const int valuesInterval[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+// ---------------------------
 
 void setup() {
   
@@ -23,29 +36,102 @@ void setup() {
     digitalWrite(PIN_DISPLAY_EN, LOW);
     delay(100);
     lcd.init();                      // initialize the lcd 
-    //lcd.backlight();
-    lcd.setCursor(3,0);
-    lcd.print("Hello, world!");
-    lcd.setCursor(2,1);
-    lcd.print("foo");
+    lcd.backlight();
+    lcd.setCursor(0,0);
+    lcd.print("TIMEBOXGO");
+    lcd.setCursor(0,1);
+    lcd.print("version: ");
+    lcd.setCursor(9,1);
+    lcd.print(VERSION);
+    
+    wait(1);
+    Serial.println("display initialized");
   #endif
 }
 
 
 void loop() {
-  //Serial.println(digitalRead(PIN_PUSHBUTTON));
 
-  #ifdef USE_PHOTOCELL
-    digitalWrite(PIN_PHOTOCELL_EN, HIGH);
-    delay(100);
-    analogRead(PIN_PHOTOCELL);
+  #ifdef DEBUG 
+    Serial.println(state);
     delay(10);
-    Serial.println(analogRead(PIN_PHOTOCELL));
-    delay(10);
-    digitalWrite(PIN_PHOTOCELL_EN, LOW);
   #endif
 
-  wait(2);
+  if (state % 10 == 0) {
+    potiSegment = getPotiPosition(6);
+    if (potiSegment != oldPotiSegment) {
+      state = potiSegment * 10 + 1;
+    }
+
+    if (buttonPressed()) {
+      state = potiSegment * 10 + 2;
+    }
+  }
+
+  switch(state) {
+
+    case STATE_MENU_DETAILS_DRAW:
+      lcd.clear();
+      lcd.setCursor(10,0);
+      lcd.print("C1:");
+      lcd.setCursor(15,0);
+      lcd.print("v");
+      lcd.setCursor(10,1);
+      lcd.print("C2:");
+      lcd.setCursor(15,1);
+      lcd.print("v");
+
+      state--;
+    break;
+        
+    case STATE_MENU_INTERVAL_DRAW: // +1
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("INTERVAL");
+      lcd.setCursor(10,0);
+      lcd.print(optInterval);
+      state--;
+    break;
+
+    case STATE_MENU_INTERVAL_SELECTED: // +2
+      potiSegment = getPotiPosition(sizeof(valuesInterval));
+      if (potiSegment != oldPotiSegment) {
+        //lcd.clear();
+        
+        lcd.setCursor(0,1);
+        lcd.print(valuesInterval[potiSegment]);
+
+        // total Time
+        lcd.setCursor(8,1);
+        lcd.print("T:");
+        lcd.setCursor(10,1);
+        lcd.print(String((valuesInterval[potiSegment] * optIterations) / 60) + "h");
+
+        oldPotiSegment = potiSegment;
+      }
+    
+      if (buttonPressed()) {
+        // saveValue...
+        state = STATE_MENU_INTERVAL;
+      }
+      
+    break;
+      
+    default:
+      if (state % 10 == 1) {
+        state -= 1;
+        return;
+      }
+
+      if (state % 10 == 2) {
+        state -= 2;
+        return;
+      }
+      
+      //Serial.println("ERR: no valid state");
+  }
+
+  wait(1);
 }
 
 void initButtons() {
@@ -69,6 +155,24 @@ void takePicture() {
   wait(POST_TRIGGER_WAIT);
 
   digitalWrite(PIN_CAMERA_HIGHSIDE, LOW);
+}
+
+int getPotiPosition(int numberOfSegments) {
+  int segmentSize = 1024 / numberOfSegments;
+  
+  //return analogRead(PIN_POTENTIOMETER) / segmentSize;
+
+  return 4;
+}
+
+boolean buttonPressed() {
+  for (int i=0; i<3; i++) {
+    if (!digitalRead(PIN_PUSHBUTTON)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void wait(byte seconds) {
