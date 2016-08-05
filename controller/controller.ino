@@ -1,22 +1,13 @@
+#include <JeeLib.h>
+
+ISR(WDT_vect) { Sleepy::watchdogEvent(); }
+
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 
-#define PIN_DISPLAY_EN          9
-#define PIN_THERM_EN
-#define PIN_CAMERA_EN
-#define PIN_PHOTOCELL_EN       A3
-#define PIN_PHOTOCELL          A2
-#define PIN_POTENTIOMETER       6
-#define PIN_PUSHBUTTON          7
-
-// OPTIONS
-
-#define USE_DISPLAY             1
-#define USE_PHOTOCELL           1
-
-
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
+int status = STATUS_MENU
 
 void setup() {
   
@@ -54,10 +45,13 @@ void loop() {
     analogRead(PIN_PHOTOCELL);
     delay(10);
     Serial.println(analogRead(PIN_PHOTOCELL));
+    delay(10);
     digitalWrite(PIN_PHOTOCELL_EN, LOW);
   #endif
 
-  delay(500);
+  for (byte i = 0; i < 2; ++i) {
+      Sleepy::loseSomeTime(1000);
+  }
 }
 
 void initButtons() {
