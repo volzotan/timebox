@@ -1,13 +1,13 @@
 #include <JeeLib.h>
-
-ISR(WDT_vect) { Sleepy::watchdogEvent(); }
-
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include "constants.h"
 
-LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+ISR(WDT_vect) { Sleepy::watchdogEvent(); }
+LiquidCrystal_I2C lcd(0x27,16,2);  
 
-int status = STATUS_MENU
+int state = STATE_MENU;
+int menu_selected = false;
 
 void setup() {
   
@@ -28,10 +28,6 @@ void setup() {
     lcd.print("Hello, world!");
     lcd.setCursor(2,1);
     lcd.print("foo");
-    lcd.setCursor(0,2);
-    lcd.print("bar");
-    lcd.setCursor(2,3);
-    lcd.print("foobar");
   #endif
 }
 
@@ -49,9 +45,7 @@ void loop() {
     digitalWrite(PIN_PHOTOCELL_EN, LOW);
   #endif
 
-  for (byte i = 0; i < 2; ++i) {
-      Sleepy::loseSomeTime(1000);
-  }
+  wait(2);
 }
 
 void initButtons() {
@@ -61,4 +55,24 @@ void initButtons() {
   pinMode(PIN_PHOTOCELL,      INPUT);  
   pinMode(PIN_POTENTIOMETER,  INPUT);  
   pinMode(PIN_PUSHBUTTON,     INPUT);    
+}
+
+void takePicture() {
+  digitalWrite(PIN_CAMERA_HIGHSIDE, HIGH);
+  
+  wait(PRE_TRIGGER_WAIT);
+  
+  digitalWrite(PIN_CAMERA_SHUTTER, HIGH);
+  delay(100);
+  digitalWrite(PIN_CAMERA_SHUTTER, LOW);
+
+  wait(POST_TRIGGER_WAIT);
+
+  digitalWrite(PIN_CAMERA_HIGHSIDE, LOW);
+}
+
+void wait(byte seconds) {
+    for (byte i = 0; i < seconds; ++i) {
+      Sleepy::loseSomeTime(1000);
+  }
 }
