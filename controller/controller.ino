@@ -54,7 +54,7 @@ void loop() {
 
   #ifdef DEBUG 
     //Serial.println(state);
-    Serial.print(getPotiPosition(10));
+    Serial.print(getPotiPosition(6));
     Serial.print(" ");
     Serial.print(getLiPoVoltage(1));
     Serial.print(" ");
@@ -94,6 +94,22 @@ void loop() {
 
       state--;
     break;
+
+    case STATE_MENU_CAMERA_ON_DRAW:
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("CAMERA ON");
+
+      state--;
+    break;
+
+    case STATE_MENU_CAMERA_OFF_DRAW:
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("CAMERA OFF");
+
+      state--;
+    break;
         
     case STATE_MENU_INTERVAL_DRAW: // +1
       lcd.clear();
@@ -127,7 +143,39 @@ void loop() {
       }
       
     break;
-      
+         
+    case STATE_MENU_ITERATIONS_DRAW: // +1
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("ITERATIONS");
+      lcd.setCursor(11,0);
+      lcd.print(optIterations);
+      state--;
+    break;
+
+    case STATE_MENU_START_DRAW: // +1
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("START");
+
+      lcd.setCursor(8,0);
+      lcd.print("N:");
+      lcd.setCursor(10,0);
+      lcd.print(optIterations);
+
+      lcd.setCursor(0,1);
+      lcd.print("D:");
+      lcd.setCursor(4,1);
+      lcd.print(optInterval);
+
+      lcd.setCursor(8,1);
+      lcd.print("T:");
+      lcd.setCursor(10,1);
+      lcd.print("foo");
+     
+      state--;
+    break;
+    
     default:
       if (state % 10 == 1) {
         state -= 1;
