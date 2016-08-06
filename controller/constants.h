@@ -4,8 +4,8 @@
 #define PIN_CELL_2                A1
 
 #define PIN_DISPLAY_EN             9
-#define PIN_THERM_EN
-#define PIN_CAMERA_EN
+#define PIN_CAMERA_EN             10
+#define PIN_THERM_EN              11
 #define PIN_PHOTOCELL_EN          A4
 #define PIN_PHOTOCELL             A3
 #define PIN_POTENTIOMETER         A2

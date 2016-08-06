@@ -190,16 +190,24 @@ void loop() {
       //Serial.println("ERR: no valid state");
   }
 
-  wait(1);
+  //wait(1);
 }
 
 void initButtons() {
-  pinMode(PIN_DISPLAY_EN,     OUTPUT);  
-  pinMode(PIN_PHOTOCELL_EN,   OUTPUT);  
-  
+  pinMode(PIN_CELL_1,         INPUT);  
+  pinMode(PIN_CELL_2,         INPUT);  
+
+  pinMode(PIN_DISPLAY_EN,     OUTPUT);
+  pinMode(PIN_CAMERA_EN,      OUTPUT);
+  pinMode(PIN_THERM_EN,       OUTPUT);
+  pinMode(PIN_PHOTOCELL_EN,   OUTPUT);
   pinMode(PIN_PHOTOCELL,      INPUT);  
   pinMode(PIN_POTENTIOMETER,  INPUT);  
-  pinMode(PIN_PUSHBUTTON,     INPUT);    
+  pinMode(PIN_PUSHBUTTON,     INPUT);  
+
+  pinMode(PIN_CAMERA_HIGHSIDE,OUTPUT);
+  pinMode(PIN_CAMERA_FOCUS,   OUTPUT);
+  pinMode(PIN_CAMERA_SHUTTER, OUTPUT);
 }
 
 void takePicture() {
