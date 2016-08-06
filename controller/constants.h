@@ -1,11 +1,14 @@
 // PINS
 
+#define PIN_CELL_1                A0
+#define PIN_CELL_2                A1
+
 #define PIN_DISPLAY_EN             9
 #define PIN_THERM_EN
 #define PIN_CAMERA_EN
-#define PIN_PHOTOCELL_EN          A3
-#define PIN_PHOTOCELL             A2
-#define PIN_POTENTIOMETER         A4
+#define PIN_PHOTOCELL_EN          A4
+#define PIN_PHOTOCELL             A3
+#define PIN_POTENTIOMETER         A2
 #define PIN_PUSHBUTTON             7
 
 #define PIN_CAMERA_HIGHSIDE        3
@@ -47,6 +50,6 @@
 #define STATE_MENU_START_DRAW             61
 
                                           
-#define STATE_SLEEP                        1
-#define STATE_SENSOR_READ                  2
-#define STATE_CAMERA_RUNNING               3
+#define STATE_SLEEP                        5
+#define STATE_SENSOR_READ                  6
+#define STATE_CAMERA_RUNNING               7

@@ -53,8 +53,15 @@ void setup() {
 void loop() {
 
   #ifdef DEBUG 
-    Serial.println(state);
-    delay(10);
+    //Serial.println(state);
+    Serial.print(getPotiPosition(10));
+    Serial.print(" ");
+    Serial.print(getLiPoVoltage(1));
+    Serial.print(" ");
+    Serial.print(getLiPoVoltage(2));
+    Serial.print(" ");
+    Serial.println(getLiPoVoltage(0));
+    delay(50);
   #endif
 
   if (state % 10 == 0) {
@@ -72,12 +79,16 @@ void loop() {
 
     case STATE_MENU_DETAILS_DRAW:
       lcd.clear();
-      lcd.setCursor(10,0);
+      lcd.setCursor(9,0);
       lcd.print("C1:");
+      lcd.setCursor(12,0);
+      lcd.print(getLiPoVoltage(1));
       lcd.setCursor(15,0);
       lcd.print("v");
-      lcd.setCursor(10,1);
+      lcd.setCursor(9,1);
       lcd.print("C2:");
+      lcd.setCursor(12,1);
+      lcd.print(getLiPoVoltage(2));
       lcd.setCursor(15,1);
       lcd.print("v");
 
@@ -160,9 +171,27 @@ void takePicture() {
 int getPotiPosition(int numberOfSegments) {
   int segmentSize = 1024 / numberOfSegments;
   
-  //return analogRead(PIN_POTENTIOMETER) / segmentSize;
+  return analogRead(PIN_POTENTIOMETER) / segmentSize;
+}
 
-  return 4;
+float getLiPoVoltage(byte cell) {
+  switch (cell) {
+    case 0:
+      return ((float) analogRead(PIN_CELL_2) / 1024) * 10.0;
+    break;
+
+    case 1:
+      return ((float) analogRead(PIN_CELL_1) / 1024) * 10.0;
+    break;
+
+    case 2:
+      return (((float) analogRead(PIN_CELL_2) / 1024) * 10.0) - ((float) analogRead(PIN_CELL_1) / 1024) * 10.0;
+    break;
+
+    default:
+      return -1;
+    break;
+  }
 }
 
 boolean buttonPressed() {
