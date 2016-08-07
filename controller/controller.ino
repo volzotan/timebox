@@ -12,6 +12,8 @@ int state = STATE_MENU_DETAILS;
 
 int oldPotiSegment  = 0;
 int potiSegment     = oldPotiSegment;
+
+int picturesTaken   = 0;
                     
 // ---------------------------
 
@@ -34,7 +36,7 @@ void setup() {
   initButtons();
   
   #ifdef USE_DISPLAY
-    digitalWrite(PIN_DISPLAY_EN, LOW);
+    displayOn(true);
     delay(100);
     lcd.init();                      // initialize the lcd 
     lcd.backlight();
@@ -81,11 +83,11 @@ void loop() {
   if (state % 10 == 0) {
     potiSegment = getPotiPosition(7);
     if (potiSegment != oldPotiSegment) {
-      state = potiSegment * 10 + 1;
+      state = (potiSegment+1) * 10 + 1;
     }
 
     if (buttonPressed()) {
-      state = potiSegment * 10 + 2;
+      state = (potiSegment+1) * 10 + 2;
       delay(300);
     }
 
@@ -95,14 +97,33 @@ void loop() {
   switch(state) {
 
     case STATE_SLEEP:
+      #ifdef DEBUG
+        Serial.println("start sleeping");
+        delay(100);
+      #endif
       
+      wait(optInterval * 60);
+
+      if (picturesTaken < optIterations) {
+        state = STATE_SENSOR_READ;
+      }
     break;
 
     case STATE_SENSOR_READ:
+      #ifdef DEBUG
+        Serial.println("reading sensors...");
+      #endif
+      
+      state = STATE_CAMERA_RUNNING;
     break;
 
     case STATE_CAMERA_RUNNING:
+      #ifdef DEBUG
+        Serial.println("taking picture...");
+      #endif
       
+      takePicture();
+      state = STATE_SLEEP;
     break;
 
     // ---------------------------------
@@ -297,9 +318,26 @@ void loop() {
       lcd.setCursor(8,1);
       lcd.print("T:");
       lcd.setCursor(10,1);
-      lcd.print("foo");
+      lcd.print(calculateTime(optIterations, optInterval));
      
       state--;
+    break;
+
+    case STATE_MENU_START_SELECTED: 
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("STARTING in 10s");
+      for (int i=9; i>-1; i--) {
+        wait(1);
+        lcd.setCursor(12,0);
+        lcd.print("0" + String(i));
+      }
+
+      displayOn(false);
+
+      wait(1);
+      
+      state = STATE_SENSOR_READ;
     break;
     
     default:
@@ -335,17 +373,24 @@ void initButtons() {
 }
 
 void takePicture() {
-  digitalWrite(PIN_CAMERA_EN, HIGH);
+  if (checkLiPoHealth()) {
   
-  wait(PRE_TRIGGER_WAIT);
+    digitalWrite(PIN_CAMERA_EN, HIGH);
+    
+    wait(PRE_TRIGGER_WAIT);
+    
+    digitalWrite(PIN_CAMERA_SHUTTER, HIGH);
+    delay(100);
+    digitalWrite(PIN_CAMERA_SHUTTER, LOW);
   
-  digitalWrite(PIN_CAMERA_SHUTTER, HIGH);
-  delay(100);
-  digitalWrite(PIN_CAMERA_SHUTTER, LOW);
+    wait(POST_TRIGGER_WAIT);
+  
+    digitalWrite(PIN_CAMERA_EN, LOW);
+    picturesTaken++;
+  }
 
-  wait(POST_TRIGGER_WAIT);
-
-  digitalWrite(PIN_CAMERA_EN, LOW);
+  // read LiPo voltage again if datalogger is used (just for comparison)
+  // checkLiPoHealth();
 }
 
 String calculateTime(int iterations, int interval) {
@@ -363,9 +408,27 @@ String calculateTime(int iterations, int interval) {
 }
 
 int getPotiPosition(int numberOfSegments) {
-  int segmentSize = 1024 / numberOfSegments;
-  
+  int segmentSize = 1030 / numberOfSegments;
+
   return analogRead(PIN_POTENTIOMETER) / segmentSize;
+}
+
+boolean checkLiPoHealth() {
+  float c1 = getLiPoVoltage(1);
+  float c2 = getLiPoVoltage(2);
+  
+  if (c1 < 3.5 ||  c2 < 3.5) {
+    if (c1 == 0) {
+      Serial.println("LiPo not connected");
+    } else {
+      Serial.println("LiPo voltage below threshold! [c1:" + String(c1) + " | c2:" + String(c2) + "]");
+    }
+    
+    delay(100);
+    return false;
+  }
+
+  return true;
 }
 
 float getLiPoVoltage(byte cell) {
@@ -385,6 +448,14 @@ float getLiPoVoltage(byte cell) {
     default:
       return -1;
     break;
+  }
+}
+
+void displayOn(boolean state) {
+  if (state) {
+    digitalWrite(PIN_DISPLAY_EN, LOW);
+  } else {
+    digitalWrite(PIN_DISPLAY_EN, HIGH);  
   }
 }
 

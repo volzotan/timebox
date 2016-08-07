@@ -52,6 +52,7 @@
 
 #define STATE_MENU_START                  70
 #define STATE_MENU_START_DRAW             71
+#define STATE_MENU_START_SELECTED         72
 
                                           
 #define STATE_SLEEP                        5
