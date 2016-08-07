@@ -5,13 +5,11 @@
 
 #define PIN_DISPLAY_EN             9
 #define PIN_CAMERA_EN             10
-#define PIN_THERM_EN              11
-#define PIN_PHOTOCELL_EN          A4
+#define PIN_SENSORS_EN            11
+#define PIN_PUSHBUTTON            12
 #define PIN_PHOTOCELL             A3
 #define PIN_POTENTIOMETER         A2
-#define PIN_PUSHBUTTON             7
 
-#define PIN_CAMERA_HIGHSIDE        3
 #define PIN_CAMERA_FOCUS           4
 #define PIN_CAMERA_SHUTTER         5
 
@@ -34,20 +32,26 @@
 
 #define STATE_MENU_CAMERA_ON              20
 #define STATE_MENU_CAMERA_ON_DRAW         21
+#define STATE_MENU_CAMERA_ON_SELECTED     22
 
 #define STATE_MENU_CAMERA_OFF             30
 #define STATE_MENU_CAMERA_OFF_DRAW        31
+#define STATE_MENU_CAMERA_OFF_SELECTED    32
 
-#define STATE_MENU_INTERVAL               40
-#define STATE_MENU_INTERVAL_DRAW          41
-#define STATE_MENU_INTERVAL_SELECTED      42
+#define STATE_MENU_TAKE_PICTURE           40
+#define STATE_MENU_TAKE_PICTURE_DRAW      41
+#define STATE_MENU_TAKE_PICTURE_SELECTED  42
 
-#define STATE_MENU_ITERATIONS             50
-#define STATE_MENU_ITERATIONS_DRAW        51
-#define STATE_MENU_ITERATIONS_SELECTED    52
+#define STATE_MENU_INTERVAL               50
+#define STATE_MENU_INTERVAL_DRAW          51
+#define STATE_MENU_INTERVAL_SELECTED      52
 
-#define STATE_MENU_START                  60
-#define STATE_MENU_START_DRAW             61
+#define STATE_MENU_ITERATIONS             60
+#define STATE_MENU_ITERATIONS_DRAW        61
+#define STATE_MENU_ITERATIONS_SELECTED    62
+
+#define STATE_MENU_START                  70
+#define STATE_MENU_START_DRAW             71
 
                                           
 #define STATE_SLEEP                        5
