@@ -21,12 +21,12 @@
 #define PRE_TRIGGER_WAIT           5
 #define POST_TRIGGER_WAIT         40
 
+#define LIPO_CELL_MIN            3.6
+#define LIPO_CELL_MAX            4.2
+
 // MISC
 
 #define VERSION                  0.1
-
-#define LIPO_CELL_MIN            3.6
-#define LIPO_CELL_MAX            4.2
 
 // ----------- MENU ----------------
 
@@ -61,3 +61,4 @@
 #define STATE_SLEEP                        5
 #define STATE_SENSOR_READ                  6
 #define STATE_CAMERA_RUNNING               7
+#define STATE_STOP                         8

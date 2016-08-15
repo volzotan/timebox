@@ -34,8 +34,14 @@ void setup() {
   
   Serial.println("init");
   initButtons();
+
+  if (!checkLiPoHealth()) {
+    // battery is empty, abort right now!
+    state = STATE_STOP;
+  }
   
   #ifdef USE_DISPLAY
+    wait(0.5);
     displayOn(true);
     delay(100);
     lcd.init();                      // initialize the lcd 
@@ -107,7 +113,7 @@ void loop() {
         delay(100);
       #endif
       
-      wait(optInterval * 60);
+      wait((optInterval * 60) - PRE_TRIGGER_WAIT - POST_TRIGGER_WAIT);
 
       if (picturesTaken < optIterations) {
         state = STATE_SENSOR_READ;
@@ -126,9 +132,18 @@ void loop() {
       #ifdef DEBUG
         Serial.println("taking picture...");
       #endif
+
+      if (!checkLiPoHealth()) {
+        // battery is empty
+        state = STATE_STOP;
+      }
       
       takePicture();
       state = STATE_SLEEP;
+    break;
+
+    case STATE_STOP:
+      wait(60);
     break;
 
     // ---------------------------------
@@ -140,7 +155,7 @@ void loop() {
       lcd.print("BATTERY");
       lcd.setCursor(0,1);
 
-      lcd.print((int) getLiPoVoltage(4));
+      lcd.print((int) getLiPoVoltage(-1));
       lcd.setCursor(3,1);
       lcd.print("%");
       
@@ -389,27 +404,29 @@ void initButtons() {
 
   pinMode(PIN_CAMERA_FOCUS,   OUTPUT);
   pinMode(PIN_CAMERA_SHUTTER, OUTPUT);
+
+  digitalWrite(PIN_DISPLAY_EN, LOW);
+  digitalWrite(PIN_CAMERA_EN,  LOW);
+  digitalWrite(PIN_SENSORS_EN, LOW);
 }
 
 void takePicture() {
-  if (checkLiPoHealth()) {
+  // TODO: if datalogger is enabled: log battery voltage
   
-    digitalWrite(PIN_CAMERA_EN, HIGH);
-    
-    wait(PRE_TRIGGER_WAIT);
-    
-    digitalWrite(PIN_CAMERA_SHUTTER, HIGH);
-    delay(100);
-    digitalWrite(PIN_CAMERA_SHUTTER, LOW);
+  digitalWrite(PIN_CAMERA_EN, HIGH);
   
-    wait(POST_TRIGGER_WAIT);
+  wait(PRE_TRIGGER_WAIT);
   
-    digitalWrite(PIN_CAMERA_EN, LOW);
-    picturesTaken++;
-  }
+  digitalWrite(PIN_CAMERA_SHUTTER, HIGH);
+  delay(100);
+  digitalWrite(PIN_CAMERA_SHUTTER, LOW);
 
-  // read LiPo voltage again if datalogger is used (just for comparison)
-  // checkLiPoHealth();
+  wait(POST_TRIGGER_WAIT);
+
+  digitalWrite(PIN_CAMERA_EN, LOW);
+  picturesTaken++;
+
+  // TODO: if datalogger is enabled: log battery voltage again for comparison
 }
 
 String calculateTime(int iterations, int interval) {
@@ -436,7 +453,7 @@ boolean checkLiPoHealth() {
   float c1 = getLiPoVoltage(1);
   float c2 = getLiPoVoltage(2);
   
-  if (c1 < 3.5 ||  c2 < 3.5) {
+  if (c1 < LIPO_CELL_MIN ||  c2 < LIPO_CELL_MIN) {
     if (c1 == 0) {
       Serial.println("LiPo not connected");
     } else {
@@ -450,7 +467,7 @@ boolean checkLiPoHealth() {
   return true;
 }
 
-float getLiPoVoltage(byte cell) {
+float getLiPoVoltage(int cell) {
   switch (cell) {
     case 0: // whole battery
       return ((float) analogRead(PIN_CELL_2) / 1024) * 10.0;
@@ -476,9 +493,9 @@ float getLiPoVoltage(byte cell) {
 
 void displayOn(boolean state) {
   if (state) {
-    digitalWrite(PIN_DISPLAY_EN, LOW);
+    digitalWrite(PIN_DISPLAY_EN, HIGH);
   } else {
-    digitalWrite(PIN_DISPLAY_EN, HIGH);  
+    digitalWrite(PIN_DISPLAY_EN, LOW);  
   }
 }
 
