@@ -25,6 +25,9 @@
 
 #define VERSION                  0.1
 
+#define LIPO_CELL_MIN            3.6
+#define LIPO_CELL_MAX            4.2
+
 // ----------- MENU ----------------
 
 #define STATE_MENU_DETAILS                10

@@ -8,7 +8,7 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 
 #define DEBUG
 
-int state = STATE_MENU_DETAILS;
+int state = STATE_SLEEP;
 
 int oldPotiSegment  = 0;
 int potiSegment     = oldPotiSegment;
@@ -49,6 +49,11 @@ void setup() {
     
     wait(1);
     Serial.println("display initialized");
+  #endif
+
+  #ifdef DEBUG
+    // do not start right away, go to menu
+    state = STATE_MENU_DETAILS;
   #endif
 }
 
@@ -130,12 +135,22 @@ void loop() {
 
     case STATE_MENU_DETAILS_DRAW:
       lcd.clear();
+
+      lcd.setCursor(0,0);
+      lcd.print("BATTERY");
+      lcd.setCursor(0,1);
+
+      lcd.print((int) getLiPoVoltage(4));
+      lcd.setCursor(3,1);
+      lcd.print("%");
+      
       lcd.setCursor(9,0);
       lcd.print("C1:");
       lcd.setCursor(12,0);
       lcd.print(getLiPoVoltage(1));
       lcd.setCursor(15,0);
       lcd.print("v");
+      
       lcd.setCursor(9,1);
       lcd.print("C2:");
       lcd.setCursor(12,1);
@@ -201,7 +216,7 @@ void loop() {
     case STATE_MENU_TAKE_PICTURE_DRAW:
       lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("TAKE PICTURE");
+      lcd.print("RELEASE SHUTTER");
 
       state--;
     break;
@@ -211,7 +226,7 @@ void loop() {
     
       lcd.clear(); 
       lcd.setCursor(0,0);
-      lcd.print("TAKE PICTURE");
+      lcd.print("WAIT");
       lcd.setCursor(13,0);
       lcd.print(".");
       wait(0.5);
@@ -305,20 +320,20 @@ void loop() {
       lcd.setCursor(0,0);
       lcd.print("START");
 
-      lcd.setCursor(8,0);
+      lcd.setCursor(0,1);
+      lcd.print("T:");
+      lcd.setCursor(2,1);
+      lcd.print(calculateTime(optIterations, optInterval));
+
+      lcd.setCursor(9,0);
       lcd.print("N:");
-      lcd.setCursor(10,0);
+      lcd.setCursor(11,0);
       lcd.print(optIterations);
 
-      lcd.setCursor(0,1);
+      lcd.setCursor(9,1);
       lcd.print("D:");
-      lcd.setCursor(4,1);
+      lcd.setCursor(11,1);
       lcd.print(optInterval);
-
-      lcd.setCursor(8,1);
-      lcd.print("T:");
-      lcd.setCursor(10,1);
-      lcd.print(calculateTime(optIterations, optInterval));
      
       state--;
     break;
@@ -331,6 +346,10 @@ void loop() {
         wait(1);
         lcd.setCursor(12,0);
         lcd.print("0" + String(i));
+//        if (buttonPressed()) {
+//          // abort
+//          state = STATE_MENU_DETAILS;
+//        }
       }
 
       displayOn(false);
@@ -433,18 +452,22 @@ boolean checkLiPoHealth() {
 
 float getLiPoVoltage(byte cell) {
   switch (cell) {
-    case 0:
+    case 0: // whole battery
       return ((float) analogRead(PIN_CELL_2) / 1024) * 10.0;
     break;
 
-    case 1:
+    case 1: // cell 1
       return ((float) analogRead(PIN_CELL_1) / 1024) * 10.0;
     break;
 
-    case 2:
+    case 2: // cell 2
       return (((float) analogRead(PIN_CELL_2) / 1024) * 10.0) - ((float) analogRead(PIN_CELL_1) / 1024) * 10.0;
     break;
 
+    case -1: // percentage loaded 
+      return ((getLiPoVoltage(1) + getLiPoVoltage(2)) - LIPO_CELL_MIN*2) / (((LIPO_CELL_MAX-LIPO_CELL_MIN) * 2) / 100);
+    break;
+    
     default:
       return -1;
     break;
