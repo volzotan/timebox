@@ -59,7 +59,7 @@ void setup() {
 
   #ifdef DEBUG
     // do not start right away, go to menu
-    state = STATE_MENU_DETAILS;
+    state = STATE_MENU_DETAILS_DRAW;
   #endif
 }
 
@@ -159,16 +159,16 @@ void loop() {
       lcd.setCursor(3,1);
       lcd.print("%");
       
-      lcd.setCursor(9,0);
+      lcd.setCursor(8,0);
       lcd.print("C1:");
-      lcd.setCursor(12,0);
+      lcd.setCursor(11,0);
       lcd.print(getLiPoVoltage(1));
       lcd.setCursor(15,0);
       lcd.print("v");
       
-      lcd.setCursor(9,1);
+      lcd.setCursor(8,1);
       lcd.print("C2:");
-      lcd.setCursor(12,1);
+      lcd.setCursor(11,1);
       lcd.print(getLiPoVoltage(2));
       lcd.setCursor(15,1);
       lcd.print("v");
