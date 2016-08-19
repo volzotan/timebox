@@ -40,56 +40,22 @@ void setup() {
     state = STATE_STOP;
   }
   
-  #ifdef USE_DISPLAY
-    wait(0.5);
-    displayOn(true);
-    delay(100);
-    lcd.init();                      // initialize the lcd 
-    lcd.backlight();
-    lcd.setCursor(0,0);
-    lcd.print("TIMEBOXGO");
-    lcd.setCursor(0,1);
-    lcd.print("version: ");
-    lcd.setCursor(9,1);
-    lcd.print(VERSION);
-    
-    wait(1);
-    Serial.println("display initialized");
-  #endif
-
   #ifdef DEBUG
     // do not start right away, go to menu
-    state = STATE_MENU_DETAILS_DRAW;
+    state = STATE_MENU_INIT;
   #endif
+
+  for (int i=0; i < 10; i++) {
+    if (buttonPressed()) {
+      state = STATE_MENU_INIT;
+      break;
+    }
+    wait(0.1); 
+  }
 }
 
 
 void loop() {
-
-//  while (true) {
-//    Serial.println("low");
-//    digitalWrite(PIN_CAMERA_EN, LOW);
-//    digitalWrite(PIN_SENSORS_EN, LOW);
-//    delay(1000);
-//    Serial.println("high");
-//    digitalWrite(PIN_CAMERA_EN, HIGH);
-//    digitalWrite(PIN_SENSORS_EN, HIGH);  
-//    delay(1000);
-//  }
-
-//  #ifdef DEBUG 
-//    //Serial.println(state);
-//    Serial.print(state);
-//    Serial.print(" ");
-//    Serial.print(getPotiPosition(7));
-//    Serial.print(" ");
-//    Serial.print(getLiPoVoltage(1));
-//    Serial.print(" ");
-//    Serial.print(getLiPoVoltage(2));
-//    Serial.print(" ");
-//    Serial.println(getLiPoVoltage(0));
-//    delay(50);
-//  #endif
 
   if (state % 10 == 0) {
     potiSegment = getPotiPosition(7);
@@ -138,7 +104,7 @@ void loop() {
         state = STATE_STOP;
       }
       
-      takePicture();
+      takePicture(true);
       state = STATE_SLEEP;
     break;
 
@@ -147,6 +113,25 @@ void loop() {
     break;
 
     // ---------------------------------
+
+    case STATE_MENU_INIT:
+      wait(0.5);
+      displayOn(true);
+      delay(100);
+      lcd.init();
+      lcd.backlight();
+      lcd.setCursor(0,0);
+      lcd.print("TIMEBOXGO");
+      lcd.setCursor(0,1);
+      lcd.print("version: ");
+      lcd.setCursor(9,1);
+      lcd.print(VERSION);
+      
+      wait(1.5);
+      Serial.println("display initialized");
+    
+      state = STATE_MENU_DETAILS_DRAW;
+    break;
 
     case STATE_MENU_DETAILS_DRAW:
       lcd.clear();
@@ -237,7 +222,7 @@ void loop() {
     break;
 
     case STATE_MENU_TAKE_PICTURE_SELECTED:
-      digitalWrite(PIN_CAMERA_SHUTTER, HIGH);
+      takePicture(false);
     
       lcd.clear(); 
       lcd.setCursor(0,0);
@@ -370,7 +355,8 @@ void loop() {
       displayOn(false);
 
       wait(1);
-      
+
+      picturesTaken = 0;
       state = STATE_SENSOR_READ;
     break;
     
@@ -397,8 +383,7 @@ void initButtons() {
 
   pinMode(PIN_DISPLAY_EN,     OUTPUT);
   pinMode(PIN_CAMERA_EN,      OUTPUT);
-  pinMode(PIN_SENSORS_EN,     OUTPUT);
-  pinMode(PIN_PHOTOCELL,      INPUT);  
+  pinMode(PIN_SENSORS_EN,     OUTPUT); 
   pinMode(PIN_POTENTIOMETER,  INPUT);  
   pinMode(PIN_PUSHBUTTON,     INPUT);  
 
@@ -408,22 +393,40 @@ void initButtons() {
   digitalWrite(PIN_DISPLAY_EN, LOW);
   digitalWrite(PIN_CAMERA_EN,  LOW);
   digitalWrite(PIN_SENSORS_EN, LOW);
+
+  #ifdef USE_EXT
+  
+    #if USE_EXT == EXT_PHOTOCELL
+      pinMode(PIN_PHOTOCELL,  INPUT); 
+    #endif
+
+    #if USE_EXT == EXT_SENDER
+      pinMode(PIN_SENDER,     OUTPUT); 
+    #endif
+    
+  #endif
 }
 
-void takePicture() {
+void takePicture(boolean turnCameraOn) {
   // TODO: if datalogger is enabled: log battery voltage
+
+  if (turnCameraOn) {
+    digitalWrite(PIN_CAMERA_EN, HIGH);
+    wait(PRE_TRIGGER_WAIT);
+  }
   
-  digitalWrite(PIN_CAMERA_EN, HIGH);
-  
-  wait(PRE_TRIGGER_WAIT);
-  
+  digitalWrite(PIN_CAMERA_FOCUS, HIGH);
+  delay(500);
   digitalWrite(PIN_CAMERA_SHUTTER, HIGH);
-  delay(100);
+  delay(500);
   digitalWrite(PIN_CAMERA_SHUTTER, LOW);
+  digitalWrite(PIN_CAMERA_FOCUS, LOW);
 
-  wait(POST_TRIGGER_WAIT);
-
-  digitalWrite(PIN_CAMERA_EN, LOW);
+  if (turnCameraOn) {
+    wait(POST_TRIGGER_WAIT);
+    digitalWrite(PIN_CAMERA_EN, LOW);
+  }
+  
   picturesTaken++;
 
   // TODO: if datalogger is enabled: log battery voltage again for comparison

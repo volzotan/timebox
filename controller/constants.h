@@ -8,15 +8,20 @@
 #define PIN_SENSORS_EN            11
 #define PIN_PUSHBUTTON            12
 #define PIN_PHOTOCELL             A3
+#define PIN_SENDER                A3 // identical to Photocell
 #define PIN_POTENTIOMETER         A2
 
-#define PIN_CAMERA_FOCUS           4
-#define PIN_CAMERA_SHUTTER         5
+#define PIN_CAMERA_FOCUS           2
+#define PIN_CAMERA_SHUTTER         3
+
+// CONST
+
+#define EXT_PHOTOCELL             10
+#define EXT_SENDER                20
 
 // OPTIONS
 
-#define USE_DISPLAY             true
-#define USE_PHOTOCELL          false
+#define USE_EXT        EXT_PHOTOCELL
 
 #define PRE_TRIGGER_WAIT           5
 #define POST_TRIGGER_WAIT         40
@@ -29,6 +34,8 @@
 #define VERSION                  0.1
 
 // ----------- MENU ----------------
+
+#define STATE_MENU_INIT                    9
 
 #define STATE_MENU_DETAILS                10
 #define STATE_MENU_DETAILS_DRAW           11
