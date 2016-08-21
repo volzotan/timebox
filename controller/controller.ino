@@ -1,10 +1,14 @@
 #include <JeeLib.h>
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include <TCN75A.h>
+#include <EEPROM.h>
+
 #include "constants.h"
 
 ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 LiquidCrystal_I2C lcd(0x27,16,2);  
+TCN75A sensor;
 
 #define DEBUG
 
@@ -33,6 +37,7 @@ void setup() {
   }
   
   Serial.println("init");
+  initConfiguration();
   initButtons();
 
   if (!checkLiPoHealth()) {
@@ -52,6 +57,8 @@ void setup() {
     }
     wait(0.1); 
   }
+
+  initFromEEPROM();
 }
 
 
@@ -137,9 +144,15 @@ void loop() {
       lcd.clear();
 
       lcd.setCursor(0,0);
-      lcd.print("BATTERY");
-      lcd.setCursor(0,1);
+      #if USE_TEMP_SENSOR
+        lcd.print(readTempSensor());
+        lcd.setCursor(5,0);
+        lcd.print("C");
+      #else
+        lcd.print("BATTERY");
+      #endif
 
+      lcd.setCursor(0,1);
       lcd.print((int) getLiPoVoltage(-1));
       lcd.setCursor(3,1);
       lcd.print("%");
@@ -269,9 +282,9 @@ void loop() {
       }
     
       if (buttonPressed()) {
-        // TODO: saveValue...
         optInterval = valuesInterval[potiSegment];
         state = STATE_MENU_INTERVAL;
+        eeprom_saveto();
       }
       
     break;
@@ -306,9 +319,9 @@ void loop() {
       }
     
       if (buttonPressed()) {
-        // TODO: saveValue...
         optIterations = valuesIterations[potiSegment];
         state = STATE_MENU_ITERATIONS;
+        eeprom_saveto();
       }
       
     break;
@@ -522,4 +535,38 @@ void wait(float seconds) {
   }
   
   Sleepy::loseSomeTime((int) ((seconds - ((int) seconds)) * 1000));
+}
+
+void initConfiguration() {
+  // TODO  
+}
+
+float readLightSensor() {
+  digitalWrite(PIN_SENSORS_EN, HIGH);
+  delay(100);
+
+  float l = analogRead(PIN_PHOTOCELL);
+  l = l / 1023;
+
+  delay(100);
+  digitalWrite(PIN_SENSORS_EN, LOW);
+
+  return l;
+}
+
+float readTempSensor() {
+  digitalWrite(PIN_SENSORS_EN, HIGH);
+  delay(100);
+
+  sensor.begin();
+  sensor.set_address(0);
+  sensor.set_resolution(3);
+
+  delay(100);
+  float t = sensor.read();  
+
+  delay(100);
+  digitalWrite(PIN_SENSORS_EN, LOW);
+ 
+  return t;
 }

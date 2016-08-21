@@ -17,21 +17,28 @@
 // CONST
 
 #define EXT_PHOTOCELL             10
-#define EXT_SENDER                20
+#define EXT_SENDER                20      
 
 // OPTIONS
 
+#define USE_TEMP_SENSOR         true
 #define USE_EXT        EXT_PHOTOCELL
 
 #define PRE_TRIGGER_WAIT           5
 #define POST_TRIGGER_WAIT         40
 
-#define LIPO_CELL_MIN            3.6
+#define LIPO_CELL_MIN            3.7
 #define LIPO_CELL_MAX            4.2
+
+#define INTERVAL_DEFAULT_VAL       1
+#define ITERATIONS_DEFAULT_VAL   100
 
 // MISC
 
 #define VERSION                  0.1
+
+#define EEPROM_INTERVAL           10
+#define EEPROM_ITERATIONS         20
 
 // ----------- MENU ----------------
 
