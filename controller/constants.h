@@ -3,13 +3,14 @@
 #define PIN_CELL_1                A0
 #define PIN_CELL_2                A1
 
-#define PIN_DISPLAY_EN             9
-#define PIN_CAMERA_EN             10
-#define PIN_SENSORS_EN            11
-#define PIN_PUSHBUTTON            12
+#define PIN_DISPLAY_EN             8
+#define PIN_CAMERA_EN              7
+#define PIN_SENSORS_EN             6
+#define PIN_PUSHBUTTON             5
 #define PIN_PHOTOCELL             A3
 #define PIN_SENDER                A3 // identical to Photocell
 #define PIN_POTENTIOMETER         A2
+#define PIN_CARD_SS               10
 
 #define PIN_CAMERA_FOCUS           2
 #define PIN_CAMERA_SHUTTER         3
@@ -23,6 +24,9 @@
 
 #define USE_TEMP_SENSOR         true
 #define USE_EXT        EXT_PHOTOCELL
+
+#define USE_LOGGER              true
+#define LOGGER_FILENAME "DATALOG.TXT"
 
 #define PRE_TRIGGER_WAIT           5
 #define POST_TRIGGER_WAIT         40

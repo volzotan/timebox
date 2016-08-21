@@ -1,7 +1,12 @@
 #include <JeeLib.h>
+
+#include <SPI.h>
+#include <SD.h>
+
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 #include <TCN75A.h>
+
 #include <EEPROM.h>
 
 #include "constants.h"
@@ -18,6 +23,8 @@ int oldPotiSegment  = 0;
 int potiSegment     = oldPotiSegment;
 
 int picturesTaken   = 0;
+
+int loggerState     = -1;
                     
 // ---------------------------
 
@@ -37,7 +44,7 @@ void setup() {
   }
   
   Serial.println("init");
-  initConfiguration();
+  initFromEEPROM();
   initButtons();
 
   if (!checkLiPoHealth()) {
@@ -58,7 +65,18 @@ void setup() {
     wait(0.1); 
   }
 
-  initFromEEPROM();
+  #if USE_LOGGER
+    loggerState = initLogger();
+    loggerWrite("--- TIMEBOXGO ---");
+
+    Serial.print(String(picturesTaken) + " : ");
+    Serial.print(String(getLiPoVoltage(1)) + " ");
+    Serial.print(String(getLiPoVoltage(2)) + " ");
+    Serial.print(String((int) getLiPoVoltage(-1)/10) + "% ");
+    //Serial.print(String(readTempSensor()));
+    Serial.println();
+    delay(100);
+  #endif
 }
 
 
@@ -259,7 +277,7 @@ void loop() {
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("INTERVAL");
-      lcd.setCursor(10,0);
+      lcd.setCursor(11,0);
       lcd.print(optInterval);
       state--;
     break;
@@ -422,6 +440,7 @@ void initButtons() {
 
 void takePicture(boolean turnCameraOn) {
   // TODO: if datalogger is enabled: log battery voltage
+  //loggerWrite();
 
   if (turnCameraOn) {
     digitalWrite(PIN_CAMERA_EN, HIGH);
@@ -535,10 +554,6 @@ void wait(float seconds) {
   }
   
   Sleepy::loseSomeTime((int) ((seconds - ((int) seconds)) * 1000));
-}
-
-void initConfiguration() {
-  // TODO  
 }
 
 float readLightSensor() {
