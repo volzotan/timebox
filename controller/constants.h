@@ -1,48 +1,49 @@
 // PINS
 
-#define PIN_CELL_1                A0
-#define PIN_CELL_2                A1
+#define PIN_CELL_1                        A0
+#define PIN_CELL_2                        A1
 
-#define PIN_DISPLAY_EN             8
-#define PIN_CAMERA_EN              7
-#define PIN_SENSORS_EN             6
-#define PIN_PUSHBUTTON             5
-#define PIN_PHOTOCELL             A3
-#define PIN_SENDER                A3 // identical to Photocell
-#define PIN_POTENTIOMETER         A2
-#define PIN_CARD_SS               10
+#define PIN_DISPLAY_EN                     8
+#define PIN_CAMERA_EN                      7
+#define PIN_SENSORS_EN                     6
 
-#define PIN_CAMERA_FOCUS           2
-#define PIN_CAMERA_SHUTTER         3
+#define PIN_PUSHBUTTON                     5
+#define PIN_PHOTOCELL                     A3
+#define PIN_SENDER                        A3 // identical to Photocell
+#define PIN_POTENTIOMETER                 A2
+#define PIN_CARD_SS                       10
 
-// CONST
-
-#define EXT_PHOTOCELL             10
-#define EXT_SENDER                20      
+#define PIN_CAMERA_FOCUS                   2
+#define PIN_CAMERA_SHUTTER                 3
 
 // OPTIONS
 
-#define USE_TEMP_SENSOR         true
-#define USE_EXT        EXT_PHOTOCELL
+#define USE_TEMP_SENSOR                 true
+#define USE_EXT                EXT_PHOTOCELL
 
-#define USE_LOGGER              true
-#define LOGGER_FILENAME "DATALOG.TXT"
+#define USE_LOGGER                      true
+#define LOGGER_FILENAME        "DATALOG.TXT"
 
-#define PRE_TRIGGER_WAIT           5
-#define POST_TRIGGER_WAIT         40
+#define PRE_TRIGGER_WAIT                   5
+#define POST_TRIGGER_WAIT                 40
 
-#define LIPO_CELL_MIN            3.7
-#define LIPO_CELL_MAX            4.2
+#define LIPO_CELL_MIN                    3.7
+#define LIPO_CELL_MAX                    4.2
 
-#define INTERVAL_DEFAULT_VAL       1
-#define ITERATIONS_DEFAULT_VAL   100
+#define INTERVAL_DEFAULT_VAL               1
+#define ITERATIONS_DEFAULT_VAL           100
 
 // MISC
 
-#define VERSION                  0.1
+#define VERSION                          0.1
 
-#define EEPROM_INTERVAL           10
-#define EEPROM_ITERATIONS         20
+#define EEPROM_INTERVAL                   10
+#define EEPROM_ITERATIONS                 20
+
+// CONST
+
+#define EXT_PHOTOCELL                     10
+#define EXT_SENDER                        20      
 
 // ----------- MENU ----------------
 

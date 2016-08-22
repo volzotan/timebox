@@ -1,4 +1,6 @@
 int initLogger() {
+  sensorsOn(true);
+  
   if (!SD.begin(PIN_CARD_SS)) {
     Serial.println("initialization failed!");
     return 1;
@@ -13,13 +15,17 @@ int initLogger() {
     delay(100);
   }
 
+  sensorsOn(false);
+
   return 0;
 }
 
 void loggerWrite(char* msg) {
-  File fd = SD.open(LOGGER_FILENAME, FILE_WRITE);
-
-  fd.write(msg);
+  sensorsOn(true);
   
+  File fd = SD.open(LOGGER_FILENAME, FILE_WRITE);
+  fd.write(msg);
   fd.close();
+  
+  sensorsOn(false);
 }

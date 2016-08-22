@@ -534,6 +534,16 @@ void displayOn(boolean state) {
   }
 }
 
+void sensorsOn(boolean state) {
+  if (state) {
+    digitalWrite(PIN_SENSORS_EN, HIGH);
+    delay(50);
+  } else {
+    digitalWrite(PIN_SENSORS_EN, LOW);  
+    delay(50);
+  }
+}
+
 boolean buttonPressed() {
   for (int i=0; i<3; i++) {
     if (!digitalRead(PIN_PUSHBUTTON)) {
@@ -557,21 +567,18 @@ void wait(float seconds) {
 }
 
 float readLightSensor() {
-  digitalWrite(PIN_SENSORS_EN, HIGH);
-  delay(100);
+  sensorsOn(true);
 
   float l = analogRead(PIN_PHOTOCELL);
   l = l / 1023;
 
-  delay(100);
-  digitalWrite(PIN_SENSORS_EN, LOW);
+  sensorsOn(false);
 
   return l;
 }
 
 float readTempSensor() {
-  digitalWrite(PIN_SENSORS_EN, HIGH);
-  delay(100);
+  sensorsOn(true);
 
   sensor.begin();
   sensor.set_address(0);
@@ -579,9 +586,8 @@ float readTempSensor() {
 
   delay(100);
   float t = sensor.read();  
-
-  delay(100);
-  digitalWrite(PIN_SENSORS_EN, LOW);
+  
+  sensorsOn(false);
  
   return t;
 }
