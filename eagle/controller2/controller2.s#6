@@ -6122,19 +6122,6 @@ Standard A4 size frame in Landscape</description>
 </device>
 </devices>
 </deviceset>
-<deviceset name="DGND" prefix="GND">
-<description>&lt;b&gt;SUPPLY SYMBOL&lt;/b&gt;</description>
-<gates>
-<gate name="G$1" symbol="DGND" x="0" y="2.54"/>
-</gates>
-<devices>
-<device name="">
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
 </devicesets>
 </library>
 <library name="SparkFun-Passives">
@@ -9504,39 +9491,96 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 </deviceset>
 </devicesets>
 </library>
-<library name="volzolib">
+<library name="supply1">
+<description>&lt;b&gt;Supply Symbols&lt;/b&gt;&lt;p&gt;
+ GND, VCC, 0V, +5V, -5V, etc.&lt;p&gt;
+ Please keep in mind, that these devices are necessary for the
+ automatic wiring of the supply signals.&lt;p&gt;
+ The pin name defined in the symbol is identical to the net which is to be wired automatically.&lt;p&gt;
+ In this library the device names are the same as the pin names of the symbols, therefore the correct signal names appear next to the supply symbols in the schematic.&lt;p&gt;
+ &lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
 <packages>
-<package name="MISC">
-<smd name="LEFT" x="-2.54" y="0" dx="5.08" dy="2.54" layer="1" rot="R90"/>
-<smd name="RIGHT" x="2.54" y="0" dx="5.08" dy="2.54" layer="1" rot="R90"/>
-<smd name="P$1" x="0" y="-1.27" dx="5.08" dy="2.54" layer="1" rot="R180"/>
-<smd name="P$3" x="0" y="1.27" dx="5.08" dy="2.54" layer="1" rot="R180"/>
-</package>
 </packages>
 <symbols>
-<symbol name="SHORT">
-<wire x1="-10.16" y1="10.16" x2="10.16" y2="10.16" width="0.254" layer="94"/>
-<wire x1="10.16" y1="10.16" x2="10.16" y2="-10.16" width="0.254" layer="94"/>
-<wire x1="10.16" y1="-10.16" x2="-10.16" y2="-10.16" width="0.254" layer="94"/>
-<wire x1="-10.16" y1="-10.16" x2="-10.16" y2="10.16" width="0.254" layer="94"/>
-<pin name="P$1" x="-15.24" y="0" length="middle"/>
-<pin name="P$2" x="15.24" y="0" length="middle" rot="R180"/>
-<text x="-9.906" y="10.922" size="1.778" layer="94">&gt;NAME</text>
+<symbol name="GNDA">
+<wire x1="-1.905" y1="0" x2="1.905" y2="0" width="0.254" layer="94"/>
+<wire x1="-1.0922" y1="-0.508" x2="1.0922" y2="-0.508" width="0.254" layer="94"/>
+<text x="-2.54" y="-2.54" size="1.778" layer="96" rot="R90">&gt;VALUE</text>
+<pin name="GNDA" x="0" y="2.54" visible="off" length="short" direction="sup" rot="R270"/>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="SHORT">
+<deviceset name="GNDA" prefix="GND">
+<description>&lt;b&gt;SUPPLY SYMBOL&lt;/b&gt;</description>
 <gates>
-<gate name="G$1" symbol="SHORT" x="0" y="0"/>
+<gate name="1" symbol="GNDA" x="0" y="0"/>
 </gates>
 <devices>
-<device name="" package="MISC">
-<connects>
-<connect gate="G$1" pin="P$1" pad="LEFT P$1"/>
-<connect gate="G$1" pin="P$2" pad="P$3 RIGHT"/>
-</connects>
+<device name="">
 <technologies>
 <technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
+<library name="shorts-old">
+<description>Hacks for connecting nets to work around no subnets</description>
+<packages>
+<package name="SHORT_TOP-50">
+<description>Short, top layer, 50mil width</description>
+<smd name="1" x="0.635" y="0" dx="1.27" dy="1.27" layer="1" stop="no" cream="no"/>
+<smd name="2" x="-0.635" y="0" dx="1.27" dy="1.27" layer="1" stop="no" cream="no"/>
+<text x="-1.27" y="-2.032" size="1.27" layer="25" ratio="16">&gt;NAME</text>
+</package>
+<package name="SHORT_ALL-50">
+<description>Short, all layers, 50mil width</description>
+<pad name="1" x="-0.635" y="0" drill="0.7366" diameter="1.524"/>
+<pad name="2" x="0.635" y="0" drill="0.7366" diameter="1.524"/>
+<text x="-1.7145" y="-2.2225" size="1.27" layer="25" ratio="16">&gt;NAME</text>
+<text x="0.381" y="-0.889" size="0.762" layer="51" ratio="10" rot="R90">&gt;NAME</text>
+<rectangle x1="-0.254" y1="0.381" x2="0.254" y2="0.635" layer="1"/>
+<rectangle x1="-0.254" y1="-0.635" x2="0.254" y2="-0.381" layer="1"/>
+<rectangle x1="-0.254" y1="0.381" x2="0.254" y2="0.635" layer="16"/>
+<rectangle x1="-0.254" y1="-0.635" x2="0.254" y2="-0.381" layer="16"/>
+</package>
+</packages>
+<symbols>
+<symbol name="SHORT-H">
+<wire x1="-2.54" y1="0" x2="2.54" y2="0" width="0.508" layer="94"/>
+<text x="-2.2225" y="1.27" size="1.778" layer="95">&gt;NAME</text>
+<pin name="P$1" x="-2.54" y="0" visible="off" length="point" swaplevel="1"/>
+<pin name="P$2" x="2.54" y="0" visible="off" length="point" swaplevel="1"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="SHORT-H" prefix="SH">
+<description>Short between two nets</description>
+<gates>
+<gate name="G$1" symbol="SHORT-H" x="0" y="0" swaplevel="1"/>
+</gates>
+<devices>
+<device name="T5" package="SHORT_TOP-50">
+<connects>
+<connect gate="G$1" pin="P$1" pad="1"/>
+<connect gate="G$1" pin="P$2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="BOM" value="no"/>
+</technology>
+</technologies>
+</device>
+<device name="A5" package="SHORT_ALL-50">
+<connects>
+<connect gate="G$1" pin="P$1" pad="1"/>
+<connect gate="G$1" pin="P$2" pad="2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="BOM" value="no"/>
+</technology>
 </technologies>
 </device>
 </devices>
@@ -9637,20 +9681,22 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="SUPPLY13" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="C3" library="SparkFun-Passives" deviceset="CAP" device="PTH" value="100nF"/>
 <part name="GND18" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
-<part name="GND10" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
-<part name="GND11" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
-<part name="GND5" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
-<part name="GND12" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
-<part name="GND16" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
-<part name="GND19" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
-<part name="GND20" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
-<part name="SHORT" library="volzolib" deviceset="SHORT" device=""/>
+<part name="GND10" library="supply1" deviceset="GNDA" device=""/>
+<part name="GND11" library="supply1" deviceset="GNDA" device=""/>
+<part name="GND12" library="supply1" deviceset="GNDA" device=""/>
+<part name="GND16" library="supply1" deviceset="GNDA" device=""/>
+<part name="GND19" library="supply1" deviceset="GNDA" device=""/>
+<part name="SH1" library="shorts-old" deviceset="SHORT-H" device="T5"/>
+<part name="GND21" library="supply1" deviceset="GNDA" device=""/>
+<part name="GND22" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
 <plain>
 <text x="17.78" y="10.16" size="1.778" layer="91">3.3v on pin 4
 OR 5v on pin 5</text>
+<text x="243.84" y="30.48" size="1.778" layer="91">Short between Power-GND
+and Signal-GND</text>
 </plain>
 <instances>
 <instance part="U1" gate="G$1" x="73.66" y="132.08"/>
@@ -9732,14 +9778,14 @@ OR 5v on pin 5</text>
 <instance part="SUPPLY13" gate="G$1" x="187.96" y="124.46" rot="R270"/>
 <instance part="C3" gate="G$1" x="20.32" y="149.86" rot="R90"/>
 <instance part="GND18" gate="1" x="10.16" y="149.86" rot="R270"/>
-<instance part="GND10" gate="G$1" x="266.7" y="88.9" rot="R90"/>
-<instance part="GND11" gate="G$1" x="223.52" y="71.12"/>
-<instance part="GND5" gate="G$1" x="86.36" y="76.2" rot="R90"/>
-<instance part="GND12" gate="G$1" x="266.7" y="119.38" rot="R90"/>
-<instance part="GND16" gate="G$1" x="175.26" y="48.26" rot="R270"/>
-<instance part="GND19" gate="G$1" x="274.32" y="40.64" rot="R90"/>
-<instance part="GND20" gate="1" x="233.68" y="40.64" rot="R270"/>
-<instance part="SHORT" gate="G$1" x="254" y="40.64"/>
+<instance part="GND10" gate="1" x="266.7" y="88.9" rot="R90"/>
+<instance part="GND11" gate="1" x="266.7" y="119.38" rot="R90"/>
+<instance part="GND12" gate="1" x="220.98" y="68.58"/>
+<instance part="GND16" gate="1" x="83.82" y="76.2" rot="R90"/>
+<instance part="GND19" gate="1" x="167.64" y="48.26" rot="R270"/>
+<instance part="SH1" gate="G$1" x="259.08" y="50.8"/>
+<instance part="GND21" gate="1" x="269.24" y="50.8" rot="R90"/>
+<instance part="GND22" gate="1" x="248.92" y="50.8" rot="R270"/>
 </instances>
 <busses>
 </busses>
@@ -9862,7 +9908,7 @@ OR 5v on pin 5</text>
 <label x="195.58" y="160.02" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="GND" class="1">
+<net name="GND" class="0">
 <segment>
 <pinref part="GND2" gate="1" pin="GND"/>
 <pinref part="COMM" gate="G$1" pin="6"/>
@@ -9966,40 +10012,9 @@ OR 5v on pin 5</text>
 <pinref part="GND18" gate="1" pin="GND"/>
 </segment>
 <segment>
-<pinref part="Q2" gate="G$1" pin="D"/>
-<wire x1="261.62" y1="88.9" x2="264.16" y2="88.9" width="0.1524" layer="91"/>
-<pinref part="GND10" gate="G$1" pin="GND"/>
-</segment>
-<segment>
-<pinref part="ST_BATT" gate="G$1" pin="2"/>
-<wire x1="226.06" y1="76.2" x2="223.52" y2="76.2" width="0.1524" layer="91"/>
-<wire x1="223.52" y1="76.2" x2="223.52" y2="73.66" width="0.1524" layer="91"/>
-<pinref part="GND11" gate="G$1" pin="GND"/>
-</segment>
-<segment>
-<pinref part="PWR_BATT" gate="G$1" pin="PWR"/>
-<wire x1="78.74" y1="76.2" x2="83.82" y2="76.2" width="0.1524" layer="91"/>
-<pinref part="GND5" gate="G$1" pin="GND"/>
-</segment>
-<segment>
-<pinref part="Q3" gate="G$1" pin="D"/>
-<wire x1="261.62" y1="119.38" x2="264.16" y2="119.38" width="0.1524" layer="91"/>
-<pinref part="GND12" gate="G$1" pin="GND"/>
-</segment>
-<segment>
-<pinref part="CONV_X_75V" gate="G$1" pin="2"/>
-<wire x1="185.42" y1="48.26" x2="177.8" y2="48.26" width="0.1524" layer="91"/>
-<pinref part="GND16" gate="G$1" pin="GND"/>
-</segment>
-<segment>
-<pinref part="GND20" gate="1" pin="GND"/>
-<pinref part="SHORT" gate="G$1" pin="P$1"/>
-<wire x1="236.22" y1="40.64" x2="238.76" y2="40.64" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="SHORT" gate="G$1" pin="P$2"/>
-<pinref part="GND19" gate="G$1" pin="GND"/>
-<wire x1="269.24" y1="40.64" x2="271.78" y2="40.64" width="0.1524" layer="91"/>
+<pinref part="GND22" gate="1" pin="GND"/>
+<wire x1="251.46" y1="50.8" x2="256.54" y2="50.8" width="0.1524" layer="91"/>
+<wire x1="256.54" y1="50.8" x2="256.54" y2="53.34" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="CAM_OUT" class="1">
@@ -10469,6 +10484,39 @@ OR 5v on pin 5</text>
 <segment>
 <pinref part="X1" gate="1" pin="3"/>
 <pinref part="MID" gate="G$1" pin="TP"/>
+</segment>
+</net>
+<net name="GNDA" class="1">
+<segment>
+<pinref part="Q2" gate="G$1" pin="D"/>
+<wire x1="261.62" y1="88.9" x2="264.16" y2="88.9" width="0.1524" layer="91"/>
+<pinref part="GND10" gate="1" pin="GNDA"/>
+</segment>
+<segment>
+<pinref part="Q3" gate="G$1" pin="D"/>
+<wire x1="261.62" y1="119.38" x2="264.16" y2="119.38" width="0.1524" layer="91"/>
+<pinref part="GND11" gate="1" pin="GNDA"/>
+</segment>
+<segment>
+<pinref part="ST_BATT" gate="G$1" pin="2"/>
+<wire x1="226.06" y1="76.2" x2="220.98" y2="76.2" width="0.1524" layer="91"/>
+<wire x1="220.98" y1="76.2" x2="220.98" y2="71.12" width="0.1524" layer="91"/>
+<pinref part="GND12" gate="1" pin="GNDA"/>
+</segment>
+<segment>
+<pinref part="PWR_BATT" gate="G$1" pin="PWR"/>
+<wire x1="81.28" y1="76.2" x2="78.74" y2="76.2" width="0.1524" layer="91"/>
+<pinref part="GND16" gate="1" pin="GNDA"/>
+</segment>
+<segment>
+<pinref part="CONV_X_75V" gate="G$1" pin="2"/>
+<wire x1="185.42" y1="48.26" x2="170.18" y2="48.26" width="0.1524" layer="91"/>
+<pinref part="GND19" gate="1" pin="GNDA"/>
+</segment>
+<segment>
+<pinref part="SH1" gate="G$1" pin="P$2"/>
+<pinref part="GND21" gate="1" pin="GNDA"/>
+<wire x1="261.62" y1="50.8" x2="266.7" y2="50.8" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>

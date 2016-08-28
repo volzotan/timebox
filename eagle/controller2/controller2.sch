@@ -9512,7 +9512,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="SUPPLY7" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="SUPPLY8" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="BTN_UP" library="SparkFun-Retired" deviceset="TAC_SWITCH" device="PTH"/>
-<part name="SHTR_BRKOUT" library="SparkFun-Connectors" deviceset="M03" device="LOCK"/>
+<part name="SHTR" library="SparkFun-Connectors" deviceset="M03" device="LOCK"/>
 <part name="GND9" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="R8" library="SparkFun-Resistors" deviceset="RESISTOR" device="AXIAL-0.3"/>
 <part name="SUPPLY9" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
@@ -9589,9 +9589,9 @@ and Signal-GND</text>
 <instance part="VD12" gate="G$1" x="215.9" y="127" rot="R90"/>
 <instance part="VD22" gate="G$1" x="220.98" y="127" rot="R90"/>
 <instance part="GND6" gate="1" x="215.9" y="114.3"/>
-<instance part="ZERO" gate="G$1" x="187.96" y="165.1"/>
-<instance part="T_ZERO" gate="G$1" x="198.12" y="175.26" rot="R180"/>
-<instance part="GND8" gate="1" x="193.04" y="180.34" rot="R270"/>
+<instance part="ZERO" gate="G$1" x="182.88" y="160.02"/>
+<instance part="T_ZERO" gate="G$1" x="193.04" y="170.18" rot="R180"/>
+<instance part="GND8" gate="1" x="187.96" y="175.26" rot="R270"/>
 <instance part="ST_CAM" gate="G$1" x="233.68" y="96.52" rot="R180"/>
 <instance part="ST_BATT" gate="G$1" x="233.68" y="78.74" rot="R180"/>
 <instance part="H1" gate="G$1" x="251.46" y="177.8"/>
@@ -9608,7 +9608,7 @@ and Signal-GND</text>
 <instance part="SUPPLY7" gate="G$1" x="134.62" y="134.62" rot="R180"/>
 <instance part="SUPPLY8" gate="G$1" x="132.08" y="157.48"/>
 <instance part="BTN_UP" gate="S" x="132.08" y="81.28"/>
-<instance part="SHTR_BRKOUT" gate="J$1" x="165.1" y="101.6"/>
+<instance part="SHTR" gate="J$1" x="165.1" y="101.6"/>
 <instance part="GND9" gate="1" x="119.38" y="78.74" rot="R270"/>
 <instance part="R8" gate="G$1" x="142.24" y="73.66"/>
 <instance part="SUPPLY9" gate="G$1" x="147.32" y="73.66" rot="R270"/>
@@ -9742,8 +9742,8 @@ and Signal-GND</text>
 </segment>
 <segment>
 <pinref part="ZERO" gate="G$1" pin="1"/>
-<wire x1="180.34" y1="167.64" x2="180.34" y2="170.18" width="0.1524" layer="91"/>
-<label x="180.34" y="170.18" size="1.778" layer="95"/>
+<wire x1="175.26" y1="162.56" x2="175.26" y2="165.1" width="0.1524" layer="91"/>
+<label x="175.26" y="165.1" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="TEMP" gate="G$1" pin="VDD"/>
@@ -9774,8 +9774,8 @@ and Signal-GND</text>
 </segment>
 <segment>
 <pinref part="ZERO" gate="G$1" pin="6"/>
-<wire x1="195.58" y1="162.56" x2="195.58" y2="160.02" width="0.1524" layer="91"/>
-<label x="195.58" y="160.02" size="1.778" layer="95"/>
+<wire x1="190.5" y1="157.48" x2="190.5" y2="154.94" width="0.1524" layer="91"/>
+<label x="190.5" y="154.94" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="GND" class="0">
@@ -9850,15 +9850,15 @@ and Signal-GND</text>
 <segment>
 <pinref part="X1" gate="1" pin="1"/>
 <pinref part="GND15" gate="1" pin="GND"/>
-<pinref part="SHTR_BRKOUT" gate="J$1" pin="1"/>
+<pinref part="SHTR" gate="J$1" pin="1"/>
 <wire x1="185.42" y1="93.98" x2="172.72" y2="93.98" width="0.1524" layer="91"/>
 <wire x1="172.72" y1="93.98" x2="172.72" y2="99.06" width="0.1524" layer="91"/>
 <junction x="185.42" y="93.98"/>
 </segment>
 <segment>
 <pinref part="ZERO" gate="G$1" pin="4"/>
-<wire x1="195.58" y1="165.1" x2="198.12" y2="165.1" width="0.1524" layer="91"/>
-<label x="198.12" y="165.1" size="1.778" layer="95"/>
+<wire x1="190.5" y1="160.02" x2="193.04" y2="160.02" width="0.1524" layer="91"/>
+<label x="193.04" y="160.02" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="TEMP" gate="G$1" pin="GND"/>
@@ -9967,8 +9967,8 @@ and Signal-GND</text>
 </segment>
 <segment>
 <pinref part="ZERO" gate="G$1" pin="3"/>
-<wire x1="180.34" y1="165.1" x2="177.8" y2="165.1" width="0.1524" layer="91"/>
-<label x="177.8" y="165.1" size="1.778" layer="95"/>
+<wire x1="175.26" y1="160.02" x2="172.72" y2="160.02" width="0.1524" layer="91"/>
+<label x="172.72" y="160.02" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="TX" class="0">
@@ -9984,15 +9984,15 @@ and Signal-GND</text>
 </segment>
 <segment>
 <pinref part="ZERO" gate="G$1" pin="5"/>
-<wire x1="180.34" y1="162.56" x2="180.34" y2="160.02" width="0.1524" layer="91"/>
-<label x="180.34" y="160.02" size="1.778" layer="95"/>
+<wire x1="175.26" y1="157.48" x2="175.26" y2="154.94" width="0.1524" layer="91"/>
+<label x="175.26" y="154.94" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="ZERO_EN" class="0">
 <segment>
 <pinref part="T_ZERO" gate="G$1" pin="B"/>
-<wire x1="200.66" y1="175.26" x2="203.2" y2="175.26" width="0.1524" layer="91"/>
-<label x="203.2" y="175.26" size="1.778" layer="95"/>
+<wire x1="195.58" y1="170.18" x2="198.12" y2="170.18" width="0.1524" layer="91"/>
+<label x="198.12" y="170.18" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="U1" gate="G$1" pin="PD6(AIN0)"/>
@@ -10004,7 +10004,7 @@ and Signal-GND</text>
 <segment>
 <pinref part="X1" gate="1" pin="5"/>
 <label x="180.34" y="104.14" size="1.778" layer="95"/>
-<pinref part="SHTR_BRKOUT" gate="J$1" pin="3"/>
+<pinref part="SHTR" gate="J$1" pin="3"/>
 <wire x1="185.42" y1="104.14" x2="172.72" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 <segment>
@@ -10020,7 +10020,7 @@ and Signal-GND</text>
 <wire x1="185.42" y1="96.52" x2="180.34" y2="96.52" width="0.1524" layer="91"/>
 <label x="180.34" y="96.52" size="1.778" layer="95"/>
 <wire x1="180.34" y1="96.52" x2="180.34" y2="101.6" width="0.1524" layer="91"/>
-<pinref part="SHTR_BRKOUT" gate="J$1" pin="2"/>
+<pinref part="SHTR" gate="J$1" pin="2"/>
 <wire x1="180.34" y1="101.6" x2="172.72" y2="101.6" width="0.1524" layer="91"/>
 </segment>
 <segment>
@@ -10317,7 +10317,7 @@ and Signal-GND</text>
 <segment>
 <pinref part="ZERO" gate="G$1" pin="2"/>
 <pinref part="T_ZERO" gate="G$1" pin="C"/>
-<wire x1="195.58" y1="167.64" x2="195.58" y2="170.18" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="162.56" x2="190.5" y2="165.1" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="FOO5" class="0">

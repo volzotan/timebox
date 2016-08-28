@@ -9504,6 +9504,45 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 </deviceset>
 </devicesets>
 </library>
+<library name="volzolib">
+<packages>
+<package name="MISC">
+<smd name="LEFT" x="-2.54" y="0" dx="5.08" dy="2.54" layer="1" rot="R90"/>
+<smd name="RIGHT" x="2.54" y="0" dx="5.08" dy="2.54" layer="1" rot="R90"/>
+<smd name="P$1" x="0" y="-1.27" dx="5.08" dy="2.54" layer="1" rot="R180"/>
+<smd name="P$3" x="0" y="1.27" dx="5.08" dy="2.54" layer="1" rot="R180"/>
+</package>
+</packages>
+<symbols>
+<symbol name="SHORT">
+<wire x1="-10.16" y1="10.16" x2="10.16" y2="10.16" width="0.254" layer="94"/>
+<wire x1="10.16" y1="10.16" x2="10.16" y2="-10.16" width="0.254" layer="94"/>
+<wire x1="10.16" y1="-10.16" x2="-10.16" y2="-10.16" width="0.254" layer="94"/>
+<wire x1="-10.16" y1="-10.16" x2="-10.16" y2="10.16" width="0.254" layer="94"/>
+<pin name="P$1" x="-15.24" y="0" length="middle"/>
+<pin name="P$2" x="15.24" y="0" length="middle" rot="R180"/>
+<text x="-9.906" y="10.922" size="1.778" layer="94">&gt;NAME</text>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="SHORT">
+<gates>
+<gate name="G$1" symbol="SHORT" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="MISC">
+<connects>
+<connect gate="G$1" pin="P$1" pad="LEFT P$1"/>
+<connect gate="G$1" pin="P$2" pad="P$3 RIGHT"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 <attribute name="CNAME" value="timebox controller"/>
@@ -9605,6 +9644,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="GND16" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
 <part name="GND19" library="SparkFun-Aesthetics" deviceset="DGND" device=""/>
 <part name="GND20" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
+<part name="SHORT" library="volzolib" deviceset="SHORT" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -9697,8 +9737,9 @@ OR 5v on pin 5</text>
 <instance part="GND5" gate="G$1" x="86.36" y="76.2" rot="R90"/>
 <instance part="GND12" gate="G$1" x="266.7" y="119.38" rot="R90"/>
 <instance part="GND16" gate="G$1" x="175.26" y="48.26" rot="R270"/>
-<instance part="GND19" gate="G$1" x="266.7" y="63.5" rot="R90"/>
-<instance part="GND20" gate="1" x="259.08" y="63.5" rot="R270"/>
+<instance part="GND19" gate="G$1" x="274.32" y="40.64" rot="R90"/>
+<instance part="GND20" gate="1" x="233.68" y="40.64" rot="R270"/>
+<instance part="SHORT" gate="G$1" x="254" y="40.64"/>
 </instances>
 <busses>
 </busses>
@@ -9952,8 +9993,13 @@ OR 5v on pin 5</text>
 </segment>
 <segment>
 <pinref part="GND20" gate="1" pin="GND"/>
+<pinref part="SHORT" gate="G$1" pin="P$1"/>
+<wire x1="236.22" y1="40.64" x2="238.76" y2="40.64" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="SHORT" gate="G$1" pin="P$2"/>
 <pinref part="GND19" gate="G$1" pin="GND"/>
-<wire x1="261.62" y1="63.5" x2="264.16" y2="63.5" width="0.1524" layer="91"/>
+<wire x1="269.24" y1="40.64" x2="271.78" y2="40.64" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="CAM_OUT" class="1">
