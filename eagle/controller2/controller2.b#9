@@ -30,8 +30,8 @@
 <layer number="34" name="bFinish" color="6" fill="6" visible="no" active="yes"/>
 <layer number="35" name="tGlue" color="7" fill="4" visible="no" active="yes"/>
 <layer number="36" name="bGlue" color="7" fill="5" visible="no" active="yes"/>
-<layer number="37" name="tTest" color="7" fill="1" visible="no" active="yes"/>
-<layer number="38" name="bTest" color="7" fill="1" visible="no" active="yes"/>
+<layer number="37" name="tTest" color="7" fill="1" visible="yes" active="yes"/>
+<layer number="38" name="bTest" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="39" name="tKeepout" color="4" fill="11" visible="yes" active="yes"/>
 <layer number="40" name="bKeepout" color="1" fill="11" visible="yes" active="yes"/>
 <layer number="41" name="tRestrict" color="4" fill="10" visible="yes" active="yes"/>
@@ -939,7 +939,7 @@ Please make sure your boards conform to these design rules.</description>
 </pass>
 </autorouter>
 <elements>
-<element name="U1" library="SparkFun-DigitalIC" package="DIL28-3" value="ATMEGA328P_PDIP" x="43.18" y="33.02" rot="R90"/>
+<element name="U1" library="SparkFun-DigitalIC" package="DIL28-3" value="ATMEGA328P" x="43.18" y="33.02" rot="R90"/>
 <element name="R3" library="SparkFun-Resistors" package="AXIAL-0.3" value="10k" x="35.56" y="6.35" rot="R270"/>
 <element name="VD11" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="27.94" y="16.51" rot="R180"/>
 <element name="VD21" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="27.94" y="19.05" rot="R180"/>
@@ -964,10 +964,10 @@ Please make sure your boards conform to these design rules.</description>
 <element name="ST_BATT" library="SparkFun-Connectors" package="1X02_2.54_SCREWTERM" value="" x="3.81" y="49.53" rot="R90"/>
 <element name="H1" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="3.81" y="59.69"/>
 <element name="H2" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="49.53" y="3.81"/>
-<element name="Q2" library="SparkFun-DiscreteSemi" package="TO220V" value="" x="21.59" y="59.69" rot="R180">
+<element name="MOSFET_CAM" library="SparkFun-DiscreteSemi" package="TO220V" value="" x="21.59" y="59.69" rot="R180">
 <attribute name="PROD_ID" value="TRANS-10060" x="21.59" y="59.69" size="1.778" layer="27" rot="R180" display="off"/>
 </element>
-<element name="Q3" library="SparkFun-DiscreteSemi" package="TO220V" value="" x="33.02" y="59.69">
+<element name="MOSFET_EXT" library="SparkFun-DiscreteSemi" package="TO220V" value="" x="33.02" y="59.69">
 <attribute name="PROD_ID" value="TRANS-10060" x="33.02" y="59.69" size="1.778" layer="27" display="off"/>
 </element>
 <element name="H3" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="50.8" y="59.69"/>
@@ -984,7 +984,7 @@ Please make sure your boards conform to these design rules.</description>
 <element name="VD31" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="27.94" y="21.59" rot="R180"/>
 <element name="3.3V" library="SparkFun-Connectors" package="1X02_LOCK" value="" x="16.51" y="10.16" rot="R270"/>
 <element name="5V" library="SparkFun-Connectors" package="1X02_LOCK" value="" x="20.32" y="7.62" rot="R90"/>
-<element name="ST_BATT1" library="SparkFun-Connectors" package="1X02_2.54_SCREWTERM" value="" x="40.64" y="59.69"/>
+<element name="ST_EXT" library="SparkFun-Connectors" package="1X02_2.54_SCREWTERM" value="" x="40.64" y="59.69"/>
 <element name="BTN_DW" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="15.24" rot="R90"/>
 <element name="R11" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="40.64" y="6.35" rot="R270"/>
 <element name="BTN_X" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="6.35" rot="R90"/>
@@ -993,11 +993,11 @@ Please make sure your boards conform to these design rules.</description>
 <element name="CONV_X_VCC" library="SparkFun-Connectors" package="1X05_LOCK" value="" x="59.69" y="50.8" rot="R90"/>
 <element name="VD41" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="27.94" y="24.13" rot="R180"/>
 <element name="VD42" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="33.02" y="35.56" rot="R270"/>
-<element name="J1" library="SparkFun-Connectors" package="1X05_LOCK" value="" x="20.32" y="13.97" rot="R90"/>
+<element name="BALANCER" library="SparkFun-Connectors" package="1X05_LOCK" value="" x="20.32" y="13.97" rot="R90"/>
 <element name="H4" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="3.81" y="3.81"/>
 <element name="C2" library="SparkFun-Passives" package="CPOL-RADIAL-1000UF-63V" value="4700uF" x="22.86" y="35.56"/>
-<element name="X1" library="adafruit" package="STX3100" value="STEREOJACK" x="0" y="15.24"/>
-<element name="U2" library="SparkFun-Sensors" package="TO-92-AMMO" value="DS18B20" x="34.29" y="52.07" rot="R90">
+<element name="X1" library="adafruit" package="STX3100" value="" x="0" y="15.24"/>
+<element name="TEMP" library="SparkFun-Sensors" package="TO-92-AMMO" value="DS18B20" x="34.29" y="52.07" rot="R90">
 <attribute name="STORE_ID" value="SEN-00245" x="34.29" y="52.07" size="1.778" layer="27" rot="R90" display="off"/>
 </element>
 <element name="R4" library="SparkFun-Resistors" package="AXIAL-0.3" value="4.7k" x="43.18" y="52.07"/>
@@ -1046,7 +1046,7 @@ Please make sure your boards conform to these design rules.</description>
 <contactref element="R12" pad="P$2"/>
 <contactref element="CONV_X_VCC" pad="1"/>
 <contactref element="ZERO" pad="1"/>
-<contactref element="U2" pad="3"/>
+<contactref element="TEMP" pad="3"/>
 <contactref element="R4" pad="P$2"/>
 <contactref element="VCC" pad="TP"/>
 <contactref element="C3" pad="2"/>
@@ -1124,12 +1124,12 @@ Please make sure your boards conform to these design rules.</description>
 <contactref element="BTN_DW" pad="2"/>
 <contactref element="BTN_X" pad="2"/>
 <contactref element="CONV_X_VCC" pad="2"/>
-<contactref element="J1" pad="1"/>
+<contactref element="BALANCER" pad="1"/>
 <contactref element="VD42" pad="P$1"/>
 <contactref element="X1" pad="1"/>
 <contactref element="SHTR_BRKOUT" pad="1"/>
 <contactref element="ZERO" pad="4"/>
-<contactref element="U2" pad="1"/>
+<contactref element="TEMP" pad="1"/>
 <contactref element="RES" pad="2"/>
 <contactref element="GND" pad="TP"/>
 <contactref element="C3" pad="1"/>
@@ -1203,7 +1203,7 @@ Please make sure your boards conform to these design rules.</description>
 </signal>
 <signal name="CAM_OUT" class="1">
 <contactref element="ST_CAM" pad="P2"/>
-<contactref element="Q2" pad="3"/>
+<contactref element="MOSFET_CAM" pad="3"/>
 <contactref element="PWR_CAM" pad="PWR"/>
 <contactref element="C2" pad="2"/>
 <wire x1="5.969" y1="34.29" x2="3.81" y2="34.29" width="0.508" layer="1"/>
@@ -1328,7 +1328,7 @@ Please make sure your boards conform to these design rules.</description>
 <signal name="BATT_VCC" class="1">
 <contactref element="PWR_BATT" pad="GND"/>
 <contactref element="ST_BATT" pad="P1"/>
-<contactref element="ST_BATT1" pad="P1"/>
+<contactref element="ST_EXT" pad="P1"/>
 <contactref element="CONV_X_75V" pad="3"/>
 <contactref element="CONV_X_VCC" pad="3"/>
 <wire x1="44.577" y1="59.69" x2="43.18" y2="59.69" width="0.508" layer="1"/>
@@ -1347,7 +1347,7 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="12.573" y1="55.88" x2="18.415" y2="61.722" width="0.508" layer="16"/>
 </signal>
 <signal name="CAM_EN">
-<contactref element="Q2" pad="1"/>
+<contactref element="MOSFET_CAM" pad="1"/>
 <contactref element="U1" pad="17"/>
 <wire x1="38.735" y1="44.45" x2="39.37" y2="44.45" width="0.254" layer="1"/>
 <wire x1="35.052" y1="48.133" x2="38.735" y2="44.45" width="0.254" layer="1"/>
@@ -1356,7 +1356,7 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="24.13" y1="59.69" x2="24.13" y2="57.785" width="0.254" layer="1"/>
 </signal>
 <signal name="EXT_EN">
-<contactref element="Q3" pad="1"/>
+<contactref element="MOSFET_EXT" pad="1"/>
 <contactref element="U1" pad="15"/>
 <wire x1="39.37" y1="50.165" x2="39.37" y2="49.53" width="0.254" layer="16"/>
 <wire x1="35.687" y1="53.848" x2="39.37" y2="50.165" width="0.254" layer="16"/>
@@ -1366,8 +1366,8 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="30.48" y1="59.69" x2="32.385" y2="57.785" width="0.254" layer="16"/>
 </signal>
 <signal name="EXT" class="1">
-<contactref element="Q3" pad="3"/>
-<contactref element="ST_BATT1" pad="P2"/>
+<contactref element="MOSFET_EXT" pad="3"/>
+<contactref element="ST_EXT" pad="P2"/>
 <wire x1="40.64" y1="59.69" x2="35.56" y2="59.69" width="0.508" layer="1"/>
 </signal>
 <signal name="SDA">
@@ -1509,22 +1509,22 @@ Please make sure your boards conform to these design rules.</description>
 </signal>
 <signal name="N$4">
 <contactref element="VD11" pad="P$2"/>
-<contactref element="J1" pad="2"/>
+<contactref element="BALANCER" pad="2"/>
 <wire x1="24.13" y1="16.51" x2="20.447" y2="16.51" width="0.254" layer="1"/>
 </signal>
 <signal name="N$5">
 <contactref element="VD21" pad="P$2"/>
-<contactref element="J1" pad="3"/>
+<contactref element="BALANCER" pad="3"/>
 <wire x1="24.13" y1="19.05" x2="20.193" y2="19.05" width="0.254" layer="1"/>
 </signal>
 <signal name="N$10">
 <contactref element="VD31" pad="P$2"/>
-<contactref element="J1" pad="4"/>
+<contactref element="BALANCER" pad="4"/>
 <wire x1="24.13" y1="21.59" x2="20.447" y2="21.59" width="0.254" layer="1"/>
 </signal>
 <signal name="N$11">
 <contactref element="VD41" pad="P$2"/>
-<contactref element="J1" pad="5"/>
+<contactref element="BALANCER" pad="5"/>
 <wire x1="24.13" y1="24.13" x2="20.193" y2="24.13" width="0.254" layer="1"/>
 </signal>
 <signal name="N$12">
@@ -1536,7 +1536,7 @@ Please make sure your boards conform to these design rules.</description>
 <contactref element="U1" pad="16"/>
 </signal>
 <signal name="TEMP">
-<contactref element="U2" pad="2"/>
+<contactref element="TEMP" pad="2"/>
 <contactref element="U1" pad="14"/>
 <contactref element="R4" pad="P$1"/>
 <wire x1="41.91" y1="49.53" x2="46.99" y2="49.53" width="0.254" layer="1"/>
@@ -1559,8 +1559,8 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="7.747" y1="17.526" x2="7.7" y2="17.54" width="0.254" layer="1"/>
 </signal>
 <signal name="GNDA" class="1">
-<contactref element="Q2" pad="2"/>
-<contactref element="Q3" pad="2"/>
+<contactref element="MOSFET_CAM" pad="2"/>
+<contactref element="MOSFET_EXT" pad="2"/>
 <contactref element="ST_BATT" pad="P2"/>
 <contactref element="PWR_BATT" pad="PWR"/>
 <contactref element="CONV_X_75V" pad="2"/>
