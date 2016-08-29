@@ -8,18 +8,18 @@
 </settings>
 <grid distance="0.05" unitdist="inch" unit="inch" style="dots" multiple="1" display="yes" altdistance="0.005" altunitdist="inch" altunit="inch"/>
 <layers>
-<layer number="1" name="Top" color="4" fill="1" visible="no" active="yes"/>
-<layer number="16" name="Bottom" color="1" fill="1" visible="no" active="yes"/>
-<layer number="17" name="Pads" color="2" fill="1" visible="no" active="yes"/>
-<layer number="18" name="Vias" color="2" fill="1" visible="no" active="yes"/>
+<layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
+<layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="yes"/>
+<layer number="17" name="Pads" color="2" fill="1" visible="yes" active="yes"/>
+<layer number="18" name="Vias" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="19" name="Unrouted" color="6" fill="1" visible="no" active="yes"/>
 <layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="21" name="tPlace" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="22" name="bPlace" color="7" fill="1" visible="no" active="yes"/>
 <layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="yes"/>
-<layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="yes"/>
+<layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="25" name="tNames" color="7" fill="1" visible="yes" active="yes"/>
-<layer number="26" name="bNames" color="7" fill="1" visible="no" active="yes"/>
+<layer number="26" name="bNames" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="27" name="tValues" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="28" name="bValues" color="7" fill="1" visible="no" active="yes"/>
 <layer number="29" name="tStop" color="7" fill="3" visible="no" active="yes"/>
@@ -183,11 +183,6 @@
 <text x="15.367" y="55.499" size="1.016" layer="21" rot="R90">X</text>
 <text x="15.367" y="49.276" size="1.016" layer="21" rot="R90">7.5V</text>
 <text x="42.418" y="56.515" size="1.778" layer="21" rot="R270">+</text>
-<text x="60.96" y="35.306" size="0.6096" layer="21">GND</text>
-<text x="60.96" y="37.846" size="0.6096" layer="21">T</text>
-<text x="60.96" y="32.766" size="0.6096" layer="21">RST</text>
-<text x="56.769" y="31.115" size="0.6096" layer="21">TX</text>
-<text x="56.896" y="39.243" size="0.6096" layer="21">VCC</text>
 <text x="33.401" y="13.462" size="1.016" layer="21">1</text>
 <text x="33.401" y="16.129" size="1.016" layer="21">1</text>
 <text x="33.401" y="18.669" size="1.016" layer="21">2</text>
@@ -196,6 +191,27 @@
 <text x="35.306" y="24.384" size="1.016" layer="21">3</text>
 <text x="33.401" y="23.749" size="1.016" layer="21">4</text>
 <text x="32.639" y="29.464" size="1.016" layer="21">4</text>
+<text x="14.605" y="12.954" size="0.8128" layer="21" rot="R90">GND</text>
+<text x="14.605" y="10.541" size="0.8128" layer="21" rot="R90">TIP</text>
+<text x="14.605" y="8.001" size="0.8128" layer="21" rot="R90">MID</text>
+<text x="14.605" y="5.334" size="0.8128" layer="21" rot="R90">VCC</text>
+<text x="57.531" y="39.37" size="0.8128" layer="21" rot="R90">VCC</text>
+<text x="57.531" y="30.48" size="0.8128" layer="21" rot="R90">TX</text>
+<text x="62.103" y="37.846" size="0.8128" layer="21" rot="R90">T</text>
+<text x="62.103" y="34.544" size="0.8128" layer="21" rot="R90">GND</text>
+<text x="62.103" y="32.004" size="0.8128" layer="21" rot="R90">RST</text>
+<circle x="31.75" y="31.75" radius="26.518378125" width="6.4516" layer="22"/>
+<circle x="31.75" y="31.75" radius="20.517475" width="3.81" layer="22"/>
+<circle x="31.75" y="31.75" radius="16.584565625" width="2.54" layer="22"/>
+<circle x="31.75" y="31.75" radius="13.53190625" width="2.1844" layer="22"/>
+<circle x="31.75" y="31.75" radius="10.824840625" width="1.9304" layer="22"/>
+<circle x="31.75" y="31.75" radius="8.34825625" width="1.778" layer="22"/>
+<circle x="31.75" y="31.75" radius="5.97035" width="1.6764" layer="22"/>
+<circle x="31.75" y="31.75" radius="3.862553125" width="1.4224" layer="22"/>
+<circle x="31.75" y="31.75" radius="1.87513125" width="1.4224" layer="22"/>
+<text x="55.245" y="17.399" size="1.4224" layer="21" rot="R180">DOWN</text>
+<text x="55.245" y="26.289" size="1.4224" layer="21" rot="R180">UP</text>
+<text x="55.245" y="8.509" size="1.4224" layer="21" rot="R180">X</text>
 </plain>
 <libraries>
 <library name="SparkFun-DigitalIC">
@@ -1046,9 +1062,7 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="NAME" x="32.893" y="8.255" size="0.4064" layer="25" font="vector" rot="R270"/>
 <attribute name="VALUE" x="32.639" y="8.382" size="1.016" layer="21" font="vector" ratio="15" rot="R270"/>
 </element>
-<element name="BTN_UP" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="24.13" smashed="yes" rot="R90">
-<attribute name="NAME" x="53.594" y="27.559" size="1.27" layer="25" ratio="10" rot="R270"/>
-</element>
+<element name="BTN_UP" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="24.13" smashed="yes" rot="R90"/>
 <element name="SHTR" library="SparkFun-Connectors" package="1X03_LOCK" value="" x="13.97" y="21.59" smashed="yes" rot="R270">
 <attribute name="NAME" x="13.7668" y="28.0162" size="1.27" layer="25" ratio="10" rot="R270"/>
 <attribute name="VALUE" x="10.795" y="22.86" size="1.27" layer="27" rot="R270"/>
@@ -1074,16 +1088,12 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="VALUE" x="23.495" y="6.35" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="ST_EXT" library="SparkFun-Connectors" package="1X02_2.54_SCREWTERM" value="" x="40.64" y="59.69" smashed="yes"/>
-<element name="BTN_DW" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="15.24" smashed="yes" rot="R90">
-<attribute name="NAME" x="54.864" y="11.938" size="1.27" layer="25" ratio="10" rot="R90"/>
-</element>
+<element name="BTN_DW" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="15.24" smashed="yes" rot="R90"/>
 <element name="R11" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="40.64" y="6.35" smashed="yes" rot="R270">
 <attribute name="NAME" x="40.513" y="8.636" size="0.4064" layer="25" font="vector" rot="R270"/>
 <attribute name="VALUE" x="40.259" y="8.382" size="1.016" layer="21" font="vector" ratio="15" rot="R270"/>
 </element>
-<element name="BTN_X" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="6.35" smashed="yes" rot="R90">
-<attribute name="NAME" x="53.594" y="9.652" size="1.27" layer="25" ratio="10" rot="R270"/>
-</element>
+<element name="BTN_X" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="6.35" smashed="yes" rot="R90"/>
 <element name="R12" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="43.18" y="6.35" smashed="yes" rot="R270">
 <attribute name="NAME" x="43.053" y="8.509" size="0.4064" layer="25" font="vector" rot="R270"/>
 <attribute name="VALUE" x="42.799" y="8.382" size="1.016" layer="21" font="vector" ratio="15" rot="R270"/>
@@ -1110,8 +1120,7 @@ Please make sure your boards conform to these design rules.</description>
 </element>
 <element name="H4" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="3.81" y="3.81" smashed="yes"/>
 <element name="C2" library="SparkFun-Passives" package="CPOL-RADIAL-1000UF-63V" value="4700uF" x="22.86" y="35.56" smashed="yes">
-<attribute name="VALUE" x="22.86" y="31.75" size="0.8128" layer="27"/>
-<attribute name="NAME" x="20.32" y="31.75" size="0.8128" layer="25"/>
+<attribute name="VALUE" x="20.828" y="35.052" size="0.8128" layer="27"/>
 </element>
 <element name="X1" library="adafruit" package="STX3100" value="" x="0" y="15.24" smashed="yes">
 <attribute name="VALUE" x="1.35" y="7.52" size="1.27" layer="27" ratio="10"/>
@@ -1127,22 +1136,18 @@ Please make sure your boards conform to these design rules.</description>
 </element>
 <element name="TIP" library="testpad" package="TP14SQ" value="TPTP14SQ" x="12.7" y="8.89" smashed="yes">
 <attribute name="TP_SIGNAL_NAME" value="" x="12.7" y="6.35" size="1" layer="37"/>
-<attribute name="NAME" x="14.8709" y="6.793" size="1.27" layer="25" rot="R90"/>
 <attribute name="VALUE" x="12.065" y="8.128" size="0.0254" layer="27"/>
 </element>
 <element name="MID" library="testpad" package="TP14SQ" value="TPTP14SQ" x="12.7" y="11.43" smashed="yes">
 <attribute name="TP_SIGNAL_NAME" value="" x="12.7" y="8.89" size="1" layer="37"/>
-<attribute name="NAME" x="14.8709" y="10.095" size="1.27" layer="25" rot="R90"/>
 <attribute name="VALUE" x="12.065" y="10.668" size="0.0254" layer="27"/>
 </element>
 <element name="VCC" library="testpad" package="TP14SQ" value="TPTP14SQ" x="12.7" y="13.97" smashed="yes">
 <attribute name="TP_SIGNAL_NAME" value="" x="12.7" y="11.43" size="1" layer="37"/>
-<attribute name="NAME" x="13.905" y="13.3231" size="1.27" layer="25"/>
 <attribute name="VALUE" x="12.065" y="13.208" size="0.0254" layer="27"/>
 </element>
 <element name="GND" library="testpad" package="TP14SQ" value="TPTP14SQ" x="12.7" y="6.35" smashed="yes">
 <attribute name="TP_SIGNAL_NAME" value="" x="12.7" y="3.81" size="1" layer="37"/>
-<attribute name="NAME" x="8.444" y="5.7031" size="1.27" layer="25"/>
 <attribute name="VALUE" x="12.065" y="5.588" size="0.0254" layer="27"/>
 </element>
 <element name="C3" library="SparkFun-Passives" package="CAP-PTH-SMALL" value="100nF" x="44.45" y="36.83" smashed="yes" rot="R180">
@@ -1450,10 +1455,10 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="6.604" y1="33.782" x2="3.81" y2="36.576" width="0.508" layer="16"/>
 <wire x1="6.604" y1="27.94" x2="6.604" y2="33.782" width="0.508" layer="16"/>
 <wire x1="6.604" y1="27.94" x2="6.63" y2="27.94" width="0.508" layer="16"/>
-<wire x1="20.955" y1="35.56" x2="26.67" y2="35.56" width="0.508" layer="16"/>
-<wire x1="19.304" y1="33.909" x2="20.955" y2="35.56" width="0.508" layer="16"/>
+<wire x1="22.225" y1="35.56" x2="26.67" y2="35.56" width="0.508" layer="16"/>
+<wire x1="20.574" y1="33.909" x2="22.225" y2="35.56" width="0.508" layer="16"/>
 <wire x1="6.731" y1="33.909" x2="13.97" y2="33.909" width="0.508" layer="16"/>
-<wire x1="13.97" y1="33.909" x2="19.304" y2="33.909" width="0.508" layer="16"/>
+<wire x1="13.97" y1="33.909" x2="20.574" y2="33.909" width="0.508" layer="16"/>
 <wire x1="6.731" y1="33.909" x2="6.604" y2="33.782" width="0.508" layer="16"/>
 <wire x1="12.573" y1="45.212" x2="12.573" y2="50.8" width="0.508" layer="16"/>
 <wire x1="13.97" y1="43.815" x2="12.573" y2="45.212" width="0.508" layer="16"/>
