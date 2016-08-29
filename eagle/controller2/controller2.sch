@@ -9461,7 +9461,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 </libraries>
 <attributes>
 <attribute name="CNAME" value="timebox controller"/>
-<attribute name="CREVISION" value="1.0 | 01.09.2016"/>
+<attribute name="CREVISION" value="1.0"/>
 <attribute name="DESIGNER" value="volzo"/>
 </attributes>
 <variantdefs>
@@ -9566,7 +9566,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <plain>
 <text x="17.78" y="10.16" size="1.778" layer="91">3.3v on pin 4
 OR 5v on pin 5</text>
-<text x="243.84" y="38.1" size="1.778" layer="91">Short between Power-GND
+<text x="241.3" y="38.1" size="1.778" layer="91">Short between Power-GND
 and Signal-GND</text>
 </plain>
 <instances>
