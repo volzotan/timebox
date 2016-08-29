@@ -174,12 +174,6 @@
 <wire x1="0" y1="63.5" x2="0" y2="0" width="0.4064" layer="20"/>
 <text x="7.62" y="51.181" size="1.778" layer="21">+</text>
 <text x="7.62" y="35.941" size="1.778" layer="21">+</text>
-<text x="22.86" y="12.7" size="1.016" layer="21" rot="R90">GND</text>
-<text x="15.748" y="21.209" size="1.016" layer="21">GND</text>
-<text x="50.419" y="40.513" size="1.016" layer="21" rot="R90">GND</text>
-<text x="50.292" y="28.067" size="1.016" layer="21" rot="R90">RST</text>
-<text x="62.611" y="55.499" size="1.016" layer="21" rot="R90">X</text>
-<text x="62.611" y="49.657" size="1.016" layer="21" rot="R90">VCC</text>
 <text x="15.367" y="55.499" size="1.016" layer="21" rot="R90">X</text>
 <text x="15.367" y="49.276" size="1.016" layer="21" rot="R90">7.5V</text>
 <text x="42.418" y="56.515" size="1.778" layer="21" rot="R270">+</text>
@@ -212,6 +206,24 @@
 <text x="55.245" y="17.399" size="1.4224" layer="21" rot="R180">DOWN</text>
 <text x="55.245" y="26.289" size="1.4224" layer="21" rot="R180">UP</text>
 <text x="55.245" y="8.509" size="1.4224" layer="21" rot="R180">X</text>
+<text x="17.145" y="50.038" size="3.81" layer="21" ratio="15">TIME</text>
+<text x="18.161" y="45.72" size="3.81" layer="21" ratio="15">BOX</text>
+<text x="10.668" y="49.911" size="0.8128" layer="21" rot="R90">CONVERTER X-&gt;7.5v</text>
+<text x="57.658" y="50.038" size="0.8128" layer="21" rot="R90">CONVERTER X-&gt;VCC</text>
+<text x="17.907" y="55.245" size="0.8128" layer="21">MOSFET CAM</text>
+<text x="29.464" y="56.642" size="0.8128" layer="21">MOSFET EXT</text>
+<text x="62.23" y="49.784" size="0.8128" layer="21" rot="R90">VCC</text>
+<text x="62.357" y="55.626" size="0.8128" layer="21" rot="R90">X</text>
+<text x="50.292" y="28.321" size="0.8128" layer="21" rot="R90">RST</text>
+<text x="50.292" y="40.894" size="0.8128" layer="21" rot="R90">GND</text>
+<text x="9.652" y="2.159" size="0.8128" layer="21">DISP</text>
+<text x="15.494" y="4.826" size="0.8128" layer="21">3.3V</text>
+<text x="19.558" y="4.826" size="0.8128" layer="21">5V</text>
+<text x="50.292" y="34.29" size="0.8128" layer="21" rot="R90">COMM</text>
+<text x="14.732" y="23.495" size="0.8128" layer="21" rot="R90">SHTR</text>
+<text x="15.875" y="21.336" size="0.8128" layer="21">GND</text>
+<text x="22.733" y="12.827" size="0.8128" layer="21" rot="R90">GND</text>
+<text x="19.177" y="25.908" size="0.8128" layer="21">BALANCER</text>
 </plain>
 <libraries>
 <library name="SparkFun-DigitalIC">
@@ -979,9 +991,7 @@ Please make sure your boards conform to these design rules.</description>
 </pass>
 </autorouter>
 <elements>
-<element name="U1" library="SparkFun-DigitalIC" package="DIL28-3" value="ATMEGA328P" x="43.18" y="33.02" smashed="yes" rot="R90">
-<attribute name="VALUE" x="45.974" y="14.605" size="0.6096" layer="27" ratio="10" rot="R180"/>
-</element>
+<element name="U1" library="SparkFun-DigitalIC" package="DIL28-3" value="ATMEGA328P" x="43.18" y="33.02" smashed="yes" rot="R90"/>
 <element name="R3" library="SparkFun-Resistors" package="AXIAL-0.3" value="10k" x="35.56" y="6.35" smashed="yes" rot="R270">
 <attribute name="NAME" x="35.433" y="5.207" size="0.4064" layer="25" font="vector" rot="R270"/>
 <attribute name="VALUE" x="35.179" y="8.382" size="1.016" layer="21" font="vector" ratio="15" rot="R270"/>
@@ -1005,7 +1015,6 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="VALUE" x="2.79" y="31.75" size="0.4064" layer="27" rot="R270"/>
 </element>
 <element name="COMM" library="SparkFun-Connectors" package="FTDI_BASIC" value="" x="52.07" y="29.21" smashed="yes" rot="R90">
-<attribute name="NAME" x="50.3682" y="33.4518" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="VALUE" x="55.245" y="30.48" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="C1" library="SparkFun-Passives" package="CAP-PTH-SMALL" value="100nF" x="50.8" y="13.97" smashed="yes" rot="R180">
@@ -1036,17 +1045,14 @@ Please make sure your boards conform to these design rules.</description>
 <element name="H2" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="49.53" y="3.81" smashed="yes"/>
 <element name="MOSFET_CAM" library="SparkFun-DiscreteSemi" package="TO220V" value="" x="21.59" y="59.69" smashed="yes" rot="R180">
 <attribute name="PROD_ID" value="TRANS-10060" x="21.59" y="59.69" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="27.559" y="56.134" size="1.27" layer="25" ratio="10" rot="R180"/>
 <attribute name="VALUE" x="24.892" y="62.992" size="1.27" layer="27" ratio="10" rot="R180"/>
 </element>
 <element name="MOSFET_EXT" library="SparkFun-DiscreteSemi" package="TO220V" value="" x="33.02" y="59.69" smashed="yes">
 <attribute name="PROD_ID" value="TRANS-10060" x="33.02" y="59.69" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="27.432" y="56.515" size="1.27" layer="25" ratio="10"/>
 <attribute name="VALUE" x="29.718" y="56.388" size="1.27" layer="27" ratio="10"/>
 </element>
 <element name="H3" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="50.8" y="59.69" smashed="yes"/>
 <element name="DISP" library="SparkFun-Connectors" package="1X06_FEMALE_LOCK.010" value="" x="13.97" y="2.54" smashed="yes">
-<attribute name="NAME" x="12.2682" y="3.1242" size="1.27" layer="25" ratio="10" rot="R180"/>
 <attribute name="VALUE" x="12.7" y="-0.635" size="1.27" layer="27"/>
 </element>
 <element name="T_DISP" library="SparkFun-DiscreteSemi" package="TO-92" value="" x="25.4" y="8.89" smashed="yes" rot="R270">
@@ -1064,7 +1070,6 @@ Please make sure your boards conform to these design rules.</description>
 </element>
 <element name="BTN_UP" library="SparkFun-Retired" package="TACTILE-PTH" value="" x="58.42" y="24.13" smashed="yes" rot="R90"/>
 <element name="SHTR" library="SparkFun-Connectors" package="1X03_LOCK" value="" x="13.97" y="21.59" smashed="yes" rot="R270">
-<attribute name="NAME" x="13.7668" y="28.0162" size="1.27" layer="25" ratio="10" rot="R270"/>
 <attribute name="VALUE" x="10.795" y="22.86" size="1.27" layer="27" rot="R270"/>
 </element>
 <element name="R8" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="38.1" y="6.35" smashed="yes" rot="R270">
@@ -1080,11 +1085,9 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="VALUE" x="29.972" y="21.971" size="1.016" layer="21" font="vector" ratio="15" rot="R180"/>
 </element>
 <element name="3.3V" library="SparkFun-Connectors" package="1X02_LOCK" value="" x="16.51" y="10.16" smashed="yes" rot="R270">
-<attribute name="NAME" x="14.7828" y="4.3688" size="1.27" layer="25" ratio="10"/>
 <attribute name="VALUE" x="13.335" y="11.43" size="1.27" layer="27" rot="R270"/>
 </element>
 <element name="5V" library="SparkFun-Connectors" package="1X02_LOCK" value="" x="20.32" y="7.62" smashed="yes" rot="R90">
-<attribute name="NAME" x="21.5392" y="5.6642" size="1.27" layer="25" ratio="10" rot="R180"/>
 <attribute name="VALUE" x="23.495" y="6.35" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="ST_EXT" library="SparkFun-Connectors" package="1X02_2.54_SCREWTERM" value="" x="40.64" y="59.69" smashed="yes"/>
@@ -1099,11 +1102,9 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="VALUE" x="42.799" y="8.382" size="1.016" layer="21" font="vector" ratio="15" rot="R270"/>
 </element>
 <element name="CONV_X_75V" library="SparkFun-Connectors" package="1X05_LOCK" value="" x="12.7" y="50.8" smashed="yes" rot="R90">
-<attribute name="NAME" x="10.7442" y="50.3428" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="VALUE" x="15.875" y="49.53" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="CONV_X_VCC" library="SparkFun-Connectors" package="1X05_LOCK" value="" x="59.69" y="50.8" smashed="yes" rot="R90">
-<attribute name="NAME" x="57.7342" y="50.3428" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="VALUE" x="62.865" y="49.53" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="VD41" library="SparkFun-Resistors" package="AXIAL-0.3" value="" x="27.94" y="24.13" smashed="yes" rot="R180">
@@ -1115,7 +1116,6 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="VALUE" x="32.639" y="37.592" size="1.016" layer="21" font="vector" ratio="15" rot="R270"/>
 </element>
 <element name="BALANCER" library="SparkFun-Connectors" package="1X05_LOCK" value="" x="20.32" y="13.97" smashed="yes" rot="R90">
-<attribute name="NAME" x="29.0322" y="27.0002" size="1.27" layer="25" ratio="10" rot="R180"/>
 <attribute name="VALUE" x="23.495" y="12.7" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="H4" library="holes" package="3,2" value="MOUNT-HOLE3.2" x="3.81" y="3.81" smashed="yes"/>
@@ -1731,6 +1731,7 @@ Please make sure your boards conform to these design rules.</description>
 <approved hash="4,16,db88a2815b47ae44"/>
 <approved hash="19,1,7e897ef97ec07eb0"/>
 <approved hash="19,1,75da03aa021d746d"/>
+<approved hash="19,1,47fa318a369a40ea"/>
 </errors>
 </board>
 </drawing>
