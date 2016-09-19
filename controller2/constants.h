@@ -22,7 +22,7 @@
 
 // OPTIONS
 
-#define USE_TEMP_SENSOR                 true
+#define USE_TEMP_SENSOR                false
 
 #define PRE_TRIGGER_WAIT                   5
 #define POST_TRIGGER_WAIT                 40
@@ -36,6 +36,8 @@
 // MISC
 
 #define VERSION                          0.2
+
+#define SECONDROW                         18
 
 #define EEPROM_INTERVAL                   10
 #define EEPROM_ITERATIONS                 20    

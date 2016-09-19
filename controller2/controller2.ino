@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <Wire.h> 
 #include <EEPROM.h>
+#include <Adafruit_SSD1306.h>
 
 #include "constants.h"
 
@@ -10,8 +11,13 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 
 #define DEBUG
 
+Adafruit_SSD1306 display(PIN_DISPLAY_RST);
+
 int state = STATE_SLEEP;
 int picturesTaken   = 0;
+
+int oldArrayPointer = 0;
+int arrayPointer    = 0;
                     
 // ---------------------------
 
@@ -36,16 +42,20 @@ void setup() {
 
   if (!checkLiPoHealth()) {
     // battery is empty, abort right now!
-    state = STATE_STOP;
+
+    #ifndef DEBUG
+      Serial.println("stopping!...");
+      state = STATE_STOP;
+    #endif
   }
-  
+
   #ifdef DEBUG
     // do not start right away, go to menu
     state = STATE_MENU_INIT;
   #endif
 
   for (int i=0; i < 10; i++) {
-    if (buttonPressed()) {
+    if (buttonXPressed()) {
       state = STATE_MENU_INIT;
       break;
     }
@@ -58,18 +68,25 @@ void setup() {
 
 void loop() {
 
-  if (state % 10 == 0) {
-    potiSegment = getPotiPosition(7);
-    if (potiSegment != oldPotiSegment) {
-      state = (potiSegment+1) * 10 + 1;
-    }
+  Serial.println(state);
 
-    if (buttonPressed()) {
-      state = (potiSegment+1) * 10 + 2;
+  if (state % 10 == 0) {
+    if (buttonXPressed()) {
+      state += 2;
+      arrayPointer = 0;
+      oldArrayPointer = 1;
       delay(300);
     }
 
-    oldPotiSegment = potiSegment;
+    if (buttonUpPressed() && state < STATE_MENU_START) {
+      state += 11;
+      delay(300);
+    }
+
+    if (buttonDownPressed() && state > STATE_MENU_DETAILS) {
+      state -= 9;
+      delay(300);
+    }
   }
 
   switch(state) {
@@ -119,14 +136,7 @@ void loop() {
       wait(0.5);
       displayOn(true);
       delay(100);
-      lcd.init();
-      lcd.backlight();
-      lcd.setCursor(0,0);
-      lcd.print("TIMEBOXGO");
-      lcd.setCursor(0,1);
-      lcd.print("version: ");
-      lcd.setCursor(9,1);
-      lcd.print(VERSION);
+      initDisplay();
       
       wait(1.5);
       Serial.println("display initialized");
@@ -135,35 +145,40 @@ void loop() {
     break;
 
     case STATE_MENU_DETAILS_DRAW:
-      lcd.clear();
+      display.clearDisplay();
 
-      lcd.setCursor(0,0);
+      display.setTextSize(2);
+      display.setTextColor(WHITE);
+
+      display.setCursor(0,0);
       #if USE_TEMP_SENSOR
-        lcd.print(readTempSensor());
-        lcd.setCursor(5,0);
-        lcd.print("C");
+        display.print(readTempSensor());
+        display.setCursor(5,0);
+        display.print("C");
       #else
-        lcd.print("BATTERY");
+        display.print("BATT");
       #endif
 
-      lcd.setCursor(0,1);
-      lcd.print((int) getLiPoVoltage(-1));
-      lcd.setCursor(3,1);
-      lcd.print("%");
+      display.setCursor(0,SECONDROW);
+//      display.print((int) getLiPoVoltage(-1));
+      display.setCursor(40,SECONDROW);
+      display.print("%");
       
-      lcd.setCursor(8,0);
-      lcd.print("C1:");
-      lcd.setCursor(11,0);
-      lcd.print(getLiPoVoltage(1));
-      lcd.setCursor(15,0);
-      lcd.print("v");
+      display.setCursor(72,0);
+      display.print("C1:");
+      display.setCursor(80,0);
+//      display.print(getLiPoVoltage(1));
+      display.setCursor(115,0);
+      display.print("v");
       
-      lcd.setCursor(8,1);
-      lcd.print("C2:");
-      lcd.setCursor(11,1);
-      lcd.print(getLiPoVoltage(2));
-      lcd.setCursor(15,1);
-      lcd.print("v");
+      display.setCursor(72,SECONDROW);
+      display.print("C2:");
+      display.setCursor(80,SECONDROW);
+//      display.print(getLiPoVoltage(2));
+      display.setCursor(115,SECONDROW);
+      display.print("v");
+
+      display.display();
 
       state--;
     break;
@@ -171,9 +186,10 @@ void loop() {
     // ---------------------------------
 
     case STATE_MENU_CAMERA_ON_DRAW:
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("CAMERA ON");
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.print("CAMERA ON");
+      display.display();
 
       state--;
     break;
@@ -181,17 +197,17 @@ void loop() {
     case STATE_MENU_CAMERA_ON_SELECTED:
       digitalWrite(PIN_CAMERA_EN, HIGH);
     
-      lcd.clear(); 
-      lcd.setCursor(0,0);
-      lcd.print("CAMERA ON");
-      lcd.setCursor(10,0);
-      lcd.print(".");
+      display.clearDisplay(); 
+      display.setCursor(0,0);
+      display.print("CAMERA ON");
+      display.print(".");
+      display.display();
       wait(0.5);
-      lcd.setCursor(11,0);
-      lcd.print(".");
+      display.print(".");
+      display.display();
       wait(0.5);
-      lcd.setCursor(12,0);
-      lcd.print(".");
+      display.print(".");
+      display.display();
       wait(0.5);
   
       state = STATE_MENU_CAMERA_ON_DRAW;
@@ -200,9 +216,10 @@ void loop() {
     // ---------------------------------
 
     case STATE_MENU_CAMERA_OFF_DRAW:
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("CAMERA OFF");
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.print("CAMERA OFF");
+      display.display();
 
       state--;
     break;
@@ -210,9 +227,10 @@ void loop() {
     case STATE_MENU_CAMERA_OFF_SELECTED:
       digitalWrite(PIN_CAMERA_EN, LOW);
     
-      lcd.clear(); 
-      lcd.setCursor(0,0);
-      lcd.print("CAMERA OFF ...");
+      display.clearDisplay(); 
+      display.setCursor(0,0);
+      display.print("CAMERA OFF ...");
+      display.display();
       wait(1.0);
   
       state = STATE_MENU_CAMERA_OFF_DRAW;
@@ -221,9 +239,10 @@ void loop() {
     // ---------------------------------
 
     case STATE_MENU_TAKE_PICTURE_DRAW:
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("RELEASE SHUTTER");
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.print("RELEASE SHUTTER");
+      display.display();
 
       state--;
     break;
@@ -231,17 +250,20 @@ void loop() {
     case STATE_MENU_TAKE_PICTURE_SELECTED:
       takePicture(false);
     
-      lcd.clear(); 
-      lcd.setCursor(0,0);
-      lcd.print("WAIT");
-      lcd.setCursor(13,0);
-      lcd.print(".");
+      display.clearDisplay(); 
+      display.setCursor(0,0);
+      display.print("WAIT");
+      display.setCursor(13,0);
+      display.print(".");
+      display.display();
       wait(0.5);
-      lcd.setCursor(14,0);
-      lcd.print(".");
+      display.setCursor(14,0);
+      display.print(".");
+      display.display();
       wait(0.5);
-      lcd.setCursor(15,0);
-      lcd.print(".");
+      display.setCursor(15,0);
+      display.print(".");
+      display.display();
       wait(0.5);
   
       state = STATE_MENU_TAKE_PICTURE_DRAW;
@@ -250,33 +272,41 @@ void loop() {
     // ---------------------------------
        
     case STATE_MENU_INTERVAL_DRAW: // +1
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("INTERVAL");
-      lcd.setCursor(11,0);
-      lcd.print(optInterval);
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.print("INTERVAL");
+      display.setCursor(11,0);
+      display.print(optInterval);
+      display.display();
       state--;
     break;
 
-    case STATE_MENU_INTERVAL_SELECTED: // +2
-      potiSegment = getPotiPosition(sizeof(valuesInterval)/sizeof(valuesInterval[0]));
-      
-      if (potiSegment != oldPotiSegment) {
-        lcd.clear();
+    case STATE_MENU_INTERVAL_SELECTED: // +2      
+      if (oldArrayPointer != arrayPointer) {
+        display.clearDisplay();
         
-        lcd.setCursor(0,1);
-        lcd.print(valuesInterval[potiSegment]);
+        display.setCursor(0,1);
+        display.print(valuesInterval[arrayPointer]);
 
         // total Time
-        lcd.setCursor(8,1);
-        lcd.print("T:");
-        lcd.setCursor(10,1);
-        lcd.print(calculateTime(valuesInterval[potiSegment], optIterations));
-        oldPotiSegment = potiSegment;
+        display.setCursor(8,1);
+        display.print("T:");
+        display.setCursor(10,1);
+        display.print(calculateTime(valuesInterval[arrayPointer], optIterations));
+        display.display();
+        oldArrayPointer = arrayPointer;
+      }
+
+      if (buttonUpPressed() && arrayPointer < (sizeof(valuesInterval)/sizeof(valuesInterval[0])) ) {
+        arrayPointer++;
+      }
+
+      if (buttonUpPressed() && arrayPointer > 0 ) {
+        arrayPointer--;
       }
     
-      if (buttonPressed()) {
-        optInterval = valuesInterval[potiSegment];
+      if (buttonXPressed()) {
+        optInterval = valuesInterval[arrayPointer];
         state = STATE_MENU_INTERVAL;
         eeprom_saveto();
       }
@@ -286,73 +316,77 @@ void loop() {
     // ---------------------------------
          
     case STATE_MENU_ITERATIONS_DRAW: // +1
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("ITERATIONS");
-      lcd.setCursor(11,0);
-      lcd.print(optIterations);
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.print("ITERATIONS");
+      display.setCursor(11,0);
+      display.print(optIterations);
+      display.display();
       state--;
     break;
 
-    
-    case STATE_MENU_ITERATIONS_SELECTED: // +2
-      potiSegment = getPotiPosition(sizeof(valuesIterations)/sizeof(valuesIterations[0]));
-      
-      if (potiSegment != oldPotiSegment) {
-        lcd.clear();
-        
-        lcd.setCursor(0,1);
-        lcd.print(valuesIterations[potiSegment]);
-
-        // total Time
-        lcd.setCursor(8,1);
-        lcd.print("T:");
-        lcd.setCursor(10,1);
-        lcd.print(calculateTime(optInterval, valuesIterations[potiSegment]));
-        oldPotiSegment = potiSegment;
-      }
-    
-      if (buttonPressed()) {
-        optIterations = valuesIterations[potiSegment];
-        state = STATE_MENU_ITERATIONS;
-        eeprom_saveto();
-      }
-      
-    break;
+//    
+//    case STATE_MENU_ITERATIONS_SELECTED: // +2
+//      potiSegment = getPotiPosition(sizeof(valuesIterations)/sizeof(valuesIterations[0]));
+//      
+//      if (potiSegment != oldPotiSegment) {
+//        display.clearDisplay();
+//        
+//        display.setCursor(0,1);
+//        display.print(valuesIterations[potiSegment]);
+//
+//        // total Time
+//        display.setCursor(8,1);
+//        display.print("T:");
+//        display.setCursor(10,1);
+//        display.print(calculateTime(optInterval, valuesIterations[potiSegment]));
+//        oldPotiSegment = potiSegment;
+//      }
+//    
+//      if (buttonPressed()) {
+//        optIterations = valuesIterations[potiSegment];
+//        state = STATE_MENU_ITERATIONS;
+//        eeprom_saveto();
+//      }
+//      
+//    break;
 
     // ---------------------------------
 
     case STATE_MENU_START_DRAW: // +1
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("START");
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.print("START");
 
-      lcd.setCursor(0,1);
-      lcd.print("T:");
-      lcd.setCursor(2,1);
-      lcd.print(calculateTime(optIterations, optInterval));
+      display.setCursor(0,1);
+      display.print("T:");
+      display.setCursor(2,1);
+      display.print(calculateTime(optIterations, optInterval));
 
-      lcd.setCursor(9,0);
-      lcd.print("N:");
-      lcd.setCursor(11,0);
-      lcd.print(optIterations);
+      display.setCursor(9,0);
+      display.print("N:");
+      display.setCursor(11,0);
+      display.print(optIterations);
 
-      lcd.setCursor(9,1);
-      lcd.print("D:");
-      lcd.setCursor(11,1);
-      lcd.print(optInterval);
+      display.setCursor(9,1);
+      display.print("D:");
+      display.setCursor(11,1);
+      display.print(optInterval);
+      display.display();
      
       state--;
     break;
 
     case STATE_MENU_START_SELECTED: 
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("STARTING in 10s");
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.print("STARTING in 10s");
+      display.display();
       for (int i=9; i>-1; i--) {
         wait(1);
-        lcd.setCursor(12,0);
-        lcd.print("0" + String(i));
+        display.setCursor(12,0);
+        display.print("0" + String(i));
+        display.display();
 //        if (buttonPressed()) {
 //          // abort
 //          state = STATE_MENU_DETAILS;
@@ -390,11 +424,11 @@ void initButtons() {
   pinMode(PIN_CELL_2,          INPUT);  
   // CELL3, CELL4
 
+  pinMode(PIN_CAMERA_EN,       OUTPUT);
+  pinMode(PIN_ZERO_EN,         OUTPUT);
+  pinMode(PIN_EXT_EN,          OUTPUT); 
   pinMode(PIN_DISPLAY_EN,      OUTPUT);
   pinMode(PIN_DISPLAY_RST,     OUTPUT);
-  pinMode(PIN_ZERO_EN,         OUTPUT);
-  pinMode(PIN_SENSORS_EN,      OUTPUT); 
-  pinMode(PIN_EXT_EN,          OUTPUT); 
    
   pinMode(PIN_PUSHBUTTON_UP,   INPUT); 
   pinMode(PIN_PUSHBUTTON_DOWN, INPUT); 
@@ -407,8 +441,30 @@ void initButtons() {
 
   digitalWrite(PIN_DISPLAY_EN, LOW);
   digitalWrite(PIN_CAMERA_EN,  LOW);
-  digitalWrite(PIN_SENSORS_EN, LOW);
 
+}
+
+void initDisplay() {
+  // initialize with the I2C addr 0x3C (for the 128x32) 
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);   
+  display.clearDisplay();
+
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0);
+  display.println("Hello, world!");
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.print("0x"); 
+  display.println(0xDEADBEEF, HEX);
+  display.display();
+
+//      display.setCursor(0,0);
+//      display.print("TIMEBOXGO");
+//      display.setCursor(0,1);
+//      display.print("version: ");
+//      display.setCursor(9,1);
+//      display.print(VERSION);
 }
 
 void takePicture(boolean turnCameraOn) {
@@ -449,12 +505,6 @@ String calculateTime(int iterations, int interval) {
   }
   
   return hours + "h" + minutes + "m";
-}
-
-int getPotiPosition(int numberOfSegments) {
-  int segmentSize = 1030 / numberOfSegments;
-
-  return analogRead(PIN_POTENTIOMETER) / segmentSize;
 }
 
 boolean checkLiPoHealth() {
@@ -507,15 +557,43 @@ void displayOn(boolean state) {
   }
 }
 
-int buttonPressed() {
+int buttonUpPressed() {
   for (int i=0; i<3; i++) {
-    if (!digitalRead(PIN_PUSHBUTTON)) {
+    if (digitalRead(PIN_PUSHBUTTON_UP)) {
       return false;
     }
     delay(10);
   }
 
-  while(digitalRead(PIN_PUSHBUTTON)) {}
+  while(!digitalRead(PIN_PUSHBUTTON_UP)) {}
+  delay(10);
+
+  return true;
+}
+
+int buttonDownPressed() {
+  for (int i=0; i<3; i++) {
+    if (digitalRead(PIN_PUSHBUTTON_DOWN)) {
+      return false;
+    }
+    delay(10);
+  }
+
+  while(!digitalRead(PIN_PUSHBUTTON_DOWN)) {}
+  delay(10);
+
+  return true;
+}
+
+int buttonXPressed() {
+  for (int i=0; i<3; i++) {
+    if (digitalRead(PIN_PUSHBUTTON_X)) {
+      return false;
+    }
+    delay(10);
+  }
+
+  while(!digitalRead(PIN_PUSHBUTTON_X)) {}
   delay(10);
 
   return true;
@@ -530,18 +608,7 @@ void wait(float seconds) {
 }
 
 float readTempSensor() {
-  sensorsOn(true);
-
-  sensor.begin();
-  sensor.set_address(0);
-  sensor.set_resolution(3);
-
-  delay(100);
-  float t = sensor.read();  
-  
-  sensorsOn(false);
- 
-  return t;
+  return -23;
 }
 
 void selftest() {
@@ -552,7 +619,8 @@ void selftest() {
   Serial.print("LiPo  2:"); Serial.println(getLiPoVoltage(2));
 
   Serial.print("Temp:"); Serial.println(readTempSensor());
-  
-  Serial.print("Poti (10 Seg.):"); Serial.println(getPotiPosition(10));
-  Serial.print("Button:"); Serial.println(buttonPressed());
+ 
+  Serial.print("ButtonUP  :"); Serial.println(buttonUpPressed());
+  Serial.print("ButtonDOWN:"); Serial.println(buttonDownPressed());
+  Serial.print("ButtonX   :"); Serial.println(buttonXPressed());
 }
