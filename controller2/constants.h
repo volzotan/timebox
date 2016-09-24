@@ -8,8 +8,8 @@
 #define PIN_DISPLAY_EN                     5
 #define PIN_DISPLAY_RST                    7
 #define PIN_ZERO_EN                        6
-#define PIN_CAMERA_EN                     11
-#define PIN_EXT_EN                         9
+#define PIN_CAMERA_EN                      9
+#define PIN_EXT_EN                        11
 
 #define PIN_PUSHBUTTON_UP                  4
 #define PIN_PUSHBUTTON_DOWN                3
@@ -24,7 +24,7 @@
 
 #define USE_TEMP_SENSOR                false
 
-#define PRE_TRIGGER_WAIT                   5
+#define PRE_TRIGGER_WAIT                  12
 #define POST_TRIGGER_WAIT                 40
 
 #define LIPO_CELL_MIN                    3.7
@@ -38,6 +38,9 @@
 #define VERSION                          0.2
 
 #define SECONDROW                         18
+
+#define VDRESISTOR1                       22
+#define VDRESISTOR2                       12
 
 #define EEPROM_INTERVAL                   10
 #define EEPROM_ITERATIONS                 20    
@@ -73,7 +76,7 @@
 #define STATE_MENU_START_DRAW             71
 #define STATE_MENU_START_SELECTED         72
 
-                                          
+#define STATE_INIT                         4
 #define STATE_SLEEP                        5
 #define STATE_SENSOR_READ                  6
 #define STATE_CAMERA_RUNNING               7
