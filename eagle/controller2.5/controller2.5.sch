@@ -7358,7 +7358,7 @@ http://www.lumberg.com/Produkte/PDFs/1501_06.pdf</description>
 <class number="0" name="default" width="0.3048" drill="0">
 <clearance class="0" value="0.254"/>
 </class>
-<class number="1" name="power" width="0.635" drill="0">
+<class number="1" name="power" width="0.762" drill="0">
 <clearance class="1" value="0.254"/>
 </class>
 </classes>
@@ -7855,11 +7855,11 @@ and Signal-GND</text>
 <label x="215.9" y="83.82" size="1.778" layer="95"/>
 </segment>
 <segment>
-<pinref part="U1" gate="G$1" pin="PB3(MOSI/OC2)"/>
-<wire x1="106.68" y1="104.14" x2="111.76" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="111.76" y1="104.14" x2="111.76" y2="101.6" width="0.1524" layer="91"/>
-<wire x1="111.76" y1="101.6" x2="124.46" y2="101.6" width="0.1524" layer="91"/>
-<label x="124.46" y="101.6" size="1.778" layer="95"/>
+<pinref part="U1" gate="G$1" pin="PB2(SS/OC1B)"/>
+<wire x1="106.68" y1="106.68" x2="114.3" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="114.3" y1="106.68" x2="114.3" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="114.3" y1="104.14" x2="124.46" y2="104.14" width="0.1524" layer="91"/>
+<label x="124.46" y="104.14" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="BATT_VCC" class="1">
@@ -7897,11 +7897,11 @@ and Signal-GND</text>
 <label x="261.62" y="76.2" size="1.778" layer="95" rot="R90"/>
 </segment>
 <segment>
-<pinref part="U1" gate="G$1" pin="PB2(SS/OC1B)"/>
-<wire x1="106.68" y1="106.68" x2="114.3" y2="106.68" width="0.1524" layer="91"/>
-<wire x1="114.3" y1="106.68" x2="114.3" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="114.3" y1="104.14" x2="124.46" y2="104.14" width="0.1524" layer="91"/>
-<label x="124.46" y="104.14" size="1.778" layer="95"/>
+<pinref part="U1" gate="G$1" pin="PB3(MOSI/OC2)"/>
+<wire x1="106.68" y1="104.14" x2="111.76" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="111.76" y1="104.14" x2="111.76" y2="101.6" width="0.1524" layer="91"/>
+<wire x1="111.76" y1="101.6" x2="124.46" y2="101.6" width="0.1524" layer="91"/>
+<label x="124.46" y="101.6" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="SDA" class="0">
@@ -7944,13 +7944,6 @@ and Signal-GND</text>
 <pinref part="U1" gate="G$1" pin="PC0(ADC0)"/>
 <wire x1="106.68" y1="157.48" x2="109.22" y2="157.48" width="0.1524" layer="91"/>
 <label x="109.22" y="157.48" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="DISP_EN" class="0">
-<segment>
-<pinref part="U1" gate="G$1" pin="PD5(T1)"/>
-<wire x1="106.68" y1="121.92" x2="124.46" y2="121.92" width="0.1524" layer="91"/>
-<label x="124.46" y="121.92" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="BTN3" class="0">
@@ -8015,11 +8008,9 @@ and Signal-GND</text>
 <junction x="132.08" y="20.32"/>
 </segment>
 <segment>
-<pinref part="U1" gate="G$1" pin="PB1(OC1A)"/>
-<wire x1="106.68" y1="109.22" x2="116.84" y2="109.22" width="0.1524" layer="91"/>
-<wire x1="116.84" y1="109.22" x2="116.84" y2="106.68" width="0.1524" layer="91"/>
-<wire x1="116.84" y1="106.68" x2="124.46" y2="106.68" width="0.1524" layer="91"/>
-<label x="124.46" y="106.68" size="1.778" layer="95"/>
+<pinref part="U1" gate="G$1" pin="PD7(AIN1)"/>
+<wire x1="106.68" y1="116.84" x2="124.46" y2="116.84" width="0.1524" layer="91"/>
+<label x="124.46" y="116.84" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="GNDA" class="1">
@@ -8122,14 +8113,6 @@ and Signal-GND</text>
 <junction x="243.84" y="66.04"/>
 </segment>
 </net>
-<net name="FOO2" class="0">
-<segment>
-<pinref part="U1" gate="G$1" pin="PB5(SCK)"/>
-<wire x1="106.68" y1="99.06" x2="106.68" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="106.68" y1="96.52" x2="124.46" y2="96.52" width="0.1524" layer="91"/>
-<label x="124.46" y="96.52" size="1.778" layer="95"/>
-</segment>
-</net>
 <net name="SOFT_TX" class="0">
 <segment>
 <pinref part="SOFT_SERIAL" gate="J$1" pin="2"/>
@@ -8137,9 +8120,11 @@ and Signal-GND</text>
 <label x="104.14" y="25.4" size="1.778" layer="95"/>
 </segment>
 <segment>
-<pinref part="U1" gate="G$1" pin="PD7(AIN1)"/>
-<wire x1="106.68" y1="116.84" x2="124.46" y2="116.84" width="0.1524" layer="91"/>
-<label x="124.46" y="116.84" size="1.778" layer="95"/>
+<pinref part="U1" gate="G$1" pin="PB1(OC1A)"/>
+<wire x1="106.68" y1="109.22" x2="116.84" y2="109.22" width="0.1524" layer="91"/>
+<wire x1="116.84" y1="109.22" x2="116.84" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="116.84" y1="106.68" x2="124.46" y2="106.68" width="0.1524" layer="91"/>
+<label x="124.46" y="106.68" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="SOFT_RX" class="0">
