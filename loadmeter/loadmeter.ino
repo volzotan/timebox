@@ -26,13 +26,13 @@ void setup(void)
 void loop(void) {
   counter++;
   
-  float shuntvoltage = 0;
   float busvoltage = 0;
-  float current_mA = 0;
+  float shuntvoltage = 0;
   float loadvoltage = 0;
+  float current_mA = 0;
 
-  shuntvoltage = ina219.getShuntVoltage_mV();
   busvoltage = ina219.getBusVoltage_V();
+  shuntvoltage = ina219.getShuntVoltage_mV();
   current_mA = ina219.getCurrent_mA();
   loadvoltage = busvoltage + (shuntvoltage / 1000);
 

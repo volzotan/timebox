@@ -26,7 +26,7 @@ int arrayPointer    = 0;
 int optInterval     =       1;
 int optIterations   =     100;
 
-const int valuesInterval[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+const int valuesInterval[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20};
 const int valuesIterations[] = {50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900};
 
 // ---------------------------
@@ -430,6 +430,24 @@ void loop() {
       picturesTaken = 0;
       state = STATE_SENSOR_READ;
       break;
+
+    // ---------------------------------
+
+    case STATE_MENU_SLEEP_DRAW: // +1
+      display.clearDisplay();
+      display.setCursor(0, 0);
+      display.print("SLEEP");
+      display.display();
+
+      state--;
+      break;
+
+    
+    case STATE_MENU_SLEEP_SELECTED:
+      state = STATE_STOP;
+      break;
+
+    // ---------------------------------
 
     default:
       if (state % 10 == 1) {

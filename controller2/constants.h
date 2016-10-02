@@ -76,6 +76,10 @@
 #define STATE_MENU_START_DRAW             71
 #define STATE_MENU_START_SELECTED         72
 
+#define STATE_MENU_SLEEP                  80
+#define STATE_MENU_SLEEP_DRAW             81
+#define STATE_MENU_SLEEP_SELECTED         82
+
 #define STATE_INIT                         4
 #define STATE_SLEEP                        5
 #define STATE_SENSOR_READ                  6
