@@ -2,24 +2,24 @@ EAGLE AutoRouter Statistics:
 
 Job           : /Users/volzotan/GIT/timebox/eagle/controller3/controller3.brd
 
-Start at      : 19:07:08 (23.09.16)
-End at        : 19:07:56 (23.09.16)
-Elapsed time  : 00:00:48
+Start at      : 19:14:14 (12.10.16)
+End at        : 19:14:55 (12.10.16)
+Elapsed time  : 00:00:41
 
-Signals       :    48   RoutingGrid: 5 mil  Layers: 2
-Connections   :   107   predefined:  0 ( 0 Vias )
+Signals       :    49   RoutingGrid: 7.5 mil  Layers: 2
+Connections   :   117   predefined:  0 ( 0 Vias )
 
-Router memory :   1282424
+Router memory :   646348
 
 Passname          : TopRouter     Route Optimize1 Optimize2 Optimize3 Optimize4 Optimize5 Optimize6 Optimize7 Optimize8 Optimize9Optimize10Optimize11Optimize12
 
-Time per pass     :  00:00:13  00:00:03  00:00:03  00:00:03  00:00:03  00:00:03  00:00:03  00:00:03  00:00:03  00:00:03  00:00:02  00:00:02  00:00:02  00:00:02
-Number of Ripups  :         0         2         0         0         0         0         0         0         0         0         0         0         0         0
+Time per pass     :  00:00:16  00:00:02  00:00:02  00:00:02  00:00:02  00:00:01  00:00:02  00:00:02  00:00:02  00:00:02  00:00:02  00:00:02  00:00:02  00:00:02
+Number of Ripups  :         0         3         0         0         0         0         0         0         0         0         0         0         0         0
 max. Level        :         0         1         0         0         0         0         0         0         0         0         0         0         0         0
-max. Total        :         0         8         0         0         0         0         0         0         0         0         0         0         0         0
+max. Total        :         0         2         0         0         0         0         0         0         0         0         0         0         0         0
 
-Routed            :        48       107       107       107       107       107       107       107       107       107       107       107       107       107
-Vias              :         0        30        43        26        23        23        23        23        23        23        23        23        23        23
-Resolution        :    44.9 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %   100.0 %
+Routed            :        59       115       103       103       103       104       104       104       104       104       104       104       104       104
+Vias              :         0        21        17        14        14        15        15        15        15        15        15        15        15        15
+Resolution        :    50.4 %    98.3 %    88.0 %    88.0 %    88.0 %    88.9 %    88.9 %    88.9 %    88.9 %    88.9 %    88.9 %    88.9 %    88.9 %    88.9 %
 
-Final             : 100.0% beendet
+Final             : 88.9% beendet
