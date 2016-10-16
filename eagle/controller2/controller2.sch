@@ -9469,7 +9469,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <classes>
 <class number="0" name="default" width="0.254" drill="0">
 </class>
-<class number="1" name="power" width="0.508" drill="0">
+<class number="1" name="power" width="0.762" drill="0">
 <clearance class="1" value="0.254"/>
 </class>
 </classes>
@@ -9568,6 +9568,8 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 OR 5v on pin 5</text>
 <text x="241.3" y="38.1" size="1.778" layer="91">Short between Power-GND
 and Signal-GND</text>
+<text x="287.02" y="88.9" size="1.778" layer="91">TODO: Pull-Resistor for Mosfet.
+Maybe even an Transistor on the gate</text>
 </plain>
 <instances>
 <instance part="U1" gate="G$1" x="81.28" y="132.08"/>
