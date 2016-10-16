@@ -2,3 +2,5 @@ eagle/controller2/.controller2.brd.lck
 eagle/controller2/.controller2.sch.lck
 *.s#[0-9]
 *.b#[0-9]
+eagle.epf
+*.pro
