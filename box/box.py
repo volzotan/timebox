@@ -282,11 +282,14 @@ def test():
 
     camera_switch_on(True)
 
-    filename = take_image(OUTPUT_DIR_TEST)
-    log.info("test image saved to {}".format(os.path.join(OUTPUT_DIR_TEST, filename)))
-    convert_raw_to_jpeg(OUTPUT_DIR_TEST, filename, OUTPUT_DIR_TEST)
-
-    camera_switch_on(False)
+    try:
+        filename = take_image(OUTPUT_DIR_TEST)
+        log.info("test image saved to {}".format(os.path.join(OUTPUT_DIR_TEST, filename)))
+        convert_raw_to_jpeg(OUTPUT_DIR_TEST, filename, OUTPUT_DIR_TEST)
+    except Exception as e:
+        log.error("test failed: " + str(e))
+    finally:
+        camera_switch_on(False)
 
 
 def run():
@@ -299,9 +302,9 @@ def run():
         convert_raw_to_jpeg(OUTPUT_DIR_RAW, filename, OUTPUT_DIR_JPEG)
     except RuntimeError as re:
         # gphoto raised an error
-        log.warn("run failed")
+        log.warn("run failed: " + str(e))
     except Exception as e:
-        log.error("jpeg conversion failed". str(e))
+        log.error("jpeg conversion failed: " + str(e))
     finally:
         camera_switch_on(False)
 

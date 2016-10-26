@@ -15,7 +15,7 @@ ISR(WDT_vect) {
 
 Adafruit_SSD1306 display(PIN_DISPLAY_RST);
 
-int state = STATE_SLEEP;
+int state           = STATE_SLEEP;
 int picturesTaken   = 0;
 
 int oldArrayPointer = 0;
@@ -38,7 +38,7 @@ void setup() {
     ;
   }
 
-  Serial.println("init");
+  Serial.println(F("init"));
   initFromEEPROM();
   initButtons();
 
@@ -102,7 +102,7 @@ void loop() {
 
     case STATE_SLEEP:
       #ifdef DEBUG
-        Serial.println("start sleeping");
+        Serial.println(F("start sleeping"));
         delay(100);
       #endif
 
@@ -115,7 +115,7 @@ void loop() {
 
     case STATE_SENSOR_READ:
       #ifdef DEBUG
-        Serial.println("reading sensors...");
+        Serial.println(F("reading sensors..."));
       #endif
 
       state = STATE_CAMERA_RUNNING;
@@ -123,7 +123,7 @@ void loop() {
 
     case STATE_CAMERA_RUNNING:
       #ifdef DEBUG
-        Serial.println("taking picture...");
+        Serial.println(F("taking picture..."));
       #endif
 
       if (!checkLiPoHealth()) {
@@ -148,7 +148,7 @@ void loop() {
       initDisplay();
 
       wait(1.5);
-      Serial.println("display initialized");
+      Serial.println(F("display initialized"));
 
       state = STATE_MENU_DETAILS_DRAW;
       break;
@@ -205,7 +205,7 @@ void loop() {
     case STATE_MENU_CAMERA_ON_DRAW:
       display.clearDisplay();
       display.setCursor(0, 0);
-      display.print("CAMERA ON");
+      display.print(F("CAMERA ON"));
       display.display();
 
       state--;
@@ -216,7 +216,7 @@ void loop() {
 
       display.clearDisplay();
       display.setCursor(0, 0);
-      display.print("CAMERA ON");
+      display.print(F("CAMERA ON"));
       display.print(".");
       display.display();
       wait(0.5);
@@ -498,9 +498,11 @@ void initDisplay() {
   display.setTextSize(2);
 
   display.setCursor(0,0);
-  display.print("TIMEBOXGO");
+  display.print(F("TIMEBOXGO"));
+
+  display.setTextSize(2);
   display.setCursor(0,SECONDROW);
-  display.print("version: ");
+  display.print(F("version: "));
   display.setCursor(64,SECONDROW);
   display.print(VERSION);
 
@@ -600,15 +602,21 @@ float getLiPoVoltageRaw(int cell) {
       break;
 
     case 1: // cell 1
-      return voltageDivider((float) analogRead(PIN_CELL_1));
+      return abs(voltageDivider((float) analogRead(PIN_CELL_1)));
       break;
 
     case 2: // cell 2
-      return voltageDivider((float) analogRead(PIN_CELL_2)) - voltageDivider((float) analogRead(PIN_CELL_1));
+      return abs(voltageDivider((float) analogRead(PIN_CELL_2)) - voltageDivider((float) analogRead(PIN_CELL_1)));
       break;
 
     case -1: // percentage loaded
-      return max(((getLiPoVoltage(1) + getLiPoVoltage(2)) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100), -1);
+      if (voltageDivider((float) analogRead(PIN_CELL_1)) > 1.0) {
+        return (getLiPoVoltage(1) + getLiPoVoltage(2) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100);
+      } else if (voltageDivider((float) analogRead(PIN_BATT_DIRECT)) > 1.0) {
+        return (getLiPoVoltage(0) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100);
+      } else {
+        return -1;  
+      }
       break;
 
     default:
@@ -683,14 +691,14 @@ float readTempSensor() {
 
 void selftest() {
 
-  Serial.print("LiPo -1:"); Serial.println(getLiPoVoltage(-1));
-  Serial.print("LiPo  0:"); Serial.println(getLiPoVoltage(0));
-  Serial.print("LiPo  1:"); Serial.println(getLiPoVoltage(1));
-  Serial.print("LiPo  2:"); Serial.println(getLiPoVoltage(2));
+  Serial.print(F("LiPo -1:")); Serial.println(getLiPoVoltage(-1));
+  Serial.print(F("LiPo  0:")); Serial.println(getLiPoVoltage(0));
+  Serial.print(F("LiPo  1:")); Serial.println(getLiPoVoltage(1));
+  Serial.print(F("LiPo  2:")); Serial.println(getLiPoVoltage(2));
 
-  Serial.print("Temp:"); Serial.println(readTempSensor());
+  Serial.print(F("Temp:")); Serial.println(readTempSensor());
 
-  Serial.print("ButtonUP  :"); Serial.println(buttonUpPressed());
-  Serial.print("ButtonDOWN:"); Serial.println(buttonDownPressed());
-  Serial.print("ButtonX   :"); Serial.println(buttonXPressed());
+  Serial.print(F("ButtonUP  :")); Serial.println(buttonUpPressed());
+  Serial.print(F("ButtonDOWN:")); Serial.println(buttonDownPressed());
+  Serial.print(F("ButtonX   :")); Serial.println(buttonXPressed());
 }
