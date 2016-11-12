@@ -7440,8 +7440,6 @@ http://www.lumberg.com/Produkte/PDFs/1501_06.pdf</description>
 <sheets>
 <sheet>
 <plain>
-<text x="25.4" y="20.32" size="1.778" layer="91">3.3v on pin 4
-OR 5v on pin 5</text>
 <text x="195.58" y="33.02" size="1.778" layer="91">Short between Power-GND
 and Signal-GND</text>
 </plain>
@@ -7511,7 +7509,10 @@ and Signal-GND</text>
 <instance part="GND14" gate="1" x="195.58" y="93.98" rot="R180"/>
 <instance part="R6" gate="G$1" x="208.28" y="83.82"/>
 <instance part="R7" gate="G$1" x="195.58" y="99.06"/>
-<instance part="HIGHSIDESWITCH" gate="G$1" x="266.7" y="66.04"/>
+<instance part="HIGHSIDESWITCH" gate="G$1" x="266.7" y="66.04" smashed="yes">
+<attribute name="NAME" x="274.32" y="55.88" size="1.778" layer="95" rot="R90"/>
+<attribute name="VALUE" x="271.78" y="66.04" size="1.778" layer="96"/>
+</instance>
 <instance part="T_HSS" gate="G$1" x="246.38" y="76.2" rot="R180"/>
 <instance part="R9" gate="G$1" x="243.84" y="58.42" rot="R90"/>
 <instance part="R10" gate="G$1" x="256.54" y="76.2" rot="R180"/>
