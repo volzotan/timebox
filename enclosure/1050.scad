@@ -1,37 +1,42 @@
 // GLOBAL VARS
 
-dim_case_interior   = [160,     55,     93  ];
+// dim_case_interior   = [160,     55,     93  ];
+dim_case_interior   = [158,     55,     91  ];
 dim_battery_holder  = [21.54,40.21,     77.7];
 
 
-translate([5, 126, 12]) camera();
+translate([5, 26, 12]) camera();
 
-//color([0.2, 0.3, 0.9, 0.9]) enclosure();
+color([0.2, 0.3, 0.9, 0.9]) enclosure();
 //translate([200, 0, 0]) color([0.2, 0.3, 0.9]) enclosure1120();
 
 translate([134, 10, 5]) battery_holder();
 
-translate([84, 0, 45]) color([0.5, 0.5, 0.5, 0.5]) uv_filter();
+translate([dim_case_interior[0]/2, 0, 46]) color([0.5, 0.5, 0.5, 1]) filter_adapter();
 
 // pelicase 
 //color([0, 0, 0, 0.1]) cube([160, 70, 93]);
 
-//color([0.3, 0.3, 0.3, 0.8]) translate([110, 60, 14]) {
-//    rotate([135, 0, 180]) {
-//    //rotate([ 90, 0, 180]) {
-//        cube([50.8, 65, 2]);
-//        translate([55, 0, 0]) cube([31, 65, 2]);
-//        translate([50, 38, 0]) cube([5, 20, 2]);
-//        translate([-23, 10, 0]) cube([20, 20, 2]);
-//        
-//        translate([0, 50, 0]) cube([20, 14, 2]);
-//    }
-//}
+color([0.3, 0.3, 0.3, 0.8]) translate([95, 60, 14]) {
+    rotate([105, 0, 180]) {
+    //rotate([ 90, 0, 180]) {
+        difference() {
+            union() {
+                cube([50.8, 65, 2]);
+                translate([55, 0, 0]) cube([31, 65, 2]);
+                translate([50, 38, 0]) cube([5, 20, 2]);
+                translate([-23, 10, 0]) cube([20, 20, 2]);
+                
+                translate([87, 10, 0]) cube([10, 20, 2]);
+            }
+            translate([0, 51, -1]) cube([6, 14, 4]);
+        }
+    }
+}
 
 // --------- modules --------- //
 
 module enclosure1120() {
-            
     difference() {
         cube([184, 78, 121]);
         translate([4, 4, 4]) cube([176, 78, 113]);
@@ -41,30 +46,24 @@ module enclosure1120() {
 module enclosure() {
             
     difference() {
-       
         union() {
             difference() {
                 cube(dim_case_interior);
                 
-                translate([4, -1, 4]) {
+                translate([3, -1, 3]) {
                     cube([152, 80, 85]);    
                 }
-                
-                translate([12, 58, 72]) {
-                    rotate([90, 0, 0]) {
-                        cylinder(h=45, d=20);
-                    }
-                } 
-            
             }
 
             // socket triangle
-            translate([54, 16, 3.5]) {
+            translate([53, 16, 0]) {
                 rotate([0, 0, 0])
-                triangle(60, 12);
+                
+                
+                triangle(60, 17);
             }
             // socket block
-            translate([54, 16, 0]) {
+            translate([53, 16, 0]) {
                 difference() {  
                     cube([60, 50, 12]);    
                     translate([-10, 40, 10]) {
@@ -82,8 +81,8 @@ module enclosure() {
             
             // front
             difference() {
-                cube([160, 3, 93]);
-                translate([84,4,46]) {
+                cube([dim_case_interior[0], 3, dim_case_interior[2]]);
+                translate([dim_case_interior[0]/2,4,46]) {
                     rotate([90, 0, 0]) {
                         cylinder(h=10, d=80);
                     }
@@ -105,21 +104,18 @@ module enclosure() {
 //        translate([-1, 0, -1]) {
 //            rotate([270, 0, 0]) triangle(162, 3);
 //        }
-//        
 //        translate([0-1, 0, 94]) {
 //            rotate([270, 90, 0]) triangle(95, 3);
 //        }
-//        
 //        translate([-1, 0, 94]) {
 //            rotate([180, 0, 0]) triangle(162, 3);
 //        }
-//        
 //        translate([161, 0, 94]) {
 //            rotate([180, 90, 0]) triangle(95, 3);
 //        }
         
         // threadhole
-        translate([81, 28, -1]) {
+        translate([80, 28, -1]) {
             camera_threadhole();
         }
         
@@ -151,7 +147,16 @@ module enclosure() {
         }
         
         // side door
-        translate([-2, 10, 10]) cube([10, 50, 75]);
+        translate([-2, 20, 62]) 
+        union() {
+            cube([10, 25, 14]);
+            translate([0, 25, 7]) {
+                rotate([0, 90, 0]) cylinder(h=10, d=14);
+            }
+            translate([0, 0, 7]) {
+                rotate([0, 90, 0]) cylinder(h=10, d=14);
+            }
+        }
     }
 }
 
@@ -171,7 +176,7 @@ module camera_threadhole() {
     // 1/4 inch = 0,635cm
     screw_hole_diameter = 7;
     socket_diameter     = 24;
-    socket_height       = 4;
+    socket_height       = 5;
     length              = 25;
     height              = 14;
     
@@ -241,15 +246,11 @@ module camera() {
     }
     
     // belt attachment holder
-    translate([-1, 20, 57]) {
-        rotate([90, 90, 0]) {
-            cylinder(h = 2, d = 3.5);
-        }
+    translate([-6, 20, 54]) {
+        cube([6, 1, 6]);
     }
-    translate([121, 20, 57]) {
-        rotate([90, 90, 0]) {
-            cylinder(h = 2, d = 3.5);
-        }
+    translate([120, 20, 54]) {
+        cube([6, 1, 6]);
     }
 
     // lens mount and lens
@@ -300,8 +301,11 @@ module battery_holder() {
     }    
 }
 
-module uv_filter() {
-    rotate([90, 0, 0]) cylinder(h=5, d=82);
+module filter_adapter() {
+    difference() {
+        rotate([90, 0, 0]) cylinder(h=3, d=82);
+        translate([0, 1, 0]) rotate([90, 0, 0]) cylinder(h=5, d=77);
+    }
 }
 
 // ----- support ------- //
