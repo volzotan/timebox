@@ -1,7 +1,7 @@
 // GLOBAL VARS
 
 // dim_case_interior   = [160,     55,     93  ];
-dim_case_interior   = [158,     55,     91  ];
+dim_case_interior   = [160,     55,     94  ];
 dim_battery_holder  = [21.54,40.21,     77.7];
 
 // ----------------------------------------------
@@ -11,9 +11,9 @@ dim_battery_holder  = [21.54,40.21,     77.7];
 color([0.2, 0.3, 0.9, 0.9]) enclosure();
 //translate([200, 0, 0]) color([0.2, 0.3, 0.9]) enclosure1120();
 
-translate([134, 10, 5]) battery_holder();
+//translate([134, 10, 5]) battery_holder();
 
-translate([dim_case_interior[0]/2, 0, 46]) color([0.5, 0.5, 0.5, 1]) filter_adapter();
+// translate([dim_case_interior[0]/2, 0, 46]) color([0.5, 0.5, 0.5, 1]) filter_adapter();
 
 // pelicase 
 //color([0, 0, 0, 0.1]) cube([160, 70, 93]);
@@ -51,8 +51,8 @@ module enclosure() {
             difference() {
                 cube(dim_case_interior);
                 
-                translate([3, -1, 3]) {
-                    cube([152, 80, 85]);    
+                translate([4, -1, 4]) {
+                    cube([152, 80, 86]);    
                 }
             }
 
@@ -90,25 +90,22 @@ module enclosure() {
                 }
             }
             
-            battery_holder_distance = dim_case_interior[0] - 4 - dim_battery_holder[0] - 2;
+            battery_holder_distance = dim_case_interior[0] - 7 - dim_battery_holder[0] - 2;
             translate([battery_holder_distance, 0, 0]) {
-                cube([2, dim_case_interior[1], 10]);
+                cube([2, dim_case_interior[1], 7]);
             }
-            translate([battery_holder_distance, 0, dim_case_interior[2] - 15]) {
-                cube([2, dim_case_interior[1], 15]);
+            translate([battery_holder_distance, 0, dim_case_interior[2] - 12]) {
+                cube([2, dim_case_interior[1], 12]);
             }
             
         }
         
         // edges
         
-        rotated_prism(dim_case_interior[0], dim_case_interior[1], 1);
-        
-        translate([0, 0, dim_case_interior[2]]) rotate([0, 90, 0]) rotated_prism(dim_case_interior[2], dim_case_interior[1], 1.5);
-
-        translate([dim_case_interior[0], 0, dim_case_interior[2] + 0.01]) rotate([0, 180, 0]) rotated_prism(dim_case_interior[0], dim_case_interior[1], 1.5);
-
-        translate([dim_case_interior[0] + 0.01, 0, 0]) rotate([0, 270, 0]) rotated_prism(dim_case_interior[2], dim_case_interior[1], 1.5);
+        translate([0, 0, -0.01]) rotated_prism(dim_case_interior[0], dim_case_interior[1], 2.5);
+        translate([0, 0, dim_case_interior[2]]) rotate([0, 90, 0]) rotated_prism(dim_case_interior[2], dim_case_interior[1], 2.5);
+        translate([dim_case_interior[0], 0, dim_case_interior[2] + 0.01]) rotate([0, 180, 0]) rotated_prism(dim_case_interior[0], dim_case_interior[1], 2.5);
+        translate([dim_case_interior[0] + 0.01, 0, 0]) rotate([0, 270, 0]) rotated_prism(dim_case_interior[2], dim_case_interior[1], 2.5);
         
         // threadhole
         translate([79, 28, -1]) {
@@ -116,17 +113,17 @@ module enclosure() {
         }
         
         // battery holder holes
-        translate([159, 20, 93/2]) {
-            rotate([90, 90, 270]) threadhole(3, 6, 3, 3, 10);
+        translate([dim_case_interior[0], 24, dim_case_interior[2]/2]) {
+            rotate([90, 90, 270]) threadhole(3, 6, 3, 10, 10);
         }
-        translate([159, 40, 93/2]) {
-            rotate([90, 90, 270]) threadhole(3, 6, 3, 3, 10);
+        translate([dim_case_interior[0], 44, dim_case_interior[2]/2]) {
+            rotate([90, 90, 270]) threadhole(3, 6, 3, 10, 10);
         }
         
         // tripod mount holes
         translate([dim_case_interior[0]/2, 22, -1]) {
             space = [83, 40];
-            height = 3;
+            height = 4;
             diameter = 13; //7.5;
 
             //cube([space[0], space[1], 10], center=true);
@@ -137,7 +134,7 @@ module enclosure() {
 
         // camera battery door hole
         translate([4, 14, 1]) {
-            cube([46, 42, 10]);
+        //     cube([46, 42, 10]);
             
             // cuttingholes
 //            translate([1, 1, -1]) {
