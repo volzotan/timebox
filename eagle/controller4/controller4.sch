@@ -8955,7 +8955,6 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="C1" library="SparkFun-Passives" deviceset="CAP" device="1206" value="100nF"/>
 <part name="SUPPLY3" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="GND6" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
-<part name="H2" library="holes" deviceset="MOUNT-HOLE" device="2.8" value="MOUNT-HOLE2.8"/>
 <part name="SUPPLY7" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="SUPPLY8" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="CONV_X_VCC" library="SparkFun-Connectors" deviceset="M05" device="LOCK"/>
@@ -9037,7 +9036,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="Q2" library="transistor-fet" deviceset="FDD4141" device="TO252" value=""/>
 <part name="Y1" library="SparkFun-FreqCtrl" deviceset="CRYSTAL" device="HC49US"/>
 <part name="S2" library="SparkFun-Electromechanical" deviceset="SWITCH-SPDT" device="PTH_LOCK"/>
-<part name="Q1" library="SparkFun-DiscreteSemi" deviceset="TRANSISTOR_PNP" device="TO92" value="check_pins"/>
+<part name="Q1" library="SparkFun-DiscreteSemi" deviceset="TRANSISTOR_PNP" device="TO92"/>
 <part name="R1" library="SparkFun-Resistors" deviceset="RESISTOR" device="1206"/>
 <part name="SUPPLY9" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="S1" library="SparkFun-Electromechanical" deviceset="JOYSTICK_MINI" device=""/>
@@ -9068,8 +9067,9 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="T_ZERO_N" library="SparkFun-DiscreteSemi" deviceset="TRANSISTOR_NPN" device="2N3904"/>
 <part name="R2" library="SparkFun-Resistors" deviceset="RESISTOR" device="1206"/>
 <part name="GND27" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
-<part name="H1" library="holes" deviceset="MOUNT-HOLE" device="2.8" value="MOUNT-HOLE2.8"/>
 <part name="FRAME2" library="frames" deviceset="DINA4_L" device=""/>
+<part name="R3" library="SparkFun-Resistors" deviceset="RESISTOR" device="1206"/>
+<part name="SUPPLY15" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -9780,7 +9780,6 @@ and Signal-GND</text>
 <text x="208.28" y="48.26" size="1.778" layer="91">changed pull up
 resistor from 1k
 to 10k. </text>
-<text x="104.14" y="129.54" size="1.778" layer="91">VCC?</text>
 </plain>
 <instances>
 <instance part="DISP" gate="G$1" x="40.64" y="22.86"/>
@@ -9812,7 +9811,6 @@ to 10k. </text>
 <instance part="FRAME2" gate="G$1" x="0" y="0"/>
 <instance part="FRAME2" gate="G$2" x="162.56" y="0"/>
 <instance part="GND6" gate="1" x="48.26" y="88.9"/>
-<instance part="H2" gate="G$1" x="43.18" y="170.18"/>
 <instance part="CONV_X_VCC" gate="G$1" x="134.62" y="22.86" rot="R180"/>
 <instance part="GND17" gate="1" x="116.84" y="25.4" rot="R270"/>
 <instance part="H4" gate="G$1" x="76.2" y="170.18"/>
@@ -9838,7 +9836,8 @@ to 10k. </text>
 <instance part="J1" gate="G$1" x="137.16" y="73.66" rot="R180"/>
 <instance part="GND7" gate="1" x="124.46" y="66.04"/>
 <instance part="D1" gate="1" x="241.3" y="86.36" rot="R90"/>
-<instance part="H1" gate="G$1" x="10.16" y="170.18"/>
+<instance part="R3" gate="G$1" x="106.68" y="129.54"/>
+<instance part="SUPPLY15" gate="G$1" x="99.06" y="132.08"/>
 </instances>
 <busses>
 </busses>
@@ -9882,6 +9881,12 @@ to 10k. </text>
 <wire x1="78.74" y1="76.2" x2="71.12" y2="76.2" width="0.1524" layer="91"/>
 <wire x1="71.12" y1="76.2" x2="71.12" y2="81.28" width="0.1524" layer="91"/>
 <pinref part="SUPPLY6" gate="G$1" pin="VCC"/>
+</segment>
+<segment>
+<pinref part="R3" gate="G$1" pin="1"/>
+<wire x1="101.6" y1="129.54" x2="99.06" y2="129.54" width="0.1524" layer="91"/>
+<pinref part="SUPPLY15" gate="G$1" pin="VCC"/>
+<wire x1="99.06" y1="129.54" x2="99.06" y2="132.08" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="GND" class="1">
@@ -10119,6 +10124,8 @@ to 10k. </text>
 <pinref part="R10" gate="G$1" pin="2"/>
 <wire x1="114.3" y1="129.54" x2="111.76" y2="129.54" width="0.1524" layer="91"/>
 <wire x1="111.76" y1="129.54" x2="111.76" y2="134.62" width="0.1524" layer="91"/>
+<pinref part="R3" gate="G$1" pin="2"/>
+<junction x="111.76" y="129.54"/>
 </segment>
 </net>
 <net name="RST" class="0">
