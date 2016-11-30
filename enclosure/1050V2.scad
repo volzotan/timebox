@@ -3,7 +3,7 @@ include <controllerHolder1050.scad>;
 // GLOBAL VARS
 
 // dim_case_interior   = [160,     55,     93  ];
-dim_case_interior   = [160,     55,     94  ];
+dim_case_interior   = [158,     55,     91  ];
 dim_battery_holder  = [21.54,40.21,     77.7];
 
 // ----------------------------------------------
