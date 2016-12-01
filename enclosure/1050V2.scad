@@ -1,4 +1,4 @@
-include <controllerHolder1050.scad>;
+ include <controllerHolder1050.scad>;
 
 // GLOBAL VARS
 
@@ -9,8 +9,8 @@ dim_battery_holder  = [21.54,40.21,     77.7];
 // ----------------------------------------------
 
 color([0.2, 0.3, 0.9, 0.9]) enclosure();
-// translate([134, 10, 5]) battery_holder();
-// translate([6, 26, 12]) camera();
+// translate([132, 10, 5]) battery_holder();
+// translate([2, 26, 12]) camera();
 
 // translate([160, 70, 90]) rotate([-90, 0, 180]) color([0.5, 0.5, 0.5, 0.2]) controllerHolder();
 
@@ -18,6 +18,8 @@ color([0.2, 0.3, 0.9, 0.9]) enclosure();
 
 // pelicase 
 //color([0, 0, 0, 0.1]) cube([160, 70, 93]);
+
+
 
 //color([0.3, 0.3, 0.3, 0.8]) translate([95, 60, 14]) {
 //    rotate([105, 0, 180]) {
@@ -51,14 +53,14 @@ module enclosure() {
             }
 
             // socket triangle
-            translate([53, 16, 0]) {
+            translate([50, 16, 0]) {
                 rotate([0, 0, 0])
                 
                 
                 triangle(60, 17);
             }
             // socket block
-            translate([53, 16, 0]) {
+            translate([50, 16, 0]) {
                 difference() {  
                     cube([60, 50, 12]);    
                     translate([-10, 40, 10]) {
@@ -76,10 +78,10 @@ module enclosure() {
             
             // front
             difference() {
-                cube([dim_case_interior[0], 3, dim_case_interior[2]]);
-                translate([dim_case_interior[0]/2,4,46]) {
+                cube([dim_case_interior[0], 2, dim_case_interior[2]]);
+                translate([dim_case_interior[0]/2,4,dim_case_interior[2]/2]) {
                     rotate([90, 0, 0]) {
-                        cylinder(h=10, d=80);
+                        cylinder(h=10, d=80, $fn=64);
                     }
                 }
             }
@@ -93,7 +95,7 @@ module enclosure() {
         translate([dim_case_interior[0] + 0.01, 0, 0]) rotate([0, 270, 0]) rotated_prism(dim_case_interior[2], dim_case_interior[1], 2.5);
         
         // threadhole
-        translate([80, 28, -1]) {
+        translate([76, 28, -1]) {
             camera_threadhole();
         }
         
@@ -118,16 +120,18 @@ module enclosure() {
         // }
         
         // side door
-        translate([-2, 20, 62]) 
-        union() {
-            cube([10, 25, 14]);
-            translate([0, 25, 7]) {
-                rotate([0, 90, 0]) cylinder(h=10, d=14);
+        translate([-1, 6, 10]) {
+            height = 72;
+            width  = 10;
+            depth  = 55;
+            prism_diff = 3;
+
+            union() {
+                cube([width, depth, height]);
+                translate([width, 0, 0]) rotate([0, 180, 0]) prism(width, depth, prism_diff);
+                translate([0, 0, height]) rotate([0, 0, 0]) prism(width, depth, prism_diff);
             }
-            translate([0, 0, 7]) {
-                rotate([0, 90, 0]) cylinder(h=10, d=14);
-            }
-        }
+}
     }
 }
 
@@ -135,7 +139,7 @@ module camera_threadhole() {
     // 1/4 inch = 0,635cm
     screw_hole_diameter = 7;
     socket_diameter     = 24;
-    socket_height       = 5;
+    socket_height       = 8;
     length              = 25;
     height              = 14;
     
