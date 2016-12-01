@@ -15,16 +15,16 @@ if (assembled) {
     translate([159, 0, 0]) cage_side_left();
     translate([6, 0, dim_case_interior[2]-10]) cage_top();
 } else {
-    translate([0, 0, 0]) cage_bottom();
-    translate([152, 70, 10]) rotate([0, 180, 0]) cage_top();
-    translate([0, 135, 5]) rotate([0, 90, 0]) cage_side_right();
-    translate([195, 135, 0]) rotate([0, -90, 0]) cage_side_left();
+    translate([0, 65, 10])      rotate([180, 0, 0]) cage_bottom();
+    translate([0, 70, 0])       rotate([0, 0, 0]) cage_top();
+    translate([0, 135, 4])      rotate([0, 90, 0])  cage_side_right();
+    translate([195, 135, 0])    rotate([0, -90, 0]) cage_side_left();
 }
 
-translate([240, 0, 0]) color([0.2, 0.3, 0.9, 0.9]) enclosure();
+// translate([240, 0, 0]) color([0.2, 0.3, 0.9, 0.9]) enclosure();
 
-translate([134, 10, 8]) battery_holder();
-translate([7, 26, 12]) camera();
+// translate([134, 10, 8]) battery_holder();
+// translate([7, 26, 12]) camera();
 // translate([dim_case_interior[0]/2, 0, 46]) color([0.5, 0.5, 0.5, 1]) filter_adapter();
 
 // pelicase 
@@ -152,7 +152,7 @@ module cage_bottom() {
             // socket block
             translate([48, 16, 0]) {
                 difference() {  
-                    cube([60, 50, 12]);    
+                    cube([60, 50, 10]);    
                     translate([-10, 40, 10]) {
                         rotate([0, 90, 0]) {
                             difference() {
@@ -185,7 +185,6 @@ module cage_bottom() {
 
         // edge
         translate([0, -0.01, -0.01]) rotated_prism(bottom_length, 3, 3);
-
     }
 
 }
