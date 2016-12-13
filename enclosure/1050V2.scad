@@ -3,7 +3,7 @@
 // GLOBAL VARS
 
 // dim_case_interior   = [160,     55,     94  ];
-dim_case_interior   = [158,     55,     90  ];
+dim_case_interior   = [159,     55,     90  ];
 dim_battery_holder  = [21.54,40.21,     77.7];
 
 // ----------------------------------------------
@@ -48,7 +48,7 @@ module enclosure() {
                 cube(dim_case_interior);
                 
                 translate([4, -1, 4]) {
-                    cube([150, 80, 82]);    
+                    cube([151, 80, 82]);    
                 }
             }
 
@@ -85,7 +85,19 @@ module enclosure() {
                     }
                 }
             }
-        }
+            
+            // battery holder ridges
+            
+            umts_stick_depth = 10;
+            
+            translate([151-20, 0, 0]) cube([2, dim_case_interior[1]-umts_stick_depth, 15]);
+            translate([151-20, 0, dim_case_interior[2]-15]) cube([2, dim_case_interior[1]-umts_stick_depth, 15]);
+            
+            translate([151-13, 0, 0]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
+            translate([151-13, 0, dim_case_interior[2]-7]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
+            translate([151-3, 0, dim_case_interior[2]-7]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
+            
+        } // end union
         
         // edges
         
@@ -99,32 +111,56 @@ module enclosure() {
             camera_threadhole();
         }
         
-        // battery holder holes
-        translate([dim_case_interior[0], 24, dim_case_interior[2]/2]) {
-            rotate([90, 90, 270]) threadhole(3, 6, 3, 10, 10);
-        }
-        translate([dim_case_interior[0], 44, dim_case_interior[2]/2]) {
-            rotate([90, 90, 270]) threadhole(3, 6, 3, 10, 10);
-        }
+        // umts stick cutout
+        translate([dim_case_interior[0]-31, dim_case_interior[1], dim_case_interior[2]-10]) roundcube(27, 27, 20, 10);        translate([dim_case_interior[0]-31, dim_case_interior[1], 0]) roundcube(27, 27, 20, 10);
         
-        // tripod mount holes
-        // translate([dim_case_interior[0]/2, 22, -1]) {
-        //     space = [83, 40];
-        //     height = 4;
-        //     diameter = 13; //7.5;
-
-        //     //cube([space[0], space[1], 10], center=true);
-            
-        //     translate([30, 0, 0]) cylinder(h=height, d=diameter);
-        //     translate([-30, 0, 0]) cylinder(h=height, d=diameter);
-        // }
+        
+        // side holes
+        
+//        offset_l = 5;
+//        range_l  = dim_case_interior[2];
+//        
+//        translate([dim_case_interior[0], 42, offset_l+range_l/5*1]) {
+//            rotate([90, 90, 270]) threadhole(10, 6, 3, 20, 10);
+//        }
+//        translate([dim_case_interior[0], 42, offset_l+range_l/5*2]) {
+//            rotate([90, 90, 270]) threadhole(10, 6, 3, 20, 10);
+//        }
+//        translate([dim_case_interior[0], 42, offset_l+range_l/5*3]) {
+//            rotate([90, 90, 270]) threadhole(10, 6, 3, 20, 10);
+//        }        
+//        translate([dim_case_interior[0], 42, offset_l+range_l/5*4]) {
+//            rotate([90, 90, 270]) threadhole(10, 6, 3, 20, 10);
+//        }
+//        
+//        offset_t = 12;
+//        range_t  = 100;
+//
+//        translate([offset_t+range_t/5*0, 22, dim_case_interior[2]-10]) {
+//            threadhole(10, 6, 3, 20, 15);
+//        }
+//        translate([offset_t+range_t/5*1, 22, dim_case_interior[2]-10]) {
+//            threadhole(10, 6, 3, 20, 15);
+//        }
+//        translate([offset_t+range_t/5*2, 22, dim_case_interior[2]-10]) {
+//            threadhole(10, 6, 3, 20, 15);
+//        }
+//        translate([offset_t+range_t/5*3, 22, dim_case_interior[2]-10]) {
+//            threadhole(10, 6, 3, 20, 15);
+//        }
+//        translate([offset_t+range_t/5*4, 22, dim_case_interior[2]-10]) {
+//            threadhole(10, 6, 3, 20, 15);
+//        }
+//        translate([offset_t+range_t/5*5, 22, dim_case_interior[2]-10]) {
+//            threadhole(10, 6, 3, 20, 15);
+//        }
         
         // side door
-        translate([-1, 6, 10]) {
-            height = 72;
+        translate([-1, 6, 11]) {
+            height = 70;
             width  = 10;
             depth  = 55;
-            prism_diff = 3;
+            prism_diff = 2;
 
             union() {
                 cube([width, depth, height]);
@@ -141,7 +177,7 @@ module camera_threadhole() {
     socket_diameter     = 24;
     socket_height       = 8;
     length              = 25;
-    height              = 14;
+    height              = 18;
     
     threadhole(screw_hole_diameter, 
                     socket_diameter,
@@ -159,11 +195,11 @@ module threadhole(  screw_hole_diameter,
     cube([screw_hole_diameter, length, height]);
     
     translate([screw_hole_diameter/2, 0, 0]) {
-        cylinder(h=height, d=screw_hole_diameter, $fn=32);
+        cylinder(h=height, d=screw_hole_diameter, $fn=64);
     }
     
     translate([screw_hole_diameter/2, length, 0]) {
-        cylinder(h=height, d=screw_hole_diameter, $fn=32);
+        cylinder(h=height, d=screw_hole_diameter, $fn=64);
     }
     
     translate([-(socket_diameter/2 - screw_hole_diameter/2), 0, 0]) {
@@ -171,11 +207,11 @@ module threadhole(  screw_hole_diameter,
     }
     
     translate([screw_hole_diameter/2, 0, 0]) {
-        cylinder(h=socket_height, d=socket_diameter, $fn=32);
+        cylinder(h=socket_height, d=socket_diameter, $fn=64);
     }
     
     translate([screw_hole_diameter/2, length, 0]) {
-        cylinder(h=socket_height, d=socket_diameter, $fn=32);
+        cylinder(h=socket_height, d=socket_diameter, $fn=64);
     }
 }
 
@@ -273,6 +309,22 @@ module rotated_prism(l, w, h) {
 }
 
 // ----- support ------- //
+
+module roundcube(width, depth, height, radius) {
+    
+    cube([width-radius, depth-radius, height]);
+    
+    translate([-radius, 0, 0]) cube([width-radius, depth-radius, height]);    
+    translate([radius, 0, 0]) cube([width-radius, depth-radius, height]);
+    translate([0, radius, 0]) cube([width-radius, depth-radius, height]);
+    translate([0, -radius, 0]) cube([width-radius, depth-radius, height]);
+
+    translate([0, 0, 0]) cylinder(h=height, d=radius*2, $fn=64);
+    translate([width-radius, 0, 0]) cylinder(h=height, d=radius*2, $fn=64);
+    translate([0, depth-radius, 0]) cylinder(h=height, d=radius*2, $fn=64);
+    translate([width-radius, depth-radius, 0]) cylinder(h=height, d=radius*2, $fn=64);
+    
+}
 
 module triangle(width, height) {
    
