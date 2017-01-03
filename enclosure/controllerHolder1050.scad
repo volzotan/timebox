@@ -1,3 +1,5 @@
+
+
 module controllerHolder() {
 
     width = 160;
@@ -26,6 +28,8 @@ module controllerHolder() {
         translate([width+0.01, -0.01, -1])      rotate([0, 0, 90]) cornercutout(10);
         translate([width+0.01, depth+0.01, -1]) rotate([0, 0, 180]) cornercutout(10);
         translate([-0.01, depth+0.01, -1])      rotate([0, 0, 270]) cornercutout(10);
+        
+        translate([width/2 -40, depth-12, -1]) cube([80, 12+1, 10]);
     }
 
     // modules

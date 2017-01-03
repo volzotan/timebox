@@ -10,7 +10,7 @@ dim_battery_holder  = [21.54,40.21,     77.7];
 
 color([0.2, 0.3, 0.9, 0.9]) enclosure();
 // translate([132, 10, 5]) battery_holder();
-// translate([2, 26, 12]) camera();
+// translate([0, 26, 12]) camera();
 
 // translate([160, 70, 90]) rotate([-90, 0, 180]) color([0.5, 0.5, 0.5, 0.2]) controllerHolder();
 
@@ -18,8 +18,6 @@ color([0.2, 0.3, 0.9, 0.9]) enclosure();
 
 // pelicase 
 //color([0, 0, 0, 0.1]) cube([160, 70, 93]);
-
-
 
 //color([0.3, 0.3, 0.3, 0.8]) translate([95, 60, 14]) {
 //    rotate([105, 0, 180]) {
@@ -53,25 +51,55 @@ module enclosure() {
             }
 
             // socket triangle
-            translate([50, 16, 0]) {
+            translate([48, 13, 0]) {
                 rotate([0, 0, 0])
                 
                 
                 triangle(60, 17);
             }
             // socket block
-            translate([50, 16, 0]) {
+            translate([48, 13, 0]) {
                 difference() {  
                     cube([60, 50, 12]);    
-                    translate([-10, 40, 10]) {
+                    translate([-10, 45, 5]) {
                         rotate([0, 90, 0]) {
                             difference() {
                                 cube([12, 12, 80]);
                                 translate([0, 0, -10]) {
-                                    cylinder(h = 100, d = 20); 
+                                    cylinder(h = 100, d = 10); 
                                 }
                             }
                         }
+                    }
+                }
+            }
+            
+            // pressure nose top
+            translate([48, 0, dim_case_interior[2]-4]) {
+                cube([60, 67, 4]);
+                translate([0, 67, 2]) rotate([0, 90, 0]) cylinder(d=4, h=60, $fn=32);
+            }
+            
+            // pressure nose bottom right
+            translate([0, 0, 0]) {
+                cube([20, 67, 4]);
+                translate([0, 67, 2]) rotate([0, 90, 0]) cylinder(d=4, h=20, $fn=32);
+                translate([20+5, dim_case_interior[1]+5, 0]) {
+                    difference() {
+                        translate([-5, -5, 0]) cube([5, 5, 4]);
+                        translate([0, 0, -1]) cylinder(d=10, h=4+2, $fn=32);
+                    }
+                }
+            }
+            
+            // pressure nose bottom left
+            translate([dim_case_interior[0]-20, 0, 0]) {
+                cube([20, 67, 4]);
+                translate([0, 67, 2]) rotate([0, 90, 0]) cylinder(d=4, h=20, $fn=32);
+                translate([0, dim_case_interior[1]+5, 0]) {
+                    difference() {
+                        translate([-5, -5, 0]) cube([5, 5, 4]);
+                        translate([-5, 0, -1]) cylinder(d=10, h=4+2, $fn=32);
                     }
                 }
             }
@@ -107,12 +135,12 @@ module enclosure() {
         translate([dim_case_interior[0] + 0.01, 0, 0]) rotate([0, 270, 0]) rotated_prism(dim_case_interior[2], dim_case_interior[1], 2.5);
         
         // threadhole
-        translate([76, 28, -1]) {
+        translate([74, 28, -1]) {
             camera_threadhole();
         }
         
         // umts stick cutout
-        translate([dim_case_interior[0]-31, dim_case_interior[1], dim_case_interior[2]-10]) roundcube(27, 27, 20, 10);        translate([dim_case_interior[0]-31, dim_case_interior[1], 0]) roundcube(27, 27, 20, 10);
+        translate([dim_case_interior[0]-31, dim_case_interior[1], dim_case_interior[2]-10]) roundcube(27, 27, 20, 10);        //translate([dim_case_interior[0]-31, dim_case_interior[1], 0]) roundcube(27, 27, 20, 10);
         
         
         // side holes
