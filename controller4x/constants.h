@@ -35,7 +35,7 @@
 
 // ----------- MISC -----------
 
-#define VERSION                          0.2
+#define VERSION                          4.0
 
 // display offset for 2nd row
 #define SECONDROW                         18 

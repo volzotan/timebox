@@ -81,7 +81,6 @@ void wait(float seconds) {
 // -------------------------------- DISPLAY -------------------------------- //
 
 void initDisplay() {
-  // initialize with the I2C addr 0x3C (for the 128x32)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
 
@@ -93,11 +92,21 @@ void initDisplay() {
 
   display.setTextSize(2);
   display.setCursor(0,SECONDROW);
-  display.print(F("version: "));
+  display.print(F("v: "));
   display.setCursor(64,SECONDROW);
   display.print(VERSION);
 
   display.display();
+}
+
+void displayOn(boolean state) {
+  if (state) {
+    digitalWrite(PIN_DISPLAY_EN, LOW);
+  } else {
+    display.clearDisplay();
+    display.display();
+    digitalWrite(PIN_DISPLAY_EN, HIGH);
+  }
 }
 
 // -------------------------------- BATTERY -------------------------------- //
