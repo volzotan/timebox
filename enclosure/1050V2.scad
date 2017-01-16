@@ -3,16 +3,16 @@
 // GLOBAL VARS
 
 // dim_case_interior   = [160,     55,     94  ];
-dim_case_interior   = [159,     55,     90  ];
+dim_case_interior   = [160,     55,     90  ];
 dim_battery_holder  = [21.54,40.21,     77.7];
 
 // ----------------------------------------------
 
 color([0.2, 0.3, 0.9, 0.9]) enclosure();
-// translate([132, 10, 5]) battery_holder();
-// translate([0, 26, 12]) camera();
+// translate([132, 10, 5]) battery_holder();    
+ translate([0, 26, 12]) camera();
 
-// translate([160, 70, 90]) rotate([-90, 0, 180]) color([0.5, 0.5, 0.5, 0.2]) controllerHolder();
+ translate([172 - (172-dim_case_interior[0])/2, 80, 105 - (105-dim_case_interior[2])/2 ]) rotate([-90, 0, 180]) color([0.5, 0.5, 0.5, 0.2]) controllerHolder();
 
 // translate([dim_case_interior[0]/2, 0, 46]) color([0.5, 0.5, 0.5, 1]) filter_adapter();
 
@@ -60,8 +60,8 @@ module enclosure() {
             // socket block
             translate([48, 13, 0]) {
                 difference() {  
-                    cube([60, 50, 12]);    
-                    translate([-10, 45, 5]) {
+                    cube([60, 47, 12]);    
+                    translate([-10, 42, 5]) {
                         rotate([0, 90, 0]) {
                             difference() {
                                 cube([12, 12, 80]);
@@ -72,18 +72,19 @@ module enclosure() {
                         }
                     }
                 }
+                  
             }
             
             // pressure nose top
             translate([48, 0, dim_case_interior[2]-4]) {
-                cube([60, 67, 4]);
-                translate([0, 67, 2]) rotate([0, 90, 0]) cylinder(d=4, h=60, $fn=32);
+                cube([60, 65, 4]);
+                translate([0, 65, 2]) rotate([0, 90, 0]) cylinder(d=4, h=60, $fn=32);
             }
             
             // pressure nose bottom right
             translate([0, 0, 0]) {
-                cube([20, 67, 4]);
-                translate([0, 67, 2]) rotate([0, 90, 0]) cylinder(d=4, h=20, $fn=32);
+                cube([20, 65, 4]);
+                translate([0, 65, 2]) rotate([0, 90, 0]) cylinder(d=4, h=20, $fn=32);
                 translate([20+5, dim_case_interior[1]+5, 0]) {
                     difference() {
                         translate([-5, -5, 0]) cube([5, 5, 4]);
@@ -94,8 +95,8 @@ module enclosure() {
             
             // pressure nose bottom left
             translate([dim_case_interior[0]-20, 0, 0]) {
-                cube([20, 67, 4]);
-                translate([0, 67, 2]) rotate([0, 90, 0]) cylinder(d=4, h=20, $fn=32);
+                cube([20, 65, 4]);
+                translate([0, 65, 2]) rotate([0, 90, 0]) cylinder(d=4, h=20, $fn=32);
                 translate([0, dim_case_interior[1]+5, 0]) {
                     difference() {
                         translate([-5, -5, 0]) cube([5, 5, 4]);
@@ -118,12 +119,12 @@ module enclosure() {
             
             umts_stick_depth = 10;
             
-            translate([151-20, 0, 0]) cube([2, dim_case_interior[1]-umts_stick_depth, 15]);
-            translate([151-20, 0, dim_case_interior[2]-15]) cube([2, dim_case_interior[1]-umts_stick_depth, 15]);
+            translate([152-20, 0, 0]) cube([2, dim_case_interior[1]-umts_stick_depth, 15]);
+            translate([152-20, 0, dim_case_interior[2]-15]) cube([2, dim_case_interior[1]-umts_stick_depth, 15]);
             
-            translate([151-13, 0, 0]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
-            translate([151-13, 0, dim_case_interior[2]-7]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
-            translate([151-3, 0, dim_case_interior[2]-7]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
+            translate([152-13, 0, 0]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
+            translate([152-13, 0, dim_case_interior[2]-7]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
+            translate([152-3, 0, dim_case_interior[2]-7]) cube([2, dim_case_interior[1]-umts_stick_depth, 7]);
             
         } // end union
         
@@ -204,7 +205,7 @@ module camera_threadhole() {
     screw_hole_diameter = 7;
     socket_diameter     = 24;
     socket_height       = 8;
-    length              = 25;
+    length              = 22;
     height              = 18;
     
     threadhole(screw_hole_diameter, 
