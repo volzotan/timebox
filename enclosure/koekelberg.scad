@@ -7,7 +7,7 @@ size_top = [160, 110, 5];
 wall_thickness = 2;
 screw_bar_width = 8;
 pug_diameter_top = 2.8;
-pug_diameter_btm = 4;
+pug_diameter_btm = 5.5;
 uv_filter_diameter = 77; // ?
 
 oring_bottom = 0.8;
@@ -42,9 +42,7 @@ if (render_bottom) {
                 translate([0, size_bottom[1]-screw_bar_width, 0]) cube([screw_bar_width, screw_bar_width, size_bottom[2]]);
             
                 // socket
-                translate([60, 25, 0]) {
-                    rotate([0, 0, 0]) triangle(60, 14);
-                    
+                translate([60, 25, 0]) {                    
                     translate([0, 0, 0]) cube([60, 46, 10]);    
                 }
             }
@@ -53,11 +51,6 @@ if (render_bottom) {
             translate([size_bottom[0]-screw_bar_width, 0, 0]) pug(100, pug_diameter_top);
             translate([size_bottom[0]-screw_bar_width, size_bottom[1]-screw_bar_width, 0]) pug(100, pug_diameter_top);
             translate([0, size_bottom[1]-screw_bar_width, 0]) pug(100, pug_diameter_top);
-            
-            translate([]) pug(1);
-            translate([size_bottom[0]-screw_bar_width, 0, 0]) pug(1);
-            translate([size_bottom[0]-screw_bar_width, size_bottom[1]-screw_bar_width, 0]) pug(1);
-            translate([0, size_bottom[1]-screw_bar_width, 0]) pug(1);
             
             translate([86, 45, -1]) threadhole(length=10);
             
@@ -87,6 +80,11 @@ if (render_top) {
             translate([size_top[0]-screw_bar_width, 0, 0]) pug(100, pug_diameter_top);
             translate([size_top[0]-screw_bar_width, size_bottom[1]-screw_bar_width, 0]) pug(100, pug_diameter_top);
             translate([0, size_top[1]-screw_bar_width, 0]) pug(100, pug_diameter_top);
+            
+            translate([]) pug(1, pug_diameter_btm);
+            translate([size_bottom[0]-screw_bar_width, 0, 0]) pug(1, pug_diameter_btm);
+            translate([size_bottom[0]-screw_bar_width, size_bottom[1]-screw_bar_width, 0]) pug(1, pug_diameter_btm);
+            translate([0, size_bottom[1]-screw_bar_width, 0]) pug(1, pug_diameter_btm);
             
             translate([0, 0, -oring_bottom+0.01]) oring(size_top, wall_thickness, screw_bar_width, oring_bottom);  
         }

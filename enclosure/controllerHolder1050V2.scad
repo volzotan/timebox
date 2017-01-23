@@ -1,4 +1,4 @@
-// controllerHolder();
+controllerHolder();
 
 module controllerHolder() {
 
