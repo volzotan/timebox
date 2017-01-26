@@ -7275,7 +7275,7 @@ High-power, low thermal resistance package.</description>
 <part name="GND21" library="supply1" deviceset="GNDA" device=""/>
 <part name="GND22" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="ICSP" library="SparkFun-Connectors" deviceset="M03X2" device="FEMALE"/>
-<part name="RRST" library="SparkFun-Passives" deviceset="RESISTOR" device="1206"/>
+<part name="RRST" library="SparkFun-Passives" deviceset="RESISTOR" device="0805-RES"/>
 <part name="RUSB1" library="SparkFun-Passives" deviceset="RESISTOR" device="0805-RES"/>
 <part name="RUSB2" library="SparkFun-Passives" deviceset="RESISTOR" device="0805-RES"/>
 <part name="R8" library="SparkFun-Passives" deviceset="RESISTOR" device="1206"/>
@@ -7288,8 +7288,8 @@ High-power, low thermal resistance package.</description>
 <part name="C2" library="SparkFun-Capacitors" deviceset="CAP" device="1206" value="1uF"/>
 <part name="GND14" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="U$3" library="adafruit" deviceset="ATMEGA32U4" device="-AU" value=""/>
-<part name="C4" library="SparkFun-Passives" deviceset="CAP" device="1206" value="22pF"/>
-<part name="C5" library="SparkFun-Passives" deviceset="CAP" device="1206" value="22pF"/>
+<part name="C4" library="SparkFun-Passives" deviceset="CAP" device="0805" value="22pF"/>
+<part name="C5" library="SparkFun-Passives" deviceset="CAP" device="0805" value="22pF"/>
 <part name="GND19" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="GND20" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="C3" library="SparkFun-Passives" deviceset="CAP" device="0805" value="10uF"/>
@@ -7431,7 +7431,7 @@ cause trouble</text>
 <instance part="J5" gate="G$1" x="256.54" y="144.78" rot="R180"/>
 <instance part="S1" gate="S" x="53.34" y="22.86"/>
 <instance part="R5" gate="G$1" x="66.04" y="27.94" rot="R270"/>
-<instance part="GND27" gate="1" x="40.64" y="22.86" rot="R270"/>
+<instance part="GND27" gate="1" x="40.64" y="20.32" rot="R270"/>
 <instance part="SUPPLY5" gate="G$1" x="66.04" y="35.56"/>
 <instance part="Q1" gate="G$1" x="198.12" y="154.94"/>
 <instance part="Q2" gate="G$1" x="198.12" y="137.16"/>
@@ -7583,11 +7583,6 @@ cause trouble</text>
 <wire x1="185.42" y1="48.26" x2="187.96" y2="48.26" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="GND27" gate="1" pin="GND"/>
-<pinref part="S1" gate="S" pin="1"/>
-<wire x1="43.18" y1="22.86" x2="48.26" y2="22.86" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="Q1" gate="G$1" pin="S"/>
 <wire x1="198.12" y1="149.86" x2="208.28" y2="149.86" width="0.1524" layer="91"/>
 <wire x1="208.28" y1="149.86" x2="208.28" y2="139.7" width="0.1524" layer="91"/>
@@ -7608,6 +7603,11 @@ cause trouble</text>
 <junction x="208.28" y="149.86"/>
 <wire x1="208.28" y1="165.1" x2="218.44" y2="165.1" width="0.1524" layer="91"/>
 <pinref part="R14" gate="G$1" pin="1"/>
+</segment>
+<segment>
+<pinref part="GND27" gate="1" pin="GND"/>
+<pinref part="S1" gate="S" pin="2"/>
+<wire x1="43.18" y1="20.32" x2="48.26" y2="20.32" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="CAM_OUT" class="2">
@@ -7655,11 +7655,6 @@ cause trouble</text>
 </net>
 <net name="CAM1" class="0">
 <segment>
-<pinref part="U$3" gate="G$1" pin="PB6(OC1B/OC4B/ADC13)"/>
-<wire x1="132.08" y1="121.92" x2="154.94" y2="121.92" width="0.1524" layer="91"/>
-<label x="154.94" y="121.92" size="1.778" layer="95"/>
-</segment>
-<segment>
 <pinref part="Q1" gate="G$1" pin="G"/>
 <pinref part="R10" gate="G$1" pin="2"/>
 <wire x1="190.5" y1="154.94" x2="187.96" y2="154.94" width="0.1524" layer="91"/>
@@ -7667,13 +7662,13 @@ cause trouble</text>
 <junction x="187.96" y="154.94"/>
 <label x="180.34" y="154.94" size="1.778" layer="95" rot="R90"/>
 </segment>
+<segment>
+<pinref part="U$3" gate="G$1" pin="PF1(ADC1)"/>
+<wire x1="132.08" y1="154.94" x2="154.94" y2="154.94" width="0.1524" layer="91"/>
+<label x="154.94" y="154.94" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="CAM2" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PC6(OC3A/!OC4A)"/>
-<wire x1="132.08" y1="132.08" x2="154.94" y2="132.08" width="0.1524" layer="91"/>
-<label x="154.94" y="132.08" size="1.778" layer="95"/>
-</segment>
 <segment>
 <pinref part="Q2" gate="G$1" pin="G"/>
 <pinref part="R11" gate="G$1" pin="2"/>
@@ -7681,6 +7676,11 @@ cause trouble</text>
 <junction x="187.96" y="137.16"/>
 <wire x1="187.96" y1="137.16" x2="190.5" y2="137.16" width="0.1524" layer="91"/>
 <label x="180.34" y="137.16" size="1.778" layer="95" rot="R90"/>
+</segment>
+<segment>
+<pinref part="U$3" gate="G$1" pin="PF4(ADC4/TCK)"/>
+<wire x1="132.08" y1="152.4" x2="154.94" y2="152.4" width="0.1524" layer="91"/>
+<label x="154.94" y="152.4" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="BATT_VCC" class="2">
@@ -7694,13 +7694,6 @@ cause trouble</text>
 <wire x1="50.8" y1="162.56" x2="35.56" y2="162.56" width="0.1524" layer="91"/>
 <label x="50.8" y="165.1" size="1.778" layer="95" rot="R90"/>
 <pinref part="S2" gate="1" pin="O"/>
-</segment>
-</net>
-<net name="CAM_EN" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PF7(ADC7(TDI)"/>
-<wire x1="132.08" y1="144.78" x2="154.94" y2="144.78" width="0.1524" layer="91"/>
-<label x="154.94" y="144.78" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="SDA" class="0">
@@ -7758,9 +7751,9 @@ cause trouble</text>
 </net>
 <net name="VD_DIRECT" class="0">
 <segment>
-<pinref part="U$3" gate="G$1" pin="PB5(OC1A/ADC12/!OC4B)"/>
-<wire x1="132.08" y1="119.38" x2="154.94" y2="119.38" width="0.1524" layer="91"/>
-<label x="154.94" y="119.38" size="1.778" layer="95"/>
+<pinref part="U$3" gate="G$1" pin="PF0(ADC0)"/>
+<wire x1="132.08" y1="157.48" x2="154.94" y2="157.48" width="0.1524" layer="91"/>
+<label x="154.94" y="157.48" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="SCK" class="0">
@@ -7838,34 +7831,6 @@ cause trouble</text>
 <pinref part="J3" gate="G$1" pin="1"/>
 </segment>
 </net>
-<net name="BTN_D" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PF6(ADC6/TDO)"/>
-<wire x1="132.08" y1="147.32" x2="154.94" y2="147.32" width="0.1524" layer="91"/>
-<label x="154.94" y="147.32" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="BTN_L" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PF1(ADC1)"/>
-<wire x1="132.08" y1="154.94" x2="154.94" y2="154.94" width="0.1524" layer="91"/>
-<label x="154.94" y="154.94" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="BTN_R" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PF5(ADC5/TMS)"/>
-<wire x1="132.08" y1="149.86" x2="154.94" y2="149.86" width="0.1524" layer="91"/>
-<label x="154.94" y="149.86" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="BTN_U" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PF4(ADC4/TCK)"/>
-<wire x1="132.08" y1="152.4" x2="154.94" y2="152.4" width="0.1524" layer="91"/>
-<label x="154.94" y="152.4" size="1.778" layer="95"/>
-</segment>
-</net>
 <net name="N$10" class="0">
 <segment>
 <pinref part="X2" gate="G$1" pin="2"/>
@@ -7935,9 +7900,9 @@ cause trouble</text>
 <label x="76.2" y="22.86" size="1.778" layer="95"/>
 </segment>
 <segment>
-<pinref part="U$3" gate="G$1" pin="PF0(ADC0)"/>
-<wire x1="132.08" y1="157.48" x2="154.94" y2="157.48" width="0.1524" layer="91"/>
-<label x="154.94" y="157.48" size="1.778" layer="95"/>
+<pinref part="U$3" gate="G$1" pin="PF7(ADC7(TDI)"/>
+<wire x1="132.08" y1="144.78" x2="154.94" y2="144.78" width="0.1524" layer="91"/>
+<label x="154.94" y="144.78" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$31" class="0">
@@ -7989,6 +7954,11 @@ cause trouble</text>
 <junction x="187.96" y="119.38"/>
 <label x="180.34" y="119.38" size="1.778" layer="95" rot="R90"/>
 </segment>
+<segment>
+<pinref part="U$3" gate="G$1" pin="PF5(ADC5/TMS)"/>
+<wire x1="132.08" y1="149.86" x2="154.94" y2="149.86" width="0.1524" layer="91"/>
+<label x="154.94" y="149.86" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="CAM4" class="0">
 <segment>
@@ -7999,6 +7969,11 @@ cause trouble</text>
 <wire x1="238.76" y1="175.26" x2="220.98" y2="175.26" width="0.1524" layer="91"/>
 <junction x="238.76" y="175.26"/>
 <label x="218.44" y="175.26" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="U$3" gate="G$1" pin="PF6(ADC6/TDO)"/>
+<wire x1="132.08" y1="147.32" x2="154.94" y2="147.32" width="0.1524" layer="91"/>
+<label x="154.94" y="147.32" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$16" class="0">
@@ -8032,6 +8007,27 @@ cause trouble</text>
 <pinref part="J2" gate="G$1" pin="6"/>
 <pinref part="J5" gate="G$1" pin="2"/>
 <wire x1="231.14" y1="142.24" x2="248.92" y2="142.24" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="FOO1" class="0">
+<segment>
+<pinref part="U$3" gate="G$1" pin="PB5(OC1A/ADC12/!OC4B)"/>
+<wire x1="132.08" y1="119.38" x2="154.94" y2="119.38" width="0.1524" layer="91"/>
+<label x="154.94" y="119.38" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="CAM_EN" class="0">
+<segment>
+<pinref part="U$3" gate="G$1" pin="PC6(OC3A/!OC4A)"/>
+<wire x1="132.08" y1="132.08" x2="154.94" y2="132.08" width="0.1524" layer="91"/>
+<label x="154.94" y="132.08" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="FOO2" class="0">
+<segment>
+<pinref part="U$3" gate="G$1" pin="PB6(OC1B/OC4B/ADC13)"/>
+<wire x1="132.08" y1="121.92" x2="154.94" y2="121.92" width="0.1524" layer="91"/>
+<label x="154.94" y="121.92" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>
