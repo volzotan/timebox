@@ -12,9 +12,9 @@ radius_t = 10;
 
 corner_radius = 2.5;
 
-wall_thickness = 2;
+wall_thickness = 1;
 
-render_simplified = true;
+render_simplified = false;
 
 // ---
 /*
@@ -26,36 +26,38 @@ Pressure Noses
 
 */
 
-//translate([size_top[0]/2 - 40, 10, -12]) socketplate();
+//translate([size_top[0]/2 - 40, 90, -12]) socketplate();
 
- translate([9, 27, 16]) camera();
+ //translate([9, 27, 16]) camera();
 
 inset();
 
-translate([0, 80, 0]) clamp();
+//translate([0, 80, 0]) clamp();
     
 module clamp() {
-    screw_offset = 7;
+    offset = size_top[0]/2 - 40;
+    screw_offset = 6;
     rot_screw = -4;
     screw_inner_diam = 4;
     screw_outer_diam = 10;
     screw_bottom_f = 6;
     screw_bottom_b = 3;
+    plate_offset = 24;
     
-    translate([65, 62, 3]) cube([42, 20, 12]);
+    translate([offset+plate_offset, 62, 3]) cube([42, 20, 12]);
     
     translate([130, 28, 8]) rotate([0, 90, 0]) cylinder(h=20, d=4, $fn=32);
     
     difference() {
-        translate([40, 0, 0]) cube([84, 50, 15]);
+        translate([offset, 0, 0]) cube([80, 50, 15]);
         
-        translate([65, 12, 3]) cube([42, 40, 13]);
+        translate([offset+plate_offset, 12, 3]) cube([42, 40, 13]);
     
         // negative outer shell
         translate([size_top[0], 0, 0]) rotate([90, 0, 180]) {
             difference() {
                 translate([-20, -20, -20]) cube([size_top[0]+40, size_top[1]+40, height+20]);
-                block2(size_top, size_bottom, height, radius_b, radius_t);
+                block(size_top, size_bottom, height);
             }
         }
         
@@ -74,16 +76,16 @@ module clamp() {
         translate([35, -1, 0]) rotate([0, -45, 0]) cube([40, 80, 10]);
         
         // screw holes
-        translate([40, 0, 0]) {
+        translate([offset, 4, 0]) {
             translate([screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
-            translate([84-screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
-            translate([screw_offset, 50-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
-            translate([84-screw_offset, 50-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
+            translate([80-screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
+            translate([screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
+            translate([80-screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
         
             translate([screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
-            translate([84-screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
-            translate([screw_offset, 50-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
-            translate([84-screw_offset, 50-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
+            translate([80-screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
+            translate([screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
+            translate([80-screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
         }
     }
 }
@@ -92,6 +94,7 @@ module inset() {
 
 difference() {
     union() {
+        
         difference() {
             translate([size_top[0], 0, 0]) rotate([90, 0, 180]) enclosure();
             
@@ -105,64 +108,64 @@ difference() {
             translate([87, 42, -1]) cylinder(h=10, d=10);
         }
 
-        // socket triangle
-        translate([37.5, 13, 0]) {
-            rotate([0, 0, 0]) triangle(88, 17);
-        }
-
-        // socket block
-        translate([37.5, 13, 0]) {
-            difference() {  
-                cube([90, 46, 12]);    
-                translate([-10, 42, 4]) {
-                    rotate([0, 90, 0]) {
-                        difference() {
-                            cube([12, 12, 100]);
-                            translate([0, 0, -10]) {
-                                cylinder(h = 120, d = 8, $fn=64); 
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//        // socket triangle
+//        translate([37.5, 13, 0]) {
+//            rotate([0, 0, 0]) triangle(88, 17);
+//        }
+//
+//        // socket block
+//        translate([37.5, 13, 0]) {
+//            difference() {  
+//                cube([90, 46, 12]);    
+//                translate([-10, 42, 4]) {
+//                    rotate([0, 90, 0]) {
+//                        difference() {
+//                            cube([12, 12, 100]);
+//                            translate([0, 0, -10]) {
+//                                cylinder(h = 120, d = 8, $fn=64); 
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
     
     // negative outer shell
     translate([size_top[0], 0, 0]) rotate([90, 0, 180]) {
         difference() {
             translate([-20, -20, -20]) cube([size_top[0]+40, size_top[1]+40, height+20]);
-            block2(size_top, size_bottom, height, radius_b, radius_t);
+            block(size_top, size_bottom, height);
         }
     }
 
-    // threadhole
-    translate([83, 28, -1]) {
-        camera_threadhole();
-    }
+//    // threadhole
+//    translate([83, 28, -1]) {
+//        camera_threadhole();
+//    }
     
     // screw tunnels
-    tunnel_height = 3;
-    translate([0, 0, -0.1]) intersection() {
-        translate([size_top[0], 0, 0]) rotate([90, 0, 180]) difference() {
-            block(size_top, size_bottom, height);
-            translate([0, tunnel_height, 0]) block(size_top, size_bottom, height);
-        }
-        
-        union() { 
-            translate([40, 13, 0]) {
-                cube([10, 100, 10]);
-                translate([5, 0, 0])cylinder(h=10, d=10, $fn=32);
-            }
-            
-            translate([115, 13, 0]) {
-                cube([10, 100, 10]);
-                translate([5, 0, 0]) cylinder(h=10, d=10, $fn=32);
-            }    
-        }
-    }
-    translate([40, 40, -0.01]) cube([10, 20, tunnel_height]);
-    translate([115, 40, -0.01]) cube([10, 20, tunnel_height]);
+//    tunnel_height = 3;
+//    translate([0, 0, -0.1]) intersection() {
+//        translate([size_top[0], 0, 0]) rotate([90, 0, 180]) difference() {
+//            block(size_top, size_bottom, height);
+//            translate([0, tunnel_height, 0]) block(size_top, size_bottom, height);
+//        }
+//        
+//        union() { 
+//            translate([40, 13, 0]) {
+//                cube([10, 100, 10]);
+//                translate([5, 0, 0])cylinder(h=10, d=10, $fn=32);
+//            }
+//            
+//            translate([115, 13, 0]) {
+//                cube([10, 100, 10]);
+//                translate([5, 0, 0]) cylinder(h=10, d=10, $fn=32);
+//            }    
+//        }
+//    }
+//    translate([40, 40, -0.01]) cube([10, 20, tunnel_height]);
+//    translate([115, 40, -0.01]) cube([10, 20, tunnel_height]);
 }
 }
 
@@ -170,7 +173,7 @@ difference() {
 
 module socketplate() {
     difference() {
-        dist = 4;
+        dist = 6;
         
         cube([80, 40, 10]);
         
@@ -218,24 +221,19 @@ module threadhole(  screw_hole_diameter,
 // ------------------------------------------------------------------
 
 module enclosure() {
-    difference() {
-        if (!render_simplified) {
-            block4(size_top, size_bottom, height, radius_b, radius_t);
-        } else {
-            block2(size_top, size_bottom, height, radius_b, radius_t);
-        }
-        
-        translate([wall_thickness, wall_thickness, 1]) block2(
-            [size_top[0]-wall_thickness*2, size_top[1]-wall_thickness*2, 0.1],
-            [size_bottom[0]-wall_thickness*2, size_bottom[1]-wall_thickness*2, 0.1],
-            height+0.1,
-            10, 15
-        );
-        
-        translate([ size_top[0]/2,
-                    size_top[1]/2,
-                    -1]) {
-            cylinder(h=10, d=80, $fn=64);
+    union() {
+        difference() {
+            if (!render_simplified) {
+                block4(size_top, size_bottom, height, radius_b, radius_t);
+            } else {
+                block2(size_top, size_bottom, height, radius_b, radius_t);
+            }
+                        
+            translate([ size_top[0]/2,
+                        size_top[1]/2,
+                        -1]) {
+                cylinder(h=10, d=80, $fn=64);
+            }
         }
     }
 }
@@ -329,7 +327,23 @@ module cornercutter(width, corner_radius) {
 }
 
 module block2(top, bottom, h, r1, r2) {
-    block(top, bottom, h);
+    union() {
+        difference() {
+            block(top, bottom, h);
+            
+            translate([wall_thickness, wall_thickness, 1]) block(
+                        [size_top[0]-wall_thickness*2, size_top[1]-wall_thickness*2, 0.1],
+                        [size_bottom[0]-wall_thickness*2, size_bottom[1]-wall_thickness*2, 0.1],
+                        height+0.1
+                    );
+        }
+        
+        support_triangle_size = 3;
+        translate([size_bottom[0] + (size_top[1]-size_bottom[1])/2, (size_top[0]-size_bottom[0])/2, 1]) rotate([0, 0, 180]) triangle(size_bottom[0], support_triangle_size);
+        translate([(size_top[1]-size_bottom[1])/2, size_bottom[1] + (size_top[0]-size_bottom[0])/2 - support_triangle_size/2, 1]) rotate([0, 0, 0]) triangle(size_bottom[0], support_triangle_size);
+        translate([(size_top[1]-size_bottom[1])/2 + support_triangle_size/2, (size_top[0]-size_bottom[0])/2, 1]) rotate([0, 0, 90]) triangle(size_bottom[1], support_triangle_size);
+        translate([size_bottom[0] + (size_top[1]-size_bottom[1])/2, (size_top[0]-size_bottom[0])/2, 1]) rotate([270, 0, 90]) triangle(size_bottom[1], support_triangle_size);
+    }
 }
 
 module cornercutter_vert(r, h) {    
