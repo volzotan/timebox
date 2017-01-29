@@ -14,7 +14,7 @@ corner_radius = 2.5;
 
 wall_thickness = 1;
 
-render_simplified = false;
+render_simplified = true;
 
 // ---
 /*
@@ -108,27 +108,27 @@ difference() {
             translate([87, 42, -1]) cylinder(h=10, d=10);
         }
 
-//        // socket triangle
-//        translate([37.5, 13, 0]) {
-//            rotate([0, 0, 0]) triangle(88, 17);
-//        }
-//
-//        // socket block
-//        translate([37.5, 13, 0]) {
-//            difference() {  
-//                cube([90, 46, 12]);    
-//                translate([-10, 42, 4]) {
-//                    rotate([0, 90, 0]) {
-//                        difference() {
-//                            cube([12, 12, 100]);
-//                            translate([0, 0, -10]) {
-//                                cylinder(h = 120, d = 8, $fn=64); 
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        // socket triangle
+        translate([37.5, 10, 0]) {
+            rotate([0, 0, 0]) triangle(88, 17);
+        }
+
+        // socket block
+        translate([37.5, 10, 0]) {
+            difference() {  
+                cube([90, 49, 12]);    
+                translate([-10, 45, 4]) {
+                    rotate([0, 90, 0]) {
+                        difference() {
+                            cube([12, 12, 100]);
+                            translate([0, 0, -10]) {
+                                cylinder(h = 120, d = 8, $fn=64); 
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     
     // negative outer shell
@@ -139,33 +139,33 @@ difference() {
         }
     }
 
-//    // threadhole
-//    translate([83, 28, -1]) {
-//        camera_threadhole();
-//    }
+    // threadhole
+    translate([83, 28, -1]) {
+        camera_threadhole();
+    }
     
     // screw tunnels
-//    tunnel_height = 3;
-//    translate([0, 0, -0.1]) intersection() {
-//        translate([size_top[0], 0, 0]) rotate([90, 0, 180]) difference() {
-//            block(size_top, size_bottom, height);
-//            translate([0, tunnel_height, 0]) block(size_top, size_bottom, height);
-//        }
-//        
-//        union() { 
-//            translate([40, 13, 0]) {
-//                cube([10, 100, 10]);
-//                translate([5, 0, 0])cylinder(h=10, d=10, $fn=32);
-//            }
-//            
-//            translate([115, 13, 0]) {
-//                cube([10, 100, 10]);
-//                translate([5, 0, 0]) cylinder(h=10, d=10, $fn=32);
-//            }    
-//        }
-//    }
-//    translate([40, 40, -0.01]) cube([10, 20, tunnel_height]);
-//    translate([115, 40, -0.01]) cube([10, 20, tunnel_height]);
+    tunnel_height = 3;
+    translate([0, 0, -0.1]) intersection() {
+        translate([size_top[0], 0, 0]) rotate([90, 0, 180]) difference() {
+            block(size_top, size_bottom, height);
+            translate([0, tunnel_height, 0]) block(size_top, size_bottom, height);
+        }
+        
+        union() { 
+            translate([40, 13, 0]) {
+                cube([12, 100, 10]);
+                translate([6, 0, 0])cylinder(h=10, d=12, $fn=32);
+            }
+            
+            translate([115, 13, 0]) {
+                cube([12, 100, 10]);
+                translate([6, 0, 0]) cylinder(h=10, d=12, $fn=32);
+            }    
+        }
+    }
+    translate([40, 40, -0.01]) cube([12, 20, tunnel_height]);
+    translate([115, 40, -0.01]) cube([12, 20, tunnel_height]);
 }
 }
 
