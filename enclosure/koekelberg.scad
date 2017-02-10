@@ -1,19 +1,19 @@
 include <camera.scad>;
 include <enclosure_util.scad>;
 
-size_bottom = [160, 110, 80];
-size_top = [160, 110, 5];
+size_bottom = [160, 110, 84];
+size_top = [160, 110, 3];
 
-wall_thickness = 2;
+wall_thickness = 1.6;
 screw_bar_width = 8;
-pug_diameter_top = 2.8;
-pug_diameter_btm = 5.5;
-uv_filter_diameter = 77; // ?
+pug_diameter_top = 3.3;
+pug_diameter_btm = 6.8;
+uv_filter_diameter = 76.8; // ?
 
 oring_bottom = 0.8;
 oring_bottom = 1.0;
 
-// translate([12, 35, 10]) camera();
+//translate([12, 35, 10]) camera();
 
 render_bottom   = true;
 render_top      = true;
@@ -81,10 +81,10 @@ if (render_top) {
             translate([size_top[0]-screw_bar_width, size_bottom[1]-screw_bar_width, 0]) pug(100, pug_diameter_top);
             translate([0, size_top[1]-screw_bar_width, 0]) pug(100, pug_diameter_top);
             
-            translate([]) pug(1, pug_diameter_btm);
-            translate([size_bottom[0]-screw_bar_width, 0, 0]) pug(1, pug_diameter_btm);
-            translate([size_bottom[0]-screw_bar_width, size_bottom[1]-screw_bar_width, 0]) pug(1, pug_diameter_btm);
-            translate([0, size_bottom[1]-screw_bar_width, 0]) pug(1, pug_diameter_btm);
+            translate([]) pug(1.5, pug_diameter_btm);
+            translate([size_bottom[0]-screw_bar_width, 0, 0]) pug(1.5, pug_diameter_btm);
+            translate([size_bottom[0]-screw_bar_width, size_bottom[1]-screw_bar_width, 0]) pug(1.5, pug_diameter_btm);
+            translate([0, size_bottom[1]-screw_bar_width, 0]) pug(1.5, pug_diameter_btm);
             
             translate([0, 0, -oring_bottom+0.01]) oring(size_top, wall_thickness, screw_bar_width, oring_bottom);  
         }
