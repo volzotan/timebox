@@ -1,8 +1,8 @@
 include <camera.scad>;
 include <enclosure_util.scad>;
 
-size_bottom = [155, 110, 84];
-size_top = [155, 110, 3];
+size_bottom = [155, 105, 82];
+size_top = [155, 105, 3];
 
 wall_thickness = 1.6;
 bottom_thickness = 1.2;
@@ -11,12 +11,12 @@ screw_bar_width = 9;
 pug_diameter_top = 3.3;
 pug_diameter_btm = 6.8;
 uv_filter_diameter  = 76.8; // ?
-uv_filter_diameter2 = 79; // ?
+uv_filter_diameter2 = 79.6; // ?
 
 oring_bottom = 0.8;
 oring_top = 1.2;
 
-// translate([12, 35, 10]) camera();
+// translate([12, 31, 10]) camera();
 
 render_bottom   = true;
 render_top      = false;
@@ -47,13 +47,13 @@ if (render_bottom) {
             
                 // socket
                 translate([60, 25, 0]) {                    
-                    translate([0, 0, 0]) cube([60, 65, 10]);    
+                    translate([0, 0, 0]) cube([60, 46, 10]);    
                 }
             }
             
             // front hole
-            translate([90, 5, size_bottom[2]/2]) rotate([90, 0, 0]) cylinder(h=10, d=uv_filter_diameter, $fn=128);
-            translate([90, 0, size_bottom[2]/2]) rotate([90, 0, 0]) cylinder(h=10, d=uv_filter_diameter2, $fn=128);
+            translate([90, 5, size_bottom[2]/2]) rotate([90, 0, 0]) cylinder(h=10, d=uv_filter_diameter, $fn=256);
+            translate([90, 0, size_bottom[2]/2]) rotate([90, 0, 0]) cylinder(h=10, d=uv_filter_diameter2, $fn=256);
                 
             pug_height = 30;
             
@@ -64,26 +64,27 @@ if (render_bottom) {
                 translate([0, size_bottom[1]-screw_bar_width, 0]) pug(pug_height, pug_diameter_top);
             }
                 
-            translate([70, 80, -1]) {
-                cylinder(h=12, d=5.3, $fn=32);
-                cylinder(h=5, d=14, $fn=5);
-                translate([40, 0, 0]) {
-                    cylinder(h=12, d=5.3, $fn=32);
-                    cylinder(h=5, d=14, $fn=5);
-                }
-            }
-            translate([86, 45, -1]) threadhole(length=10);
-            translate([60, 25, 7]) {                    
-                translate([0, 0, 0]) cube([60, 46, 10]);    
-            }
-                
-            nut_distance = 20;
-            nut_size     = 8;
+//            translate([70, 80, -1]) {
+//                cylinder(h=12, d=3.3, $fn=32);
+//                cylinder(h=3, d=7.0, $fn=6);
+//                translate([40, 0, 0]) {
+//                    cylinder(h=12, d=3.3, $fn=32);
+//                    cylinder(h=3, d=7.0, $fn=6);
+//                }
+//            }
             
-            translate([-0.01, -0.01, size_bottom[2]-nut_distance]) cube([7.4, 7.4, 2]);
-            translate([size_bottom[0]-nut_size+0.01, -0.01, size_bottom[2]-nut_distance]) cube([nut_size, nut_size, 2]);
-            translate([-0.01, size_bottom[1]-nut_size+0.01, size_bottom[2]-nut_distance]) cube([nut_size, nut_size, 2]);
-            translate([size_bottom[0]-nut_size+0.01, size_bottom[1]-nut_size+0.01, size_bottom[2]-nut_distance]) cube([nut_size, nut_size, 2]);
+            translate([86, 42, -1]) threadhole(length=10);
+//            translate([60, 25, 7]) {                    
+//                translate([0, 0, 0]) cube([60, 46, 10]);    
+//            }
+                
+            nut_distance = 10;
+            nut_size     = 7.4;
+            
+            translate([0.8-0.01, -0.01, size_bottom[2]-nut_distance]) cube([7.4, 7.4, 3]);
+            translate([size_bottom[0]-nut_size-0.8, -0.01, size_bottom[2]-nut_distance]) cube([nut_size, nut_size, 3]);
+            translate([0.8-0.01, size_bottom[1]-nut_size+0.01, size_bottom[2]-nut_distance]) cube([nut_size, nut_size, 2]);
+            translate([size_bottom[0]-nut_size-0.8+0.01, size_bottom[1]-nut_size+0.01, size_bottom[2]-nut_distance]) cube([nut_size, nut_size, 3]);
         }
     }
 }
@@ -138,6 +139,20 @@ module oring(base, thickness, bar_width, ring_width) {
    
     translate([base[0] - bar_width, base[1]-bar_width, base[2]]) cube([bar_width-(thickness-ring_width), ring_width, ring_width]);
     translate([base[0] - bar_width, base[1]-bar_width, base[2]]) cube([ring_width, bar_width-(thickness-ring_width), ring_width]);
+}
+
+module nutcut(height, diameter, hole=-1) {
+    rotate([0, 0, 270-45]) {
+        difference() {
+            union() {
+                rotate([0, 0, 30]) cylinder(h=height, d=diameter, $fn=6);
+                translate([0, -diameter/2, 0]) rotate([0, 0, 0]) cube([20, diameter, height]);
+            } 
+            if (hole>0) {
+                translate([0, 0, -1]) cylinder(h=height+2, d=hole, $fn=32);
+            }
+        }
+    }
 }
 
 module pug(height, pug_diameter) {
