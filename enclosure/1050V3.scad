@@ -16,30 +16,29 @@ corner_radius = 2.5;
 wall_thickness = 2.0;
 
 render_simplified = true;
-clamp_print = true;
+clamp_print = false;
 
 // ---
 /*
 TODO:
 
 Halterung für Batterie
-Pressure Noses
 
 */
 
-// translate([size_top[0]/2 - 40, 83, -12]) socketplate();
+//translate([size_top[0]/2 - 40, 43, -12]) socketplate();
 
- //translate([9, 27, 16]) camera();
+// translate([9, 27, 16]) camera();
 
-//inset();
+inset();
 
-// block2(size_top, size_bottom, height, radius_b, radius_t);
-
+// translate([size_top[0], 0, 0]) rotate([90, 0, 180]) enclosure();
+//block2(size_top, size_bottom, height, radius_b, radius_t);
 //translate([87, 152, 10]) cylinder(h=10, d=10);
-
-translate([0, 80, 0]) clamp();
+// translate([0, -4, 0]) clamp();
     
 module clamp() {
+    
     offset = size_top[0]/2 - 40;
     screw_offset = 6;
     rot_screw = -4;
@@ -48,6 +47,13 @@ module clamp() {
     screw_bottom_f = 6;
     screw_bottom_b = 4;
     plate_offset = 23;
+    
+    translate([offset+plate_offset+41, 82, 4.5]) union() {
+        cube([2, 33, 10.5]);
+        translate([2, 0, 3.7]) cube([1, 33, 1.8]);
+        translate([-4+0.1, 0, 5]) rotate([180, 0, 90]) prism(33, 3.8, 4.8);       
+           
+    }
     
     if (!clamp_print) { 
         translate([offset+plate_offset, 30, 5]) {
@@ -67,15 +73,20 @@ module clamp() {
     }
         
     union() {
+                
         difference() {
-            translate([offset, 0, 0]) cube([80, 50, 15]);
+            translate([offset, 0, 0]) cube([80, 45, 15]);
             
             translate([offset+plate_offset, 12, 4+0.01]) cube([43, 40, 11]);
+            
             translate([offset+plate_offset+43-0.01, 12, 8]) cube([1.2, 40, 2]);
-        
+            translate([offset+plate_offset+44-0.01+0.2, 12, 10-0.01]) rotate([0, 0, 90]) prism(41, 1.2, 1.2);       
+            
+            // corner triangle front
+            translate([offset-0.1, 5-0.1, 3]) rotate([270, 0, 0]) triangle(80+1, 2);
             
             // negative outer shell
-            translate([size_top[0], 0, 0]) rotate([90, 0, 180]) {
+            translate([size_top[0], 5, 0]) rotate([90, 0, 180]) {
                 difference() {
                     translate([-20, -20, -20]) cube([size_top[0]+40, size_top[1]+40, height+20]);
                     block(size_top, size_bottom, height);
@@ -98,98 +109,119 @@ module clamp() {
             
             // screw holes
             translate([offset, 4, 0]) {
-                translate([screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
-                translate([80-screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
-                translate([screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
-                translate([80-screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=32);
+                translate([screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
+                translate([80-screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
+                translate([screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
+                translate([80-screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
             
-                translate([screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
-                translate([80-screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
-                translate([screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
-                translate([80-screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=32);
+                translate([screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
+                translate([80-screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
+                translate([screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
+                translate([80-screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
             }
             
             // test
             // translate([28, -1, -1]) cube([20, 100, 30]);
         }
     }
-    translate([offset+plate_offset-0.01, 8, 5]) rotate([90, 0, 90]) prism(42, 4.8, 3.8);
+    translate([offset+plate_offset-0.01, 8, 5]) rotate([90, 0, 90]) prism(37, 4.8, 3.8);
     //translate([38+offset+plate_offset+0.01, 8, 5+5]) rotate([180, 0, 90]) prism(42, 3.8, 4.8);
 }
 
 module inset() {
 
-difference() {
-    union() {
-        difference() {
-            translate([size_top[0], 0, 0]) rotate([90, 0, 180]) enclosure();
-            
-            // strap holder opening
-            translate([0, 31, 64]) {
-                translate([-1, 6, 6]) rotate([0, 90, 0]) cylinder(h=10, d=12);
-                translate([-1, 6, 0]) cube([10, 15, 12]);
+    difference() {
+        union() {
+            difference() {
+                translate([size_top[0], 0, 0]) rotate([90, 0, 180]) enclosure();
+                
+                // strap holder opening
+                translate([0, 31, 64]) {
+                    translate([-1, 6, 6]) rotate([0, 90, 0]) cylinder(h=10, d=12);
+                    translate([-1, 6, 0]) cube([10, 15, 12]);
+                }
             }
-        }
 
-        // socket triangle
-        translate([39, 10, 0]) {
-            rotate([0, 0, 0]) triangle(88, 17);
-        }
+            // socket triangle
+            translate([39, 10, 0]) {
+                rotate([0, 0, 0]) triangle(88, 17);
+            }
 
-        // socket block
-        translate([39, 10, 0]) {
-            difference() {  
-                cube([88, 49, 12]);    
-                translate([-10, 45, 4]) {
-                    rotate([0, 90, 0]) {
-                        difference() {
-                            cube([12, 12, 100]);
-                            translate([0, 0, -10]) {
-                                cylinder(h = 120, d = 8, $fn=64); 
+            // socket block
+            translate([39, 10, 0]) {
+                difference() {  
+                    cube([88, 49, 12]);    
+                    translate([-10, 45, 4]) {
+                        rotate([0, 90, 0]) {
+                            difference() {
+                                cube([12, 12, 100]);
+                                translate([0, 0, -10]) {
+                                    cylinder(h = 120, d = 8, $fn=64); 
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-    }
-    
-    // negative outer shell
-    translate([size_top[0], 0, 0]) rotate([90, 0, 180]) {
-        difference() {
-            translate([-20, -20, -20]) cube([size_top[0]+40, size_top[1]+40, height+20]);
-            block(size_top, size_bottom, height);
-        }
-    }
-
-    // threadhole
-    translate([82, 28, -1]) {
-        camera_threadhole();
-    }
-    
-    // screw tunnels
-    tunnel_height = 3;
-    translate([0, 0, -0.1]) intersection() {
-        translate([size_top[0], 0, 0]) rotate([90, 0, 180]) difference() {
-            block(size_top, size_bottom, height);
-            translate([0, tunnel_height, 0]) block(size_top, size_bottom, height);
-        }
-        
-        union() { 
-            translate([43, 13, 0]) {
-                cube([12, 100, 10]);
-                translate([6, 0, 0])cylinder(h=10, d=12, $fn=32);
+            
+            // pressure noses
+            
+            nose_width1 = 40;
+            nose_width2 = 20;
+            nose_depth  = 65;
+            
+            translate([size_top[0]/2 - nose_width1/2, 0, size_top[1]-wall_thickness]) {
+                cube([nose_width1, nose_depth-wall_thickness/2, wall_thickness]);    
+                translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width1, d=wall_thickness, $fn=32);
             }
             
-            translate([111, 13, 0]) {
-                cube([12, 100, 10]);
-                translate([6, 0, 0]) cylinder(h=10, d=12, $fn=32);
-            }    
+            translate([0, 0, 35]) rotate([0, 90, 0]){
+                cube([nose_width2, nose_depth-wall_thickness/2, wall_thickness]);    
+                translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width2, d=wall_thickness, $fn=32);
+            }
+            
+            translate([size_top[0]-wall_thickness, 0, 35]) rotate([0, 90, 0]){
+                cube([nose_width2, nose_depth-wall_thickness/2, wall_thickness]);    
+                translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width2, d=wall_thickness, $fn=32);
+            }
         }
+        
+        // negative outer shell
+        translate([size_top[0], 0, 0]) rotate([90, 0, 180]) {
+            difference() {
+                translate([-20, -20, -20]) cube([size_top[0]+40, size_top[1]+40, height+20]);
+                block(size_top, size_bottom, height);
+            }
+        }
+
+        // threadhole
+        translate([82, 28, -1]) {
+            threadhole();
+        }
+        
+        // screw tunnels
+        tunnel_height = 3;
+        translate([0, 0, -0.1]) intersection() {
+            translate([size_top[0], 0, 0]) rotate([90, 0, 180]) difference() {
+                block(size_top, size_bottom, height);
+                translate([0, tunnel_height, 0]) block(size_top, size_bottom, height);
+            }
+            
+            union() { 
+                translate([43, 13, 0]) {
+                    cube([12, 100, 10]);
+                    translate([6, 0, 0])cylinder(h=10, d=12, $fn=32);
+                }
+                
+                translate([111, 13, 0]) {
+                    cube([12, 100, 10]);
+                    translate([6, 0, 0]) cylinder(h=10, d=12, $fn=32);
+                }    
+            }
+        }
+        translate([43, 40, -0.01]) cube([12, 20, tunnel_height]);
+        translate([111, 40, -0.01]) cube([12, 20, tunnel_height]);
     }
-    translate([43, 40, -0.01]) cube([12, 20, tunnel_height]);
-    translate([111, 40, -0.01]) cube([12, 20, tunnel_height]);
-}
 
     // tripod test hole    
     // translate([87, 42, -1]) cylinder(h=10, d=10);
@@ -215,10 +247,10 @@ module socketplate() {
         
         cube([80, 40, 10]);
         
-        translate([dist,    dist,       -1]) cylinder(d=4, h=18, $fn=32);
-        translate([80-dist, dist,       -1]) cylinder(d=4, h=18, $fn=32);
-        translate([dist,    40-dist,    -1]) cylinder(d=4, h=18, $fn=32);
-        translate([80-dist, 40-dist,    -1]) cylinder(d=4, h=18, $fn=32);
+        translate([dist,    dist,       -1]) cylinder(d=5, h=18, $fn=32);
+        translate([80-dist, dist,       -1]) cylinder(d=5, h=18, $fn=32);
+        translate([dist,    40-dist,    -1]) cylinder(d=5, h=18, $fn=32);
+        translate([80-dist, 40-dist,    -1]) cylinder(d=5, h=18, $fn=32);
         
         translate([80/4, 40/2, -1]) cylinder(d=7, h=12, $fn=32);  
         translate([80/2, 40/2, -1]) cylinder(d=7, h=12, $fn=32);  

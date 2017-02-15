@@ -1,4 +1,4 @@
-module threadhole(  screw_hole_diameter = 7, 
+module threadhole(  screw_hole_diameter = 6.5, 
                     socket_diameter     = 24,
                     socket_height       = 8,
                     length              = 22,
