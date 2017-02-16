@@ -11,15 +11,49 @@ import gi
 gi.require_version('GExiv2', '0.10')
 from gi.repository import GExiv2
 
-RAW_DIR = "/Users/volzotan/zerobox"
-FILE_EXTENSION = ".arw"
+
+PLATFORM            = None
+RAW_DIR             = None
+FILE_EXTENSION      = ".arw"
 
 WAIT_EXPOSURE_COMP  = 0
 WAIT_AUTOFOCUS      = 1
 
-BRIGHTNESS_THRESHOLD = 10
+EXPOSURE_THRESHOLD  = 10
 
 EXIF_DATE_FORMAT    = '%Y:%m:%d %H:%M:%S'
+
+
+def determine_environment():
+    global RAW_DIR
+    global PLATFORM
+
+    """
+    TODO: maybe check "cat /etc/debian_version" ?
+    """
+
+    output = subprocess.check_output(["uname", "-a"]).lower()
+
+    if "darwin" in output:
+        PLATFORM = "OSX"
+        RAW_DIR = "/Users/volzotan/zerobox"
+    elif "raspberrypi" in output:
+        PLATFORM = "PI"
+        RAW_DIR = "/home/pi/RAW"
+    elif "linux" in output:
+        PLATFORM = "LINUX"
+        RAW_DIR = "/home/pi/RAW"
+    else:
+        PLATFORM = "UNKNOWN"
+
+
+def get_uptime():
+    if PLATFORM == "PI":
+        output = subprocess.check_output(["cat", "/proc/uptime"]).split(" ")
+        return output[0]
+    else:
+        return str("---")
+
 
 # returns (path, filename)
 def acquire_filename(path):
@@ -53,11 +87,6 @@ def take_image(full_name):
     print("image saved to: {}".format(filename))
 
     return filename
-
-
-def shutdown():
-    print("shutdown!")
-    sys.exit(0)
 
 
 def check_prerequisites():
@@ -136,7 +165,7 @@ def adjust_exposure(correction_value):
     for out in output:
         if "Current:" in out:
             current = int(out[9:])
-            if current == correction_value:
+            if current == str(correction_value):
                 print("exposure adjustment correct")
                 return
 
@@ -160,11 +189,18 @@ def autofocus():
     time.sleep(WAIT_AUTOFOCUS)
 
 
+def shutdown():
+    print("shutdown!")
+    print("--- --- --- --- --- --- --- --- --- ---")
+    sys.exit(0)
+
 # ---------- ---------- ---------- ---------- ---------- ---------- #
 
 if (__name__ == "__main__"):
 
-    print("init.", sep="")
+    print("init.") #, sep="")
+    determine_environment()
+
     if not check_prerequisites():
         shutdown()
 
@@ -178,22 +214,28 @@ if (__name__ == "__main__"):
         full_name = os.path.join(path, filename)
 
         adjust_exposure(+1)
+        autofocus()
         take_image(full_name)
-        #full_name = os.path.join(path, "0000.arw")
-        #filename = "0000.arw"
+        #full_name = os.path.join(path, "DSC06531.arw")
+        #filename = "DSC06531.arw"
     except RuntimeError as e:
         print(e)
         shutdown()
 
     # check exposure
     jpeg_full_name = convert_raw_to_jpeg(path, filename, "")
-    brightness = calculate_brightness(jpeg_full_name)
-    print(brightness)
+    exposure = calculate_brightness(jpeg_full_name)
+    print(exposure)
 
-    if brightness > BRIGHTNESS_THRESHOLD:
-        adjust_exposure(-5)
-        take_image(full_name+"_2")
-        adjust_exposure(+1)
+    if exposure < EXPOSURE_THRESHOLD:
+        try:
+            adjust_exposure(-5)
+            take_image(full_name+"_2")
+            adjust_exposure(+1)
+        except RuntimeError as e:
+            print(e)
+            shutdown()
 
-    print("success")
+    print("success : " + get_uptime())
+    print("--- --- --- --- --- --- --- --- --- ---")
     shutdown()
