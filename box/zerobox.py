@@ -5,14 +5,20 @@ import time
 import shutil
 import datetime
 import math
+import logging
 import numpy as np
 
 import gi
 gi.require_version('GExiv2', '0.10')
 from gi.repository import GExiv2
 
+# --- --- --- --- --- --- --- --- --- ---
 
-PLATFORM            = None
+LOG_BASE_DIR        = "./"
+LOG_FILENAME_DEBUG  = LOG_BASE_DIR + "debug.log"
+LOG_FILENAME_INFO   = LOG_BASE_DIR + "info.log"
+LOG_LEVEL_CONSOLE   = logging.DEBUG 
+
 RAW_DIR             = None
 FILE_EXTENSION      = ".arw"
 
@@ -20,8 +26,44 @@ WAIT_EXPOSURE_COMP  = 0
 WAIT_AUTOFOCUS      = 1
 
 EXPOSURE_THRESHOLD  = 10
+FREE_DISK_THRESHOLD = 100 * 1024 * 1024
 
 EXIF_DATE_FORMAT    = '%Y:%m:%d %H:%M:%S'
+
+# --- --- --- --- --- --- --- --- --- ---
+
+PLATFORM            = None
+log                 = None
+
+def initLog():
+    global log
+
+    if not os.path.exists(LOG_BASE_DIR):
+        print("LOG DIR missing. create...")
+        os.makedirs(LOG_BASE_DIR)
+
+    # create logger
+    log = logging.getLogger()
+    log.setLevel(logging.DEBUG)
+
+    # create formatter
+    formatter = logging.Formatter('%(asctime)s | %(name)s [%(levelname)s] %(message)s')
+
+    # console handler and set level to debug
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(LOG_LEVEL_CONSOLE)
+    consoleHandler.setFormatter(formatter)
+    log.addHandler(consoleHandler)
+
+    fileHandlerDebug = logging.FileHandler(LOG_FILENAME_DEBUG, mode="a", encoding="UTF-8")
+    fileHandlerDebug.setLevel(logging.DEBUG)
+    fileHandlerDebug.setFormatter(formatter)
+    log.addHandler(fileHandlerDebug)
+
+    fileHandlerInfo = logging.FileHandler(LOG_FILENAME_INFO, mode="a", encoding="UTF-8")
+    fileHandlerInfo.setLevel(logging.INFO)
+    fileHandlerInfo.setFormatter(formatter)
+    log.addHandler(fileHandlerInfo)
 
 
 def determine_environment():
@@ -67,26 +109,24 @@ def acquire_filename(path):
             filename = testname
             break
 
+    log.debug("acquired filename: {}".format(filename))
+
     return (path, filename)
 
 
-# returns full filename of image, without path
+
 def take_image(full_name):
 
-    # TODO: overwrite image?
+    output = subprocess.check_output(["gphoto2" ,"--capture-image-and-download"])
 
-    ret_val = subprocess.call(["gphoto2" ,"--capture-image-and-download"])
-
-    if ret_val > 0:
+    if "ERROR" in output:
         raise RuntimeError("taking image failed (gphoto2 value: {})".format(ret_val))
 
     camera_file = "capt0000.arw"
-
     shutil.copyfile(camera_file, full_name)
     os.remove(camera_file)
-    print("image saved to: {}".format(filename))
 
-    return filename
+    log.info("image saved to: {}".format(full_name))
 
 
 def check_prerequisites():
@@ -94,8 +134,15 @@ def check_prerequisites():
     # check disk space
 
     if not os.path.exists(RAW_DIR):
-        print("RAW DIR missing. create...")
+        log.info("RAW DIR missing. create...")
         os.makedirs(RAW_DIR)
+
+    stat = os.statvfs(RAW_DIR)
+    free_bytes = stat.f_frsize * stat.f_bavail
+
+    if free_bytes < FREE_DISK_THRESHOLD:
+        log.error("disk full")
+        return False
 
     return True
 
@@ -145,6 +192,8 @@ def convert_raw_to_jpeg(rawfile_path, rawfile_name, jpeg_path):
     # dcraw does not support export as JPEG and output as TIFF
     # and conversion to JPEG is unnecessary work
 
+    # TODO: overwrite/remove jpeg image?
+
     rawfile_full_name   = os.path.join(rawfile_path, rawfile_name)
     thumb               = rawfile_name[:-4] + ".thumb" + ".jpg"
     thumb_full_name     = os.path.join(rawfile_path, thumb)
@@ -172,27 +221,58 @@ def adjust_exposure(correction_value):
     ret_val = subprocess.call(["gphoto2" ,"--set-config-value", "/main/capturesettings/exposurecompensation="+str(correction_value)])
 
     if ret_val > 0:
-        raise RuntimeError("adjusting exposure failed (gphoto2 value: {})".format(ret_val))
+        log.warn("adjusting exposure failed (gphoto2 value: {})".format(ret_val))
+        return
 
     time.sleep(WAIT_EXPOSURE_COMP)
+
+
+def _exec(cmd):
+
+    ret_val = subprocess.call(cmd)
+    if not ret_val == 0:
+        log.info("command failed")
+        return False
+
+    return True
 
 
 def autofocus():
 
     # gphoto2 --set-config-value /main/actions/autofocus=0
 
-    subprocess.call(["gphoto2" ,"--set-config-value", "/main/actions/autofocus="+str(0)])
+    if not _exec(["gphoto2" ,"--set-config-value", "/main/capturesettings/focusmode=Automatic"]): 
+        return
     time.sleep(WAIT_AUTOFOCUS)
-    subprocess.call(["gphoto2" ,"--set-config-value", "/main/actions/autofocus="+str(1)])
+
+    if not _exec(["gphoto2" ,"--set-config-value", "/main/actions/autofocus="+str(0)]):
+        return
+    time.sleep(WAIT_AUTOFOCUS)
+
+    if not _exec(["gphoto2" ,"--set-config-value", "/main/actions/autofocus="+str(1)]):
+        return
     time.sleep(WAIT_AUTOFOCUS*2)
-    subprocess.call(["gphoto2" ,"--set-config-value", "/main/actions/autofocus="+str(0)])
+
+    if not _exec(["gphoto2" ,"--set-config-value", "/main/actions/autofocus="+str(0)]):
+        return
+    time.sleep(WAIT_AUTOFOCUS)
+
+    if not _exec(["gphoto2" ,"--set-config-value", "/main/capturesettings/focusmode=Manual"]): 
+        return
     time.sleep(WAIT_AUTOFOCUS)
 
 
-def shutdown():
-    print("shutdown!")
-    print("--- --- --- --- --- --- --- --- --- ---")
-    sys.exit(0)
+def exit(error=False):
+    log.info("uptime: {}".format(get_uptime()))
+
+    if error:
+        log.info("shutdown!")
+        log.debug("--- --- --- --- --- --- --- --- --- ---")
+        sys.exit(1)
+    else:
+        log.info("success")
+        log.debug("--- --- --- --- --- --- --- --- --- ---")
+        sys.exit(0)
 
 # ---------- ---------- ---------- ---------- ---------- ---------- #
 
@@ -200,9 +280,11 @@ if (__name__ == "__main__"):
 
     print("init.") #, sep="")
     determine_environment()
+    initLog()
 
+    log.info("init")
     if not check_prerequisites():
-        shutdown()
+        exit(error=True)
 
     (path, filename) = acquire_filename(RAW_DIR)
     full_name = None
@@ -213,29 +295,28 @@ if (__name__ == "__main__"):
 
         full_name = os.path.join(path, filename)
 
-        adjust_exposure(+1)
-        autofocus()
-        take_image(full_name)
+        adjust_exposure(+1)         # no abort on error
+        autofocus()                 # no abort on error
+        take_image(full_name)       
         #full_name = os.path.join(path, "DSC06531.arw")
         #filename = "DSC06531.arw"
-    except RuntimeError as e:
-        print(e)
-        shutdown()
+    except Exception as e:
+        log.error(e)
+        exit(error=True)
 
     # check exposure
     jpeg_full_name = convert_raw_to_jpeg(path, filename, "")
     exposure = calculate_brightness(jpeg_full_name)
-    print(exposure)
+    log.info("exposure: {}".format(exposure))
 
     if exposure < EXPOSURE_THRESHOLD:
         try:
             adjust_exposure(-5)
-            take_image(full_name+"_2")
+            full_name_2 = os.path.join(path, "x_" + filename)
+            take_image(full_name_2)
             adjust_exposure(+1)
         except RuntimeError as e:
-            print(e)
-            shutdown()
+            log.error(e)
+            exit(error=True)
 
-    print("success : " + get_uptime())
-    print("--- --- --- --- --- --- --- --- --- ---")
-    shutdown()
+    exit()
