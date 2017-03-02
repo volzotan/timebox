@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 import subprocess
 import time
 import shutil
@@ -15,18 +16,23 @@ from gi.repository import GExiv2
 # --- --- --- --- --- --- --- --- --- ---
 
 LOG_BASE_DIR        = "./"
-LOG_FILENAME_DEBUG  = LOG_BASE_DIR + "debug.log"
-LOG_FILENAME_INFO   = LOG_BASE_DIR + "info.log"
+LOG_FILENAME_DEBUG  = "debug.log"
+LOG_FILENAME_INFO   = "info.log"
 LOG_LEVEL_CONSOLE   = logging.DEBUG 
 
 RAW_DIR             = None
 FILE_EXTENSION      = ".arw"
 
+AUTOFOCUS_ENABLED   = False
+DOUBLEEXPOSURE_ENABLED = True
 WAIT_EXPOSURE_COMP  = 0
 WAIT_AUTOFOCUS      = 1
 
 EXPOSURE_THRESHOLD  = 10
 FREE_DISK_THRESHOLD = 100 * 1024 * 1024
+
+EXPOSURE_LOW        = -5
+EXPOSURE_NORMAL     = +1
 
 EXIF_DATE_FORMAT    = '%Y:%m:%d %H:%M:%S'
 
@@ -37,10 +43,15 @@ log                 = None
 
 def initLog():
     global log
+    global LOG_FILENAME_DEBUG
+    global LOG_FILENAME_INFO
 
     if not os.path.exists(LOG_BASE_DIR):
         print("LOG DIR missing. create...")
         os.makedirs(LOG_BASE_DIR)
+
+    LOG_FILENAME_DEBUG = os.path.join(LOG_BASE_DIR, LOG_FILENAME_DEBUG)
+    LOG_FILENAME_INFO = os.path.join(LOG_BASE_DIR, LOG_FILENAME_INFO)
 
     # create logger
     log = logging.getLogger()
@@ -68,6 +79,7 @@ def initLog():
 
 def determine_environment():
     global RAW_DIR
+    global LOG_BASE_DIR
     global PLATFORM
 
     """
@@ -78,10 +90,12 @@ def determine_environment():
 
     if "darwin" in output:
         PLATFORM = "OSX"
+        LOG_BASE_DIR = "./"
         RAW_DIR = "/Users/volzotan/zerobox"
     elif "raspberrypi" in output:
         PLATFORM = "PI"
-        RAW_DIR = "/home/pi/RAW"
+        LOG_BASE_DIR = "/home/pi/zerobox"
+        RAW_DIR = "/home/pi/RAW"    
     elif "linux" in output:
         PLATFORM = "LINUX"
         RAW_DIR = "/home/pi/RAW"
@@ -114,7 +128,6 @@ def acquire_filename(path):
     return (path, filename)
 
 
-
 def take_image(full_name):
 
     output = subprocess.check_output(["gphoto2" ,"--capture-image-and-download"])
@@ -126,13 +139,18 @@ def take_image(full_name):
     shutil.copyfile(camera_file, full_name)
     os.remove(camera_file)
 
-    log.info("image saved to: {}".format(full_name))
+    log.debug("image saved to: {}".format(full_name))
 
 
 def check_prerequisites():
-    # output folder present?
-    # check disk space
 
+    # working directory?
+    log.debug("working dir: {}".format(os.getcwd()))
+    if PLATFORM == "PI":
+        os.chdir("/home/pi/zerobox")
+        log.debug("new working dir: {}".format(os.getcwd()))
+
+    # output folder present?
     if not os.path.exists(RAW_DIR):
         log.info("RAW DIR missing. create...")
         os.makedirs(RAW_DIR)
@@ -140,6 +158,7 @@ def check_prerequisites():
     stat = os.statvfs(RAW_DIR)
     free_bytes = stat.f_frsize * stat.f_bavail
 
+    # check disk space
     if free_bytes < FREE_DISK_THRESHOLD:
         log.error("disk full")
         return False
@@ -170,8 +189,8 @@ def calculate_brightness(full_name):
     metadata = GExiv2.Metadata()
     metadata.open_path(full_name)
 
-    shutter = metadata.get_exposure_time()
-    shutter = float(shutter[0]) / float(shutter[1])
+    shutter = float(metadata.get_exposure_time())
+    # shutter = float(shutter[0]) / float(shutter[1])
     iso     = int(metadata.get_tag_string("Exif.Photo.ISOSpeedRatings"))
 
     try: 
@@ -180,7 +199,7 @@ def calculate_brightness(full_name):
         time = datetime.datetime.strptime(metadata.get_tag_string("Exif.Image.DateTime"), EXIF_DATE_FORMAT)
 
     aperture = metadata.get_focal_length()
-    if aperture < 0:
+    if aperture <= 0:
         # no aperture tag set, probably an lens adapter was used. assume fixed aperture.
         aperture = 8.0
 
@@ -213,9 +232,8 @@ def adjust_exposure(correction_value):
     output = output.decode().split("\n")
     for out in output:
         if "Current:" in out:
-            current = int(out[9:])
-            if current == str(correction_value):
-                print("exposure adjustment correct")
+            current = float(out[9:])
+            if current == float(correction_value):
                 return
 
     ret_val = subprocess.call(["gphoto2" ,"--set-config-value", "/main/capturesettings/exposurecompensation="+str(correction_value)])
@@ -268,19 +286,31 @@ def exit(error=False):
     if error:
         log.info("shutdown!")
         log.debug("--- --- --- --- --- --- --- --- --- ---")
+        # if PLATFORM == "PI":
+        #     time.sleep(1)
+        #     subprocess.call(["sudo", "shutdown", "now"]) 
         sys.exit(1)
     else:
         log.info("success")
         log.debug("--- --- --- --- --- --- --- --- --- ---")
+        if PLATFORM == "PI":
+            time.sleep(1)
+            subprocess.call(["sudo", "shutdown", "now"]) 
         sys.exit(0)
 
 # ---------- ---------- ---------- ---------- ---------- ---------- #
 
-if (__name__ == "__main__"):
+def run():
 
     print("init.") #, sep="")
-    determine_environment()
+
+    determine_environment() # set directory variables and change working directory
+
     initLog()
+
+    if os.path.exists("NO_AUTOSTART"):
+        log.info("no autostart")
+        sys.exit(0)    
 
     log.info("init")
     if not check_prerequisites():
@@ -295,28 +325,41 @@ if (__name__ == "__main__"):
 
         full_name = os.path.join(path, filename)
 
-        adjust_exposure(+1)         # no abort on error
-        autofocus()                 # no abort on error
+        adjust_exposure(EXPOSURE_NORMAL)        # no abort on error
+        if (AUTOFOCUS_ENABLED):
+            autofocus()                         # no abort on error
         take_image(full_name)       
-        #full_name = os.path.join(path, "DSC06531.arw")
-        #filename = "DSC06531.arw"
+    except subprocess.CalledProcessError as cpe:
+        log.error(cpe)
+        log.error(cpe.output)
+        exit(error=True)
     except Exception as e:
-        log.error(e)
+        log.error(traceback.format_exc())
         exit(error=True)
 
     # check exposure
-    jpeg_full_name = convert_raw_to_jpeg(path, filename, "")
-    exposure = calculate_brightness(jpeg_full_name)
-    log.info("exposure: {}".format(exposure))
+    if (DOUBLEEXPOSURE_ENABLED):
+        jpeg_full_name = convert_raw_to_jpeg(path, filename, path)
+        exposure = calculate_brightness(jpeg_full_name)
+        log.info("exposure: {}".format(exposure))
 
-    if exposure < EXPOSURE_THRESHOLD:
-        try:
-            adjust_exposure(-5)
-            full_name_2 = os.path.join(path, "x_" + filename)
-            take_image(full_name_2)
-            adjust_exposure(+1)
-        except RuntimeError as e:
-            log.error(e)
-            exit(error=True)
+        if exposure < EXPOSURE_THRESHOLD:
+            try:
+                adjust_exposure(EXPOSURE_LOW)
+                full_name_2 = os.path.join(path, "x_" + filename)
+                take_image(full_name_2)
+                adjust_exposure(+1)
+            except RuntimeError as e:
+                log.error(traceback.format_exc())
+                exit(error=True)
 
     exit()
+
+
+if (__name__ == "__main__"):
+    try:
+        run()
+    except Exception as e:
+        print(e)
+        log.error(traceback.format_exc())
+        exit(error=True)
