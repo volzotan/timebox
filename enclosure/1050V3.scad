@@ -4,6 +4,7 @@ include <enclosure_util.scad>;
 size_top    = [165, 98, 0.1];
 size_bottom = [157, 91, 0.1];
 height      = 47;
+nose_depth  = 66;
 
 translation_x = (size_top[0]-size_bottom[0])/2;
 translation_y = (size_top[1]-size_bottom[1])/2;    
@@ -11,12 +12,13 @@ translation_y = (size_top[1]-size_bottom[1])/2;
 radius_b = 6;
 radius_t = 10;
 
-corner_radius = 2.5;
+corner_radius       = 2.5;
 
-wall_thickness = 2.0;
+wall_thickness      = 2.4;
+bottom_thickness    = 1.2;
 
-render_simplified = true;
-clamp_print = false;
+render_simplified   = true;
+clamp_print         = false;
 
 // ---
 /*
@@ -28,7 +30,9 @@ Halterung für Batterie
 
 //translate([size_top[0]/2 - 40, 43, -12]) socketplate();
 
-// translate([9, 27, 16]) camera();
+// socketplate2();
+
+// translate([8, 27, 12]) camera();
 
 inset();
 
@@ -166,23 +170,30 @@ module inset() {
             
             // pressure noses
             
-            nose_width1 = 40;
+            nose_width1 = 20;
             nose_width2 = 20;
-            nose_depth  = 65;
             
-            translate([size_top[0]/2 - nose_width1/2, 0, size_top[1]-wall_thickness]) {
-                cube([nose_width1, nose_depth-wall_thickness/2, wall_thickness]);    
-                translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width1, d=wall_thickness, $fn=32);
-            }
-            
-            translate([0, 0, 35]) rotate([0, 90, 0]){
-                cube([nose_width2, nose_depth-wall_thickness/2, wall_thickness]);    
-                translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width2, d=wall_thickness, $fn=32);
-            }
-            
-            translate([size_top[0]-wall_thickness, 0, 35]) rotate([0, 90, 0]){
-                cube([nose_width2, nose_depth-wall_thickness/2, wall_thickness]);    
-                translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width2, d=wall_thickness, $fn=32);
+            difference() {
+                union() {
+                    translate([size_top[0]/5 - nose_width1/2, 0, size_top[1]-wall_thickness]) {            
+                        translate([nose_width1/2, 0, -2]) {
+                            translate([0, 0, 4]) rotate([270, 0, 0]) scale([1, 0.5, 1]) cylinder(h=nose_depth, d=nose_width1, $fn=64);
+                            translate([0, nose_depth-4+2, 2]) rotate([0, 180, 180]) prism(2,2,2);
+                            translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width1, d=wall_thickness, $fn=32);
+                        
+                        }
+                    } 
+              
+                    translate([size_top[0]/5*4 - nose_width1/2, 0, size_top[1]-wall_thickness]) {            
+                        translate([nose_width1/2, 0, -2]) {
+                            translate([0, 0, 4]) rotate([270, 0, 0]) scale([1, 0.5, 1]) cylinder(h=nose_depth, d=nose_width1, $fn=64);
+                            translate([0, nose_depth-4+2, 2]) rotate([0, 180, 180]) prism(2,2,2);
+                            translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width1, d=wall_thickness, $fn=32);
+                        
+                        }
+                    }
+                }
+                translate([0, 0, size_top[1]]) cube([size_top[0], 100, 10]);
             }
         }
         
@@ -200,7 +211,7 @@ module inset() {
         }
         
         // screw tunnels
-        tunnel_height = 3;
+        tunnel_height = 2.8;
         translate([0, 0, -0.1]) intersection() {
             translate([size_top[0], 0, 0]) rotate([90, 0, 180]) difference() {
                 block(size_top, size_bottom, height);
@@ -233,18 +244,7 @@ module socketplate() {
     rotate([-4, 0, 0])
     difference() {
         dist = 6;
-        
-//        square([80, 40]);
-//        
-//        translate([dist,    dist]) circle(d=4, $fn=32);
-//        translate([80-dist,    dist]) circle(d=4, $fn=32);
-//        translate([dist,    40-dist]) circle(d=4, $fn=32);
-//        translate([80-dist, 40-dist]) circle(d=4, $fn=32);
-//        
-//        translate([80/4,    40/2]) circle(d=7, $fn=32);
-//        translate([80/2,    40/2]) circle(d=7, $fn=32);
-//        translate([(80/4)*3, 40/2]) circle(d=7, $fn=32);
-        
+
         cube([80, 40, 10]);
         
         translate([dist,    dist,       -1]) cylinder(d=5, h=18, $fn=32);
@@ -258,6 +258,53 @@ module socketplate() {
   
         // test
         // translate([-1, -1, -1]) cube([7, 100, 30]);
+    }
+}
+
+module socketplate2() { // for actual printing with non perfect hole spacing
+    union() {
+    difference() {
+        dist        = 7;
+        nutM5       = 11; // ?
+        nut14Inch   = 13; // ?
+
+        cube([80, 40, 8]);
+        
+        translate([dist,    dist,       -1]) {
+            cylinder(d=5.3, h=18, $fn=32);
+            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+        }
+        translate([80-dist, dist,       -1]) {
+            cylinder(d=5.3, h=18, $fn=32);
+            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+        }
+        translate([dist,    40-dist,    -1]) {
+            cylinder(d=5.3, h=18, $fn=32);
+            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+        }
+        translate([80-dist, 40-dist,    -1]) {
+            cylinder(d=5.3, h=18, $fn=32);
+            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+        }
+        
+        translate([80/4, 40/2, -1]) {
+            cylinder(d=6.4, h=12, $fn=32);  
+            cylinder(d=nut14Inch, h=8, $fn=6);  
+        }
+        translate([80/2, 40/2, -1]) {
+            cylinder(d=6.4, h=12, $fn=32);  
+            cylinder(d=nut14Inch, h=8, $fn=6); 
+        }
+        translate([(80/4)*3, 40/2, -1]) {
+            cylinder(d=6.4, h=12, $fn=32);  
+            translate([0, 0, 2]) cylinder(d=nut14Inch, h=6, $fn=6); 
+        }
+            
+        // test
+        // translate([-1, -1, -1]) cube([7, 100, 30]);
+    }
+        // support layer to properly print hole
+        translate([0, 0, 3]) color([1,1,1,0.5]) cube([15, 15, 0.2]);
     }
 }
 
@@ -374,7 +421,7 @@ module block2(top, bottom, h, r1, r2) {
         difference() {
             block(top, bottom, h);
             
-            translate([wall_thickness, wall_thickness, 1]) block(
+            translate([wall_thickness, wall_thickness, bottom_thickness]) block(
                         [size_top[0]-wall_thickness*2, size_top[1]-wall_thickness*2, 0.1],
                         [size_bottom[0]-wall_thickness*2, size_bottom[1]-wall_thickness*2, 0.1],
                         height+0.1

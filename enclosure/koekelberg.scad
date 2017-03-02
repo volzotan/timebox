@@ -55,12 +55,30 @@ cavity =  [ [w,     15+w],
             [20+w,   110-w],
             [0+w,     90-w]
             ];
+            
+ trianglecut_faces =   [[0, 1, 2],
+                        [2, 1, 4, 5],
+                        [0, 2, 5, 3],
+                        [3, 5, 4],
+                        [3, 4, 1, 0]];
+                        
+ trcut_bottom_right =  [[140,   25,  0],  // 0
+                        [150,   25,  0],  // 1
+                        [150,   25, 10],  // 2
+                        [140,   110, 0],  // 3
+                        [150,   110, 0],  // 4
+                        [150,   110,10]]; // 5
 
 difference() {
     union() {
         difference() {
             linear_extrude(height=height) polygon(points = shell);
-            translate([0, 0, b]) linear_extrude(height=height) polygon(points = cavity);
+            
+            translate([0, 0, 0]) polyhedron(trcut_bottom_right, trianglecut_faces);
+            
+            union() {
+                translate([0, 0, b]) linear_extrude(height=height) polygon(points = cavity);
+            }
         }
     
         intersection() {
