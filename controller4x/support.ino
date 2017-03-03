@@ -31,7 +31,7 @@ int buttonPressed(int button) {
   return true;
 }
 
-void initButtons() {
+void initPins() {
 
   pinMode(PIN_CELL_1,          INPUT);
   pinMode(PIN_CELL_2,          INPUT);
@@ -52,6 +52,7 @@ void initButtons() {
   pinMode(PIN_CAMERA_SHUTTER,  OUTPUT);
 
   digitalWrite(PIN_CAMERA_EN,  LOW);
+  digitalWrite(PIN_ZERO_EN,    LOW);
   digitalWrite(PIN_DISPLAY_EN, HIGH);
 
 }
@@ -71,6 +72,16 @@ String calculateTime(int interval, int iterations) {
 }
 
 void wait(float seconds) {
+
+  #ifdef DEBUG
+    for (int i = 0; i < (int) seconds; ++i) {
+      delay(500);
+      delay(500);
+      Serial.println("sleep");
+    }
+    return;
+  #endif
+  
   for (int i = 0; i < (int) seconds; ++i) {
     Sleepy::loseSomeTime(1000);
   }
@@ -80,34 +91,34 @@ void wait(float seconds) {
 
 // -------------------------------- DISPLAY -------------------------------- //
 
-void initDisplay() {
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.clearDisplay();
-
-  display.setTextColor(WHITE);
-  display.setTextSize(2);
-
-  display.setCursor(0,0);
-  display.print(F("TIMEBOXGO"));
-
-  display.setTextSize(2);
-  display.setCursor(0,SECONDROW);
-  display.print(F("v: "));
-  display.setCursor(64,SECONDROW);
-  display.print(VERSION);
-
-  display.display();
-}
-
-void displayOn(boolean state) {
-  if (state) {
-    digitalWrite(PIN_DISPLAY_EN, LOW);
-  } else {
-    display.clearDisplay();
-    display.display();
-    digitalWrite(PIN_DISPLAY_EN, HIGH);
-  }
-}
+//void initDisplay() {
+//  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+//  display.clearDisplay();
+//
+//  display.setTextColor(WHITE);
+//  display.setTextSize(2);
+//
+//  display.setCursor(0,0);
+//  display.print(F("TIMEBOXGO"));
+//
+//  display.setTextSize(2);
+//  display.setCursor(0,SECONDROW);
+//  display.print(F("v: "));
+//  display.setCursor(64,SECONDROW);
+//  display.print(VERSION);
+//
+//  display.display();
+//}
+//
+//void displayOn(boolean state) {
+//  if (state) {
+//    digitalWrite(PIN_DISPLAY_EN, LOW);
+//  } else {
+//    display.clearDisplay();
+//    display.display();
+//    digitalWrite(PIN_DISPLAY_EN, HIGH);
+//  }
+//}
 
 // -------------------------------- BATTERY -------------------------------- //
 
@@ -191,11 +202,20 @@ float getLiPoVoltageRaw(int cell) {
       return abs(voltageDivider((float) analogRead(PIN_CELL_2)) - voltageDivider((float) analogRead(PIN_CELL_1)));
       break;
 
-    case BATT_PERCENTAGE: // percentage loaded
+    case BATT_PERCENTAGE_CELL: // percentage loaded
       if (voltageDivider((float) analogRead(PIN_CELL_1)) > 1.0) {
         return (getLiPoVoltage(1) + getLiPoVoltage(2) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100);
-      } else if (voltageDivider((float) analogRead(PIN_BATT_DIRECT)) > 1.0) {
-        return (getLiPoVoltage(0) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100);
+      } else {
+        return -1;  
+      }
+      break;
+
+    case BATT_PERCENTAGE_DIRECT: // percentage loaded
+
+      // There is a bug here... (maybe)
+    
+      if (voltageDivider((float) analogRead(PIN_BATT_DIRECT)) > 1.0) {
+        return (getLiPoVoltage(BATT_DIRECT) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100);
       } else {
         return -1;  
       }

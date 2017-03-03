@@ -11,35 +11,32 @@ ISR(WDT_vect) {
   Sleepy::watchdogEvent();
 }
 
-#define DEBUG
+//#define DEBUG
 
-Adafruit_SSD1306 display(PIN_DISPLAY_RST);
-
-int state           = STATE_SLEEP;
+int state           = STATE_INIT;
 int picturesTaken   = 0;
-
-int oldArrayPointer = 0;
-int arrayPointer    = 0;
 
 // ---------------------------
 
-int optInterval     =       1;
-int optIterations   =     100;
-
-const int valuesInterval[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20};
-const int valuesIterations[] = {50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900};
+int optInterval     =       2;        // CHANGE
+int optIterations   =    1000;
+int zero_uptime     =      80;
 
 // ---------------------------
 
 void setup() {
   Serial.begin(9600);
-  while (!Serial) {
-    ;
-  }
+  Serial1.begin(115200);
 
-  Serial.println(F("init"));
-  initFromEEPROM();
-  initButtons();
+//  #ifdef DEBUG
+//    while (!Serial) {
+//       ;
+//    }
+//  #endif
+
+  Serial.println("init"); delay(200);
+  
+  initPins();
 
   if (!checkBattHealth()) {
     // battery is empty, abort right now!
@@ -52,12 +49,80 @@ void setup() {
     #endif
   }
 
-  digitalWrite(PIN_DISPLAY_EN, LOW);
-  initDisplay();
+//  delay(100);
+//  Serial.println("start");
+//  digitalWrite(PIN_ZERO_EN, HIGH);
+//  delay(500);
 }
 
 void loop() {
-  delay(1000);
-  selftest();
+  //serialEvent();
+
+  switch (state) {
+
+    case STATE_INIT:
+      for(int i=0; i<300; i++) {
+        if (digitalRead(PIN_PUSHBUTTON_CENTER) == 0) {
+          state = STATE_IDLE;
+          Serial.println("idle"); delay(200);
+          return;  
+        } else {
+          delay(10);  
+        }
+      }
+
+      Serial.println("start"); delay(200);
+      state = STATE_ZERO;
+    break;  
+
+    case STATE_IDLE:
+      delay(1000);
+      Serial.println("idle");
+    break;  
+    
+    case STATE_SLEEP:
+
+      if (!checkBattHealth()) {
+        // battery is empty, abort right now!
+        
+        Serial.println("stopping!...");
+        #ifndef DEBUG
+          state = STATE_STOP;
+        #else
+          Serial.println("stopping aborted (debug mode)");
+        #endif
+
+        delay(200);
+      }
+    
+      #ifdef DEBUG
+        Serial.println("start sleeping");
+        delay(200);
+      #endif
+
+      wait((optInterval * 60) - zero_uptime);
+      state = STATE_ZERO;
+    break;  
+
+    case STATE_ZERO:
+      Serial.println("start zero"); delay(200);
+      digitalWrite(PIN_ZERO_EN, HIGH);
+      wait(10);
+      digitalWrite(PIN_CAMERA_EN, HIGH);
+      wait(zero_uptime-10);
+      digitalWrite(PIN_ZERO_EN, LOW);
+      digitalWrite(PIN_CAMERA_EN, LOW);
+      
+      picturesTaken++;
+
+      Serial.println("stop zero"); delay(200);
+
+      state = STATE_SLEEP;
+    break;    
+
+    case STATE_STOP:
+      wait(60);
+    break;
+  }
 }
 
