@@ -130,7 +130,7 @@ def acquire_filename(path):
 
 def take_image(full_name):
 
-    output = subprocess.check_output(["gphoto2" ,"--capture-image-and-download"])
+    output = subprocess.check_output(["gphoto2" ,"--capture-image-and-download"], stderr=subprocess.STDOUT)
 
     if "ERROR" in output:
         raise RuntimeError("taking image failed (gphoto2 value: {})".format(ret_val))
@@ -224,11 +224,36 @@ def convert_raw_to_jpeg(rawfile_path, rawfile_name, jpeg_path):
     return jpeg_full_name
 
 
+def check_camera():
+    try:
+        output = subprocess.check_output(["gphoto2" ,"--summary"], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as cpe:
+        log.info("first connect FAIL")
+        log.error(cpe)
+        time.sleep(10)
+
+        try:
+            output = subprocess.check_output(["gphoto2" ,"--summary"], stderr=subprocess.STDOUT)
+            log.debug("second connect SUCCESS")
+        except subprocess.CalledProcessError as cpe:
+            log.error("second connect FAIL")
+        
+            log.error(cpe)
+            log.error(cpe.output)
+            exit(error=True)
+        except Exception as e:
+            raise e
+    except Exception as e:
+        raise e
+    else:
+        log.debug("first connect successful")
+
+
 def adjust_exposure(correction_value):
  
     # gphoto2 --set-config-value /main/capturesettings/exposurecompensation=-5
 
-    output = subprocess.check_output(["gphoto2" ,"--get-config", "/main/capturesettings/exposurecompensation"])
+    output = subprocess.check_output(["gphoto2" ,"--get-config", "/main/capturesettings/exposurecompensation"], stderr=subprocess.STDOUT)
     output = output.decode().split("\n")
     for out in output:
         if "Current:" in out:
@@ -325,6 +350,9 @@ def run():
 
         full_name = os.path.join(path, filename)
 
+        # knock knock
+        check_camera()
+
         adjust_exposure(EXPOSURE_NORMAL)        # no abort on error
         if (AUTOFOCUS_ENABLED):
             autofocus()                         # no abort on error
@@ -352,6 +380,8 @@ def run():
             except RuntimeError as e:
                 log.error(traceback.format_exc())
                 exit(error=True)
+
+        os.remove(jpeg_full_name)
 
     exit()
 
