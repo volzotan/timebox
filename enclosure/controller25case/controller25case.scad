@@ -49,60 +49,82 @@ module board() {
     }    
 }
 
-
-difference() {
-    case();
-    //translate([8.5, -1, 2]) cube([17, 3, 3]);
-    translate([-1, 12, 5]) cube([3, 27, 20]);
-    translate([-1, 10, 6.5]) cube([3, 10, 20]);
-    translate([-1, 13, 6.4]) rotate([0, 90, 0]) cylinder(h=3, d=6, $fn=32);
-    
-    translate([2, 2.5, -1]) {    
-        translate([3.8, 3.8, 0]) color("green") cylinder($fn=32, h=10, d=3.4);
-        translate([3.8, 40.6, 0]) color("green") cylinder($fn=32, h=10, d=3.4);
-        translate([50.8, 26.7, 0]) color("green") cylinder($fn=32, h=10, d=3.4);
-    
-        translate([3.8, 3.8, 0]) color("green") cylinder($fn=6, h=2, d=6.5);
-        translate([3.8, 40.6, 0]) color("green") cylinder($fn=6, h=2, d=6.5);
-        translate([50.8, 26.7, 0]) color("green") cylinder($fn=6, h=2, d=6.5);
-  
+module bottom() {
+    difference() {
+        case();
+        //translate([8.5, -1, 2]) cube([17, 3, 3]);
+        translate([-1, 12, 5]) cube([3, 27.5, 20]);
+        translate([-1, 10, 6.5]) cube([3, 10, 20]);
+        translate([-1, 13, 6.4]) rotate([0, 90, 0]) cylinder(h=3, d=6, $fn=32);
+        
+        translate([2, 2.5, -1]) {    
+            translate([3.8, 3.8, 0]) color("green") cylinder($fn=32, h=10, d=3.4);
+            translate([3.8, 40.6, 0]) color("green") cylinder($fn=32, h=10, d=3.4);
+            translate([50.8, 26.7, 0]) color("green") cylinder($fn=32, h=10, d=3.4);
+        
+            translate([3.8, 3.8, 0]) color("green") cylinder($fn=6, h=2, d=6.5);
+            translate([3.8, 40.6, 0]) color("green") cylinder($fn=6, h=2, d=6.5);
+            translate([50.8, 26.7, 0]) color("green") cylinder($fn=6, h=2, d=6.5);
+        }
+        
+        translate([48, -0.01, 5]) {
+            cube([20, 25, 20]);
+        }
+        
+        translate([9, -0.01, 4.7]) {
+            cube([17, 3, 4]);
+        }
     }
-    
-    translate([48, -0.01, 5]) {
-        cube([20, 25, 20]);
+
+    translate([2, 2.5, 1]) {    
+        translate([3.8, 3.8, 0]) cylinder($fn=32, h=0.2, d=7);
+        translate([3.8, 40.6, 0]) cylinder($fn=32, h=0.2, d=7);
+        translate([50.8, 26.7, 0])cylinder($fn=32, h=0.2, d=7);
     }
 }
 
-translate([2, 2.5, 1]) {    
-    translate([3.8, 3.8, 0]) cylinder($fn=32, h=0.2, d=7);
-    translate([3.8, 40.6, 0]) cylinder($fn=32, h=0.2, d=7);
-    translate([50.8, 26.7, 0])cylinder($fn=32, h=0.2, d=7);
-}
- board();
+//bottom();
+
+//board();
+
+translate([0, 0, 15.5]) rotate([0, 180, 0]) top();
 
 // ---
 
 module top() {
-    translate([0, 0, 50]) {
-        difference() {
-            cube([size[0], size[1], 1.2]);
+    difference() {
+        union() {
+            difference() {
+                union() {
+                    translate([0, 0, 0]) foo(height=3, h1=0);
+                    translate([0, 0, 0-1.2]) foo(height=2, h1=0.8);
+                }
+                translate([0, 0, -10+(3-1.2)]) foo(height=10, h1=2);
+                
+                // buttons
+                translate([48, 0-0.01, -5]) cube([20, 25.5, 10]);
+                
+                translate([-2, 12, -10+(3-1.2)]) cube([5, 27.5, 10]);
+                translate([-2, 10, -10+(3-1.2)]) cube([5, 10, 10]);
+                
+            }
             
-            // buttons
-            translate([46, 0-0.01, -1]) cube([20, 25, 10]);
-            
-            // display
-            translate([10, 10, -1]) cube([30, 15, 10]);
+            translate([46.8, 1.8, -11.8+(3-1.2)]) cube([1.2, 24.8, 12]);
+            translate([46.8, 25.5, -11.8+(3-1.2)]) cube([12.2, 1.2, 12]);
+           
+            translate([2, 2.5, -10]) {
+                translate([3.8, 3.8, 0]) color("green") cylinder($fn=32, h=13, d=6.5);
+                translate([3.8, 40.6, 0]) color("green") cylinder($fn=32, h=13, d=6.5);
+                translate([50.8, 26.7, 0]) color("green") cylinder($fn=32, h=13, d=6.5);
+                translate([47.55, 23.2, 0]) cube([6.5, 3.5, 13]);
+                //translate([50.5, 23.4, 0]) cube([6.5, 6.5, 13]);
+            }
         }
         
-        translate([2, 2.5, -3]) {
-      
-            translate([3.8, 3.8, 0]) color("green") cylinder($fn=32, h=10, d=3.0);
-            translate([3.8, 40.6, 0]) color("green") cylinder($fn=32, h=10, d=3.0);
-            translate([50.8, 26.7, 0]) color("green") cylinder($fn=32, h=10, d=3.0);
-
-            translate([3.8, 3.8, 0]) color("green") cylinder($fn=32, h=1, d=6.0);
-            translate([3.8, 40.6, 0]) color("green") cylinder($fn=32, h=1, d=6.0);
-            translate([50.8, 26.7, 0]) color("green") cylinder($fn=32, h=1, d=6.0);
+        translate([2, 2.5, -11]) {
+            translate([3.8, 3.8, 0]) color("green") cylinder($fn=32, h=15, d=3.4);
+            translate([3.8, 40.6, 0]) color("green") cylinder($fn=32, h=15, d=3.4);
+            translate([50.8, 26.7, 0]) color("green") cylinder($fn=32, h=15, d=3.4);
         }
-    }    
+    }
 }
