@@ -19,6 +19,7 @@ bottom_thickness    = 1.2;
 
 render_simplified   = true;
 clamp_print         = false;
+mat_saving_holes    = true;
 
 // ---
 /*
@@ -34,6 +35,7 @@ Halterung für Batterie
 
 // translate([8, 27, 12]) camera();
 
+// pressureNose();
 inset();
 
 // translate([size_top[0], 0, 0]) rotate([90, 0, 180]) enclosure();
@@ -168,33 +170,9 @@ module inset() {
                 }
             }
             
-            // pressure noses
-            
-            nose_width1 = 20;
-            nose_width2 = 20;
-            
-            difference() {
-                union() {
-                    translate([size_top[0]/5 - nose_width1/2, 0, size_top[1]-wall_thickness]) {            
-                        translate([nose_width1/2, 0, -2]) {
-                            translate([0, 0, 4]) rotate([270, 0, 0]) scale([1, 0.5, 1]) cylinder(h=nose_depth, d=nose_width1, $fn=64);
-                            translate([0, nose_depth-4+2, 2]) rotate([0, 180, 180]) prism(2,2,2);
-                            translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width1, d=wall_thickness, $fn=32);
-                        
-                        }
-                    } 
-              
-                    translate([size_top[0]/5*4 - nose_width1/2, 0, size_top[1]-wall_thickness]) {            
-                        translate([nose_width1/2, 0, -2]) {
-                            translate([0, 0, 4]) rotate([270, 0, 0]) scale([1, 0.5, 1]) cylinder(h=nose_depth, d=nose_width1, $fn=64);
-                            translate([0, nose_depth-4+2, 2]) rotate([0, 180, 180]) prism(2,2,2);
-                            translate([0, nose_depth-wall_thickness/2, wall_thickness/2]) rotate([0, 90, 0]) cylinder(h=nose_width1, d=wall_thickness, $fn=32);
-                        
-                        }
-                    }
-                }
-                translate([0, 0, size_top[1]]) cube([size_top[0], 100, 10]);
-            }
+            // pressure noses            
+            translate([size_top[0]/5 - 20/2, 0, size_top[1]-wall_thickness]) pressureNose();
+            translate([size_top[0]/5*4 - 20/2, 0, size_top[1]-wall_thickness]) pressureNose();
         }
         
         // negative outer shell
@@ -236,6 +214,33 @@ module inset() {
 
     // tripod test hole    
     // translate([87, 42, -1]) cylinder(h=10, d=10);
+}
+
+// ------------------------------------------------------------------
+
+module pressureNose() {
+    
+    nose_width = 20;
+    curvature  = 3;
+
+    difference() {
+        union() {           
+            translate([nose_width/2, 0, -2]) {
+                translate([0, 0, 4]) rotate([270, 0, 0]) scale([1, 0.5, 1]) cylinder(h=nose_depth, d=nose_width, $fn=64);
+                translate([0, nose_depth-4+2, 2]) rotate([0, 180, 180]) prism(2,2,2);
+                    
+            }     
+        } 
+        difference() {
+            offset = 0.85;
+            
+            translate([0, nose_depth-curvature/2, offset]) cube([nose_width, 10, 10]);
+            translate([0, nose_depth-curvature/2, offset]) rotate([0, 90, 0]) cylinder(h=nose_width, d=curvature, $fn=32);
+        }
+  
+        translate([0, nose_depth-20, wall_thickness]) cube([nose_width, 20, 10]);
+    }
+    
 }
 
 // ------------------------------------------------------------------
@@ -318,11 +323,32 @@ module enclosure() {
             } else {
                 block2(size_top, size_bottom, height, radius_b, radius_t);
             }
-                        
+                    
+            // lens
             translate([ size_top[0]/2,
                         size_top[1]/2,
                         -1]) {
                 cylinder(h=10, d=80, $fn=64);
+            }
+            
+            // material saving holes
+            if (mat_saving_holes) {
+                distance = 27;
+                translate([ distance,
+                            distance,
+                            -1]) cylinder(h=10, d=30, $fn=32);
+                
+                translate([ distance,
+                            size_top[1]-distance,
+                            -1]) cylinder(h=10, d=30, $fn=32);
+                
+                translate([ size_top[0]-distance,
+                            distance,
+                            -1]) cylinder(h=10, d=30, $fn=32);
+                
+                translate([ size_top[0]-distance,
+                            size_top[1]-distance,
+                            -1]) cylinder(h=10, d=30, $fn=32);
             }
         }
     }

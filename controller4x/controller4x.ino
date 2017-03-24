@@ -24,6 +24,12 @@ int zero_uptime     =      80;
 
 // ---------------------------
 
+String serialInputString  = "";
+char serialCommand        = 0;
+int serialParam           = 0;
+
+// ---------------------------
+
 void setup() {
   Serial.begin(9600);
   Serial1.begin(115200);
@@ -56,7 +62,9 @@ void setup() {
 }
 
 void loop() {
-  //serialEvent();
+  serialEvent();
+
+  return;
 
   switch (state) {
 

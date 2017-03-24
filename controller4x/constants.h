@@ -52,6 +52,13 @@
 #define BATT_PERCENTAGE_CELL              -3
 #define BATT_PERCENTAGE_DIRECT            -4
 
+// ----------- ERROR CODES -----------
+
+#define ERRORCODE_INVALID_MESSAGE        100
+#define ERRORCODE_MESSAGE_EMPTY          101
+#define ERRORCODE_MESSAGE_TOO_LONG       102
+#define ERRORCODE_UNKNOWN_CMD            103
+
 // ----------- BUTTONS -----------
 
 #define BTN_UP             PIN_PUSHBUTTON_UP
