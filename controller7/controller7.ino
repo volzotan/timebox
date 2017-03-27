@@ -114,12 +114,17 @@ void loop() {
 
     case STATE_ZERO:
       Serial.println("start zero"); delay(200);
-      digitalWrite(PIN_ZERO_EN, HIGH);
+      
+      switchZeroOn(true);
+      
       wait(10);
-      digitalWrite(PIN_CAMERA_EN, HIGH);
+      
+      switchCameraOn(true);
+      
       wait(zero_uptime-10);
-      digitalWrite(PIN_ZERO_EN, LOW);
-      digitalWrite(PIN_CAMERA_EN, LOW);
+      
+      switchZeroOn(false);
+      switchCameraOn(false);
       
       picturesTaken++;
 

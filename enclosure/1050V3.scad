@@ -171,8 +171,10 @@ module inset() {
             }
             
             // pressure noses            
-            translate([size_top[0]/5 - 20/2, 0, size_top[1]-wall_thickness]) pressureNose();
-            translate([size_top[0]/5*4 - 20/2, 0, size_top[1]-wall_thickness]) pressureNose();
+            translate([size_top[0]/2 - 20/2, 0, size_top[1]-wall_thickness]) pressureNose();
+            translate([size_top[0]- wall_thickness, 0, 40]) rotate([0, 90, 0]) pressureNose();
+            translate([wall_thickness, 0, 40-20]) rotate([0, -90, 0]) pressureNose();
+        
         }
         
         // negative outer shell
@@ -222,23 +224,25 @@ module pressureNose() {
     
     nose_width = 20;
     curvature  = 3;
+    
+    depth = nose_depth - 5;
 
-    difference() {
+    translate([0, 5, 0]) difference() {
         union() {           
             translate([nose_width/2, 0, -2]) {
-                translate([0, 0, 4]) rotate([270, 0, 0]) scale([1, 0.5, 1]) cylinder(h=nose_depth, d=nose_width, $fn=64);
-                translate([0, nose_depth-4+2, 2]) rotate([0, 180, 180]) prism(2,2,2);
+                translate([0, 0, 4]) rotate([270, 0, 0]) scale([1, 0.5, 1]) cylinder(h=depth, d=nose_width, $fn=64);
+                translate([0, depth-4+2, 2]) rotate([0, 180, 180]) prism(2,2,2);
                     
             }     
         } 
         difference() {
             offset = 0.85;
             
-            translate([0, nose_depth-curvature/2, offset]) cube([nose_width, 10, 10]);
-            translate([0, nose_depth-curvature/2, offset]) rotate([0, 90, 0]) cylinder(h=nose_width, d=curvature, $fn=32);
+            translate([0, depth-curvature/2, offset]) cube([nose_width, 10, 10]);
+            translate([0, depth-curvature/2, offset]) rotate([0, 90, 0]) cylinder(h=nose_width, d=curvature, $fn=32);
         }
   
-        translate([0, nose_depth-20, wall_thickness]) cube([nose_width, 20, 10]);
+        translate([0, depth-20, wall_thickness]) cube([nose_width, 20, 10]);
     }
     
 }
@@ -292,18 +296,18 @@ module socketplate2() { // for actual printing with non perfect hole spacing
             translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
         }
         
-        translate([80/4, 40/2, -1]) {
-            cylinder(d=6.4, h=12, $fn=32);  
-            cylinder(d=nut14Inch, h=8, $fn=6);  
-        }
+//        translate([80/4, 40/2, -1]) {
+//            cylinder(d=6.4, h=12, $fn=32);  
+//            cylinder(d=nut14Inch, h=8, $fn=6);  
+//        }
         translate([80/2, 40/2, -1]) {
             cylinder(d=6.4, h=12, $fn=32);  
-            cylinder(d=nut14Inch, h=8, $fn=6); 
+            translate([0, 0, 2]) cylinder(d=nut14Inch, h=10, $fn=6); // h=6
         }
-        translate([(80/4)*3, 40/2, -1]) {
-            cylinder(d=6.4, h=12, $fn=32);  
-            translate([0, 0, 2]) cylinder(d=nut14Inch, h=6, $fn=6); 
-        }
+//        translate([(80/4)*3, 40/2, -1]) {
+//            cylinder(d=6.4, h=12, $fn=32);  
+//            translate([0, 0, 2]) cylinder(d=nut14Inch, h=6, $fn=6); 
+//        }
             
         // test
         // translate([-1, -1, -1]) cube([7, 100, 30]);

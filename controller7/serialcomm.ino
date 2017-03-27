@@ -66,7 +66,19 @@ void serialEvent() {
 
 void executeCommand() {
   switch(serialCommand) {
-    case 'P': 
+    case 'B': // Battery Health
+      Serial.print(getLiPoVoltage(BATT_CELL_1)); 
+      Serial.print(" ");
+      Serial.print(getLiPoVoltage(BATT_CELL_2));
+      Serial.print(" ");
+      Serial.println(getLiPoVoltage(BATT_DIRECT));
+      break;
+    case 'S': // Shutdown 
+      // TODO
+      Serial.println("K"); 
+      break;
+    case 'T': // Time 
+      errorSerial(ERRORCODE_NOT_AVAILABLE); // TODO
       break;    
     default:
       errorSerial(ERRORCODE_UNKNOWN_CMD);

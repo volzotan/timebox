@@ -89,6 +89,37 @@ void wait(float seconds) {
   Sleepy::loseSomeTime((int) ((seconds - ((int) seconds)) * 1000));
 }
 
+// -------------------------------- OPERATIONS -------------------------------- //
+
+void switchZeroOn(boolean switchOn) {
+  if (switchOn) {
+    digitalWrite(PIN_ZERO_EN, HIGH);
+  } else {
+    digitalWrite(PIN_ZERO_EN, HIGH);  
+  }
+}
+
+
+void switchDisplayOn(boolean switchOn) {
+  if (switchOn) {
+    digitalWrite(PIN_DISPLAY_EN, HIGH);
+  } else {
+    digitalWrite(PIN_DISPLAY_EN, HIGH);  
+  }
+}
+
+
+void switchCameraOn(boolean switchOn) {
+  if (switchOn) {
+    digitalWrite(PIN_CAMERA_EN, HIGH);
+  } else {
+    digitalWrite(PIN_CAMERA_EN, HIGH);  
+  }
+}
+
+
+
+
 // -------------------------------- DISPLAY -------------------------------- //
 
 //void initDisplay() {
