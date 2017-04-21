@@ -18,7 +18,7 @@ wall_thickness      = 2.4;
 bottom_thickness    = 1.2;
 
 render_simplified   = true;
-clamp_print         = true;
+clamp_print         = false;
 mat_saving_holes    = true;
 
 // ---
@@ -29,102 +29,10 @@ Halterung für Batterie
 
 */
 
-// translate([size_top[0]/2 - 40, 43, -12]) socketplate();
-
-// socketplate2();
+translate([size_top[0]/2 - 39.5, 43, -12]) socketplate();
+//inset();
 
 // translate([8, 27, 12]) camera();
-
-// pressureNose();
-// inset();
-clamp();
-
-// translate([size_top[0], 0, 0]) rotate([90, 0, 180]) enclosure();
-//block2(size_top, size_bottom, height, radius_b, radius_t);
-//translate([87, 152, 10]) cylinder(h=10, d=10);
-// translate([0, -4, 0]) clamp();
-    
-module clamp() {
-    
-    offset = size_top[0]/2 - 40;
-    screw_offset = 6.1;                 // should be 6 actually
-    rot_screw = -4;
-    screw_inner_diam = 5.3;
-    screw_outer_diam = 10;
-    screw_bottom_f = 7;
-    screw_bottom_b = 4;
-    plate_offset = 23;
-    
-    if (!clamp_print) { 
-        translate([offset+plate_offset, 30, 5]) {
-            difference() {
-                cube([40, 40, 10]);
-        
-                translate([-0.01, -1, -0.01]) rotate([90, 0, 90]) prism(42, 5, 4);
-                translate([36+0.01, -1, 5-0.01]) rotate([180, 0, 90]) prism(42, 4, 5);
-                
-                translate([20, 22, -1]) cylinder(h=15, d=6.35, $fn=32);
-            }
-        }
-        //translate([130, 28, 8]) rotate([0, 90, 0]) cylinder(h=20, d=4, $fn=32);
-    }
-       
-    difference() {
-    union() {      
-        difference() {
-            translate([offset, 0, 0]) cube([80, 45, 15]);
-            
-            translate([offset+plate_offset, 12, 4+0.01]) cube([42, 40, 11]);
-            
-            // corner triangle front
-            translate([offset-0.1, 5-0.1, 3]) rotate([270, 0, 0]) triangle(80+1, 2);
-            
-            // negative outer shell
-            translate([size_top[0], 5, 0]) rotate([90, 0, 180]) {
-                difference() {
-                    translate([-20, -20, -20]) cube([size_top[0]+40, size_top[1]+40, height+20]);
-                    block(size_top, size_bottom, height);
-                }
-            }
-            
-            // nut hole
-            /* m4 nyloc nut: 
-             * depth  = 6
-             * height = 7.66
-             * width  = 7
-             */
-            translate([112, 24, 3]) cube([6.2, 8, 30]);
-            
-            // sidecut
-            translate([35, -1, 0]) rotate([0, -45, 0]) cube([40, 80, 10]);
-            
-            // screw holes
-            translate([offset, 4, 0]) {
-                translate([screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
-                translate([80-screw_offset, screw_offset, screw_bottom_f]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
-                translate([screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
-                translate([80-screw_offset, 40-screw_offset, screw_bottom_b]) rotate([rot_screw, 0, 0]) cylinder(h=30, d=screw_outer_diam, $fn=64);
-            
-                translate([screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
-                translate([80-screw_offset, screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
-                translate([screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
-                translate([80-screw_offset, 40-screw_offset, 0]) rotate([rot_screw, 0, 0]) cylinder(h=32, d=screw_inner_diam, $fn=64);
-            }
-            
-            // test
-            // translate([28, -1, -1]) cube([20, 100, 30]);
-        }
-    
-    translate([offset+plate_offset-0.01, 8, 5]) rotate([90, 0, 90]) prism(37, 4.8, 3.8);
-    translate([38.5+offset+plate_offset+0.01, 8, 5+5]) rotate([180, 0, 90]) prism(37, 3.8, 4.8);
-    }
-                
-    // fastener        
-    translate([100, 28, 8]) rotate([0, 90, 0]) cylinder(h=50, d=4.5, $fn=32);
-    translate([102.5, 28, 8]) rotate([0, 90, 0]) cylinder(h=5, r1=4, r2=3, $fn=32);
-    //translate([103, 25.8, 8]) cube([4.5, 4.5, 4.5]);
-    }
-}
 
 module inset() {
 
@@ -241,51 +149,40 @@ module pressureNose() {
 
 // ------------------------------------------------------------------
 
-module socketplate() {
-    rotate([-4, 0, 0])
-    difference() {
-        dist = 6;
 
-        cube([80, 40, 10]);
-        
-        translate([dist,    dist,       -1]) cylinder(d=5, h=18, $fn=32);
-        translate([80-dist, dist,       -1]) cylinder(d=5, h=18, $fn=32);
-        translate([dist,    40-dist,    -1]) cylinder(d=5, h=18, $fn=32);
-        translate([80-dist, 40-dist,    -1]) cylinder(d=5, h=18, $fn=32);
-        
-        translate([80/4, 40/2, -1]) cylinder(d=7, h=12, $fn=32);  
-        translate([80/2, 40/2, -1]) cylinder(d=7, h=12, $fn=32);  
-        translate([(80/4)*3, 40/2, -1]) cylinder(d=7, h=12, $fn=32);  
-  
-        // test
-        // translate([-1, -1, -1]) cube([7, 100, 30]);
-    }
-}
-
-module socketplate2() { // for actual printing with non perfect hole spacing
+module socketplate() { 
+    
+    // 1/4 Nut Height: 5.6  Width: 11.1
+    // M5 Nut  Height: 3.2  Width: 8 
+    
+//    color("green") {
+//        translate([3, 3.3, 10]) cube([8,8,2]);
+//        translate([34, 14.7, 10]) cube([11.1,11.1,2]);
+//    }
+    
     union() {
     difference() {
-        dist        = 7;
-        nutM5       = 11; // ?
-        nut14Inch   = 13; // ?
+        dist        = 7; // should be 6 actually
+        nutM5       = 10; // ?
+        nut14Inch   = 14; // ?
 
         cube([80, 40, 8]);
         
         translate([dist,    dist,       -1]) {
             cylinder(d=5.3, h=18, $fn=32);
-            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+            translate([0, 0, 4]) cylinder(d=nutM5, h=4, $fn=6); 
         }
         translate([80-dist, dist,       -1]) {
             cylinder(d=5.3, h=18, $fn=32);
-            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+            translate([0, 0, 4]) cylinder(d=nutM5, h=4, $fn=6); 
         }
         translate([dist,    40-dist,    -1]) {
             cylinder(d=5.3, h=18, $fn=32);
-            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+            translate([0, 0, 4]) cylinder(d=nutM5, h=4, $fn=6); 
         }
         translate([80-dist, 40-dist,    -1]) {
             cylinder(d=5.3, h=18, $fn=32);
-            translate([0, 0, 4]) cylinder(d=nutM5, h=6, $fn=6); 
+            translate([0, 0, 4]) cylinder(d=nutM5, h=4, $fn=6); 
         }
         
 //        translate([80/4, 40/2, -1]) {
@@ -294,7 +191,7 @@ module socketplate2() { // for actual printing with non perfect hole spacing
 //        }
         translate([80/2, 40/2, -1]) {
             cylinder(d=6.4, h=12, $fn=32);  
-            translate([0, 0, 2]) cylinder(d=nut14Inch, h=10, $fn=6); // h=6
+            translate([0, 0, 2]) cylinder(d=nut14Inch, h=6.1, $fn=6); // h=6
         }
 //        translate([(80/4)*3, 40/2, -1]) {
 //            cylinder(d=6.4, h=12, $fn=32);  
@@ -304,8 +201,9 @@ module socketplate2() { // for actual printing with non perfect hole spacing
         // test
         // translate([-1, -1, -1]) cube([7, 100, 30]);
     }
+    
         // support layer to properly print hole
-        translate([0, 0, 3]) color([1,1,1,0.5]) cube([15, 15, 0.2]);
+        //translate([0, 0, 3]) color([1,1,1,0.5]) cube([15, 15, 0.2]);
     }
 }
 
