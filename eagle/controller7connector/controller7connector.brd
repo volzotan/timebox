@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.7.0">
+<eagle version="8.1.1">
 <drawing>
 <settings>
 <setting alwaysvectorfont="yes"/>
@@ -1364,14 +1364,14 @@
 <rectangle x1="9.3345" y1="54.9021" x2="10.3251" y2="54.9783" layer="200" rot="R90"/>
 <rectangle x1="9.2583" y1="54.9021" x2="10.2489" y2="54.9783" layer="200" rot="R90"/>
 <text x="63.119" y="4.572" size="1.016" layer="21" rot="R90">GND</text>
-<wire x1="45.72" y1="73.66" x2="10.16" y2="73.66" width="0" layer="20"/>
-<wire x1="10.16" y1="73.66" x2="10.16" y2="64.77" width="0" layer="20"/>
-<wire x1="10.16" y1="64.77" x2="17.78" y2="64.77" width="0" layer="20"/>
+<wire x1="44.45" y1="73.66" x2="11.43" y2="73.66" width="0" layer="20"/>
+<wire x1="11.43" y1="73.66" x2="11.43" y2="64.77" width="0" layer="20"/>
+<wire x1="11.43" y1="64.77" x2="17.78" y2="64.77" width="0" layer="20"/>
 <wire x1="17.78" y1="64.77" x2="17.78" y2="5.08" width="0" layer="20"/>
 <wire x1="17.78" y1="5.08" x2="31.75" y2="5.08" width="0" layer="20"/>
 <wire x1="31.75" y1="5.08" x2="31.75" y2="64.77" width="0" layer="20"/>
-<wire x1="31.75" y1="64.77" x2="45.72" y2="64.77" width="0" layer="20"/>
-<wire x1="45.72" y1="64.77" x2="45.72" y2="73.66" width="0" layer="20"/>
+<wire x1="31.75" y1="64.77" x2="44.45" y2="64.77" width="0" layer="20"/>
+<wire x1="44.45" y1="64.77" x2="44.45" y2="73.66" width="0" layer="20"/>
 </plain>
 <libraries>
 <library name="SparkFun-Connectors">
