@@ -19,7 +19,11 @@ mat_saving_holes = true;
 // -----------------------
 
 base4();
-translate([8, 27, 12]) camera();
+
+//translate([8, 27, 12]) color("blue") camera();
+
+// include <socketplate.scad>;
+
 
 // ------------------------------------------------------------------
 
@@ -116,13 +120,13 @@ module base4() {
      
 
     translate([43, 13, 0]) {
-        cube([12, 100, tunnel_height]);
-        translate([6, 0, 0]) cylinder(h=tunnel_height, d=12, $fn=32);
+        cube([13, 100, tunnel_height]);
+        translate([6.5, 0, 0]) cylinder(h=tunnel_height, d=13, $fn=32);
     }
     
-    translate([111, 13, 0]) {
-        cube([12, 100, tunnel_height]);
-        translate([6, 0, 0]) cylinder(h=tunnel_height, d=12, $fn=32);
+    translate([110, 13, 0]) {
+        cube([13, 100, tunnel_height]);
+        translate([6.5, 0, 0]) cylinder(h=tunnel_height, d=13, $fn=32);
     }    
     
     translate([43, 40, -0.01]) cube([12, 20, tunnel_height]);
