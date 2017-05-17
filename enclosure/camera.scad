@@ -1,5 +1,4 @@
-
-module camera() {
+module camera(longlens=false) {
 
     translate([0, -17, 0]) {
         cube([40, 17, 67]);
@@ -41,8 +40,15 @@ module camera() {
             color([1,0,0]) cylinder(h = 5, d = 60);
             
             // lens
-            translate([0, 0, 5]) {
-            cylinder(h = 23, d = 62);
+
+            if (longlens) {
+                translate([0, 0, 5]) {
+                    cylinder(h = 63, d = 73);
+                }
+            } else {
+                translate([0, 0, 5]) {
+                    cylinder(h = 23, d = 62);
+                }
             }
         }
     }
