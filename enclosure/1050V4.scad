@@ -1,12 +1,12 @@
 include <camera.scad>;
 include <enclosure_util.scad>;
 
-size_btm    = [157, 91];
-size_top    = [165, 98];
-height      = 47;
+size_btm    = [157, 90];
+size_top    = [165, 99];
+height      = 48;
 
 wall_thickness      = 2;
-bottom_thickness    = 1;
+bottom_thickness    = 1.2;
 
 nose_depth  = 66;
 
@@ -101,6 +101,10 @@ module base4() {
         translate([wall_thickness, 0, 40-20]) rotate([0, -90, 0]) pressureNose();
         
     }
+    
+    // rubber mat
+    translate([43, 17, 11.5]) color("green") cube([31, 40, 1]);
+    translate([92, 17, 11.5]) color("green") cube([31, 40, 1]);
 
     // negative outer shell
     translate([size_top[0], 0, 0]) rotate([90, 0, 180]) {
@@ -190,7 +194,7 @@ module base2reinforcement() {
 
 module base2cutter() {
 
-    height = 3;
+    height = 4;
 
     addx = 2;
     addy = 2;

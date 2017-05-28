@@ -3,9 +3,9 @@ include <enclosure_util.scad>;
 
 size_top    = [165, 98, 0.1];
 
-translate([size_top[0]/2 - 39.5, 43, -12]) socketplate();
+// translate([size_top[0]/2 - 39.5, 43, -12]) socketplate();
 
-module socketplate() { 
+module socketplate(marker=false) { 
     
     // 1/4 Nut Height: 5.6  Width: 11.1
     // M5 Nut  Height: 3.2  Width: 8 
@@ -14,13 +14,20 @@ module socketplate() {
 //        translate([3, 3.3, 10]) cube([8,8,2]);
 //        translate([34, 14.7, 10]) cube([11.1,11.1,2]);
 //    }
+
+    dist        = 7; // should be 6 actually
+    nutM5       = 10; // ?
+    nut14Inch   = 13.5; // ?
+
+    if (marker) {
+        translate([dist,    dist,       -1]) cylinder(d=5.3, h=50, $fn=32);
+        translate([80-dist, dist,       -1]) cylinder(d=5.3, h=50, $fn=32);
+        translate([dist,    40-dist,    -1]) cylinder(d=5.3, h=50, $fn=32); 
+        translate([80-dist, 40-dist,    -1]) cylinder(d=5.3, h=50, $fn=32);
+    }
     
     union() {
     difference() {
-        dist        = 7; // should be 6 actually
-        nutM5       = 10; // ?
-        nut14Inch   = 13.5; // ?
-
         cube([80, 40, 8]);
         
         
