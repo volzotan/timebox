@@ -1,6 +1,8 @@
 include <camera.scad>;
 include <enclosure_util.scad>;
-include <socketplate.scad>;
+//include <socketplate.scad>;
+include <clamptest.scad>;
+
 
 // lensplate
 
@@ -13,39 +15,39 @@ include <socketplate.scad>;
     
     scr             = 5; // screw distance
     
-    lensplate_trans = [88, 49, -1];
+    lensplate_trans = [88, 46, -1];
     
 // front
 
-    sfront          = [160, 98, 100]; 
+    sfront          = [160, 94, 100]; 
     w               = 1.6;              // wall thickness
     bw              = 1.6;              // bottom thickness
     
     sback           = [sfront[0], sfront[1], 10];
     
- 
+translate([10, 68, 17]) color("blue") camera(longlens=true);
 
-//translate([10, 68, 17]) color("blue") camera(longlens=true);
-
-translate([40, -1,  6]) rotate([90, 0, 0]) color("yellow") lensplate(); 
+translate([40, -1,  5]) rotate([90, 0, 0]) color("yellow") lensplate(); 
 
 //translate([8, 8, 116]) rotate([0, 0, 0]) color("green") batteries();
 
 translate([0, 0, sfront[1]]) rotate([-90, 0, 0]) front();
+//translate([48, 40, w]) clamp_alt();
 translate([48, 40, w]) clamp();
-translate([0, -300, 0]) front();
+//translate([0, -300, 0]) front();
 
-//translate([-10 + 0, 180, 0]) rotate([90, 0, 90]) back();
-translate([0, 111.5, 0]) rotate([90, 0, 0]) back();
+translate([-10 + 0, 180, 0]) rotate([90, 0, 90]) back();
+//translate([0, 111.5, 0]) rotate([90, 0, 0]) back();
+translate([0, -300, 0]) rotate([0, 0, 0]) back();
 
 //translate([0, 0, 0]) cube([160, 100, 80]);
 
-translate([48, 50, -10]) socketplate(marker=false);
+//translate([48, 50, -10]) socketplate(marker=false);
 
 translate([0, 100.5, 0]) hinge_front(nuttop=true);
 translate([0, 100.5, 52]) hinge_front(nutbottom=true);
 
-translate([160, 80, sfront[2]/2+15]) rotate([0, 90, 0]) lock();
+translate([0, 0, 200]) pcb();
 
 module lock() {
     points0 = [[0, 0], [0, 0.1], [0.1, 0.1]];   
@@ -60,8 +62,11 @@ module lock() {
         
         }     
         
-        translate([15, 28.5, 5]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=5.3);
+        translate([15, 28.5, 4]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=5.3);
     }
+    
+    // print hole support
+    translate([10, 17, 0]) color("red") cube([10, 0.3, 10]);
 }
 
 module lock2() {  
@@ -75,8 +80,8 @@ module lock2() {
         
         }     
         
-        translate([15, 30, 5]) rotate([90, 0, 0]) cylinder($fn=32, h=100, d=5.3);
-        translate([15, 28, 5]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=8.2);
+        translate([15, 30, 4]) rotate([90, 0, 0]) cylinder($fn=32, h=100, d=5.3);
+        translate([15, 28, 4]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=8.2);
     }
 }
 
@@ -89,20 +94,20 @@ module hinge_front(nuttop=false, nutbottom=false) {
     difference() {
         union() {
             if (nutbottom) {
-                translate([-7, 0, 10-tol-nutheight]) cylinder($fn=32, h=hingew+nutheight, d=12);
+                translate([-7, 0, 10-tol-nutheight]) cylinder($fn=32, h=hingew+nutheight, d=13);
             } else {
-                translate([-7, 0, 10-tol]) cylinder($fn=32, h=hingew, d=12);
+                translate([-7, 0, 10-tol]) cylinder($fn=32, h=hingew, d=13);
             }
                 
-            translate([-7, 0, 10+2*hingew]) cylinder($fn=32, h=hingew, d=12);
+            translate([-7, 0, 10+2*hingew]) cylinder($fn=32, h=hingew, d=13);
             
             if (nuttop) {
-                translate([-7, 0, 10+4*hingew+tol]) cylinder($fn=32, h=hingew+nutheight, d=12);
+                translate([-7, 0, 10+4*hingew+tol]) cylinder($fn=32, h=hingew+nutheight, d=13);
             } else {
-              translate([-7, 0, 10+4*hingew+tol]) cylinder($fn=32, h=hingew, d=12);       
+              translate([-7, 0, 10+4*hingew+tol]) cylinder($fn=32, h=hingew, d=13);       
             }
             
-            points = [[0, -0.5], [-6, 6], [-10.5, -3.9], [0, -15], [0, 0]];
+            points = [[0, -0.5], [-6, 6], [-11, -5], [0, -15], [0, 0]];
             
             if (nuttop) {
                 translate([0, 0, 10-tol]) color("green") linear_extrude(height=5*hingew+2*tol+nutheight) polygon(points);
@@ -118,14 +123,14 @@ module hinge_front(nuttop=false, nutbottom=false) {
         translate([-7, 0, 0]) cylinder($fn=32, h=50, d=5.3);
         
         if (nuttop) {
-            translate([-7, 0, 35]) cylinder($fn=6, h=10, d=9); //?
+            translate([-7, 0, 35]) cylinder($fn=6, h=10, d=11.7); // a little bit bigger, due to inprecision by printing direction
         } 
         if (nutbottom) {
-            translate([-7, 0, 0]) cylinder($fn=6, h=9, d=9); //?
+            translate([-7, 0, 0]) cylinder($fn=6, h=9, d=11.7); 
         }  
         
-        translate([-7, 0, 10+1*hingew-tol]) cylinder($fn=32, h=hingew+tol, d=12.5);
-        translate([-7, 0, 10+3*hingew]) cylinder($fn=32, h=hingew+tol, d=12.5);
+        translate([-7, 0, 10+1*hingew-tol]) cylinder($fn=32, h=hingew+tol, d=13.5);
+        translate([-7, 0, 10+3*hingew]) cylinder($fn=32, h=hingew+tol, d=13.5);
     }
 }
 
@@ -150,8 +155,8 @@ module hinge_back() {
 }
 
 module front() {
-    corn            = 5; 
-    corn2           = 5;
+    corn            = 3; 
+    corn2           = 3;
     
     points_ext = [  [0              , corn],
                     [corn           ,   0],
@@ -182,6 +187,8 @@ module front() {
             // outer hull
             linear_extrude(height=sfront[2]) polygon(points_ext);
             
+            // lock
+            translate([160, 33, sfront[2]-20]) rotate([90, 0, 90]) lock();
         }
         
         // inner hull
@@ -220,6 +227,10 @@ module front() {
         // left/right 
         translate([-0.01, 100, -0.01]) rotate([90, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
         translate([sfront[0]+0.01, sfront[1], -0.01]) rotate([90, 0, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
+
+        // lock nut trap
+        translate([148, 44, 94]) cube([20, 8, 3]); //?
+    
     }
     
     //translate([190, 40, 40]) cube([10, 20, 40]);
@@ -235,19 +246,20 @@ module front() {
                     translate([-distx, disty])    cylinder($fn=32, h=4, d=9);
                     translate([distx, disty])     cylinder($fn=32, h=4, d=9);
                 }
-                translate([-distx, -disty])   cylinder($fn=6, h=6, d=6); // ?
-                translate([distx, -disty])    cylinder($fn=6, h=6, d=6);
-                translate([-distx, disty])    cylinder($fn=6, h=6, d=6);
-                translate([distx, disty])     cylinder($fn=6, h=6, d=6);
+                translate([-distx, -disty])   cylinder($fn=6, h=6, d=6.6);
+                translate([distx, -disty])    cylinder($fn=6, h=6, d=6.6);
+                translate([-distx, disty])    cylinder($fn=6, h=6, d=6.6);
+                translate([distx, disty])     cylinder($fn=6, h=6, d=6.6);
             }    
-        }   
+        }
+           
     }
 }
 
 module back() {
     
-    corn            = 5; 
-    corn2           = 5;
+    corn            = 3; 
+    corn2           = 3;
     
     w1 = w+0.1;
     w2 = w1+1.2;
@@ -304,7 +316,19 @@ module back() {
     translate([0, 92-1/2, 10]) rotate([90, 0, 0]) hinge_back();
     
     translate([160, 65, 10]) rotate([-90, 0, -90]) lock2();
+    
+    translate([90, 6, 5]) rotate([0, 0, 90]) pcb();
+    translate([100, 80, 5]) rotate([0, 0, -90]) zero();
 }
+
+module clamp_alt() {
+        union() {
+            points = [[0, 0], [8, 0], [0, 8]];
+            translate([0, 0, 0]) rotate([0, -90, -180]) linear_extrude(height=80) polygon(points);
+            
+            cube([80, 50, 8]);
+        }    
+    }
 
 module clamp() {
     difference() {
@@ -332,6 +356,9 @@ module clamp() {
             translate([80-dist, 40-dist])   cylinder($fn=32, h=10, d=8.3);
             translate([dist, 40-dist])      cylinder($fn=32, h=10, d=8.3);
         }
+        
+        // nut trap
+        translate([64, 25, 0]) cube([3, 10, 10]);
     }
 }
 
@@ -380,6 +407,26 @@ module lensplate() {
 }
 
 // utilities 
+
+module pcb() {
+    translate([0, 0, 0]) color("purple") import("/Users/volzotan/GIT/timebox/eagle/controller10/controller10.dxf");
+}
+
+module zero() {
+    translate([0, 0, 0]) {
+        difference() {
+            color("green") cube([65, 30, 2]);
+            
+            translate([3.5, 3.5, -1]) cylinder($fn=32, h=10, d=2.75);
+            translate([65-3.5, 3.5, -1]) cylinder($fn=32, h=10, d=2.75);
+            translate([3.5, 30-3.5, -1]) cylinder($fn=32, h=10, d=2.75);
+            translate([65-3.5, 30-3.5, -1]) cylinder($fn=32, h=10, d=2.75);  
+        }
+        translate([7, 0.5, 0]) color("black") cube([51, 6, 5]);
+        translate([7, 30-6-0.5, 0]) color("silver") cube([10, 6, 5]);
+    }
+    
+}
 
 module batteries() {
     translate([9, 9, 0]) cylinder($fn=32, h=65, d=18);
