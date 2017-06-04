@@ -4,7 +4,11 @@ fins = [[4, 1.4], [0.4, 4], [4, 4]];
 
 tol2 = 0.3;
 
-translate([0, 0, 0]) clamp();
+difference() {
+    translate([0, 0, 0]) clamp();
+    //translate([0, 0, 2.0]) cube([100, 100, 100]);
+    
+}    
 //translate([0, 50, 0]) plate();
 
 module plate() {
@@ -90,29 +94,48 @@ difference() {
     translate([-8.0, 22, 5.5]) rotate([0, 90, 0]) cylinder($fn=32, h=10, d=9);
         
     // translate([10, 15.75, 1.6]) cube([3, 8.3, 9]); // square nut
-    translate([4, 17.85, 1.1]) cube([4.2, 8.3, 10]); // normal M5 nut
+    translate([3, 17.85, 1.1]) cube([4.2, 8.3, 10]); // normal M5 nut
     
-    translate([11, 15, 2.0]) cube([10, 14, 10]); // pressure nose
+    //translate([9, 15, 2.0]) cube([7, 14, 7.5]); // pressure nose
+    points = [  [0, 0], 
+                            [14, 0], 
+                            [14, 7], 
+                            [14-1, 7+1], 
+                            [1, 7+1], 
+                            [0, 7]];
+    translate([9, 15, 2.0]) rotate([90, 0, 90]) linear_extrude(height=7) polygon(points);
+    translate([15, 17, 2.0]) cube([7, 10, 7.5]); // pressure nose
 
 }
 
-    //translate([11.5, 15, 2+tol2]) {
-    translate([10, 50, 0]) rotate([0, -90, 0]) {
+    translate([9+tol2, 15, 2]) {
+    //translate([10, 50, 0]) rotate([0, -90, 0]) {
        
         bottom_height = 2;
-        height = 5.2;
+        height = 4;
+        x=2;
         
-        difference() {
+        translate([0, tol2, 0]) cube([0.4, 14-2*tol2, 0.3]);
+        translate([4-0.4, tol2, 0]) cube([0.4, 14-2*tol2, 0.3]);
+        translate([7-0.2, 2+tol2, 0]) cube([0.4, 14-2*tol2-4, 0.3]);
+        
+        translate([0, 0, 0.3]) difference() {
             // body
-            points = [[tol2, 0], [14-tol2, 0], [14-tol2, size[2]-bottom_height], [14-1, size[2]+1-tol2-bottom_height], [1, size[2]+1-tol2-bottom_height], [0+tol2, size[2]-bottom_height]];
-            translate([0, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=height) polygon(points);
-                              
+            union() {
+                
+                
+                points = [[tol2, 0], [14-tol2, 0], [14-tol2, size[2]-bottom_height-x], [14-1, size[2]+1-tol2-bottom_height-x], [1, size[2]+1-tol2-bottom_height-x], [0+tol2, size[2]-bottom_height-x]];
+                translate([0, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=height) polygon(points);
+                translate([height, 2+tol2, 0]) cube([3.2, 10-2*tol2, size[2]+1-tol2-bottom_height-x]);  
+            }
+            //translate([0, tol2, 0]) cube([height, 14-2*tol2, 6.5]);
+            
             // screw hole
             translate([-1, 7, 5.5-bottom_height-tol2]) rotate([0, 90, 0]) cylinder($fn=32, h=3, d=5.4);    
         }
         
         // fins
-        translate([height+4, tol2, -tol2+0.2]) rotate([90, 0, 180]) color("blue") linear_extrude(height=14-2*tol2) polygon(fins);
+        //translate([height+4, tol2, -tol2+0.2]) rotate([90, 0, 180]) color("blue") linear_extrude(height=14-2*tol2) polygon(fins);
     
     } 
 }
