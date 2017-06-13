@@ -75,7 +75,7 @@
 			#define RX_LED_OFF()	PORTB &= ~(1<<0)
 			#define RX_LED_ON()		PORTB |= (1<<0)			
 		#else 
-			#define TX_LED_OFF()	PORTD |= (1<<5)
+			#define TX_LED_OFF()	//PORTD |= (1<<5)
 			#define TX_LED_ON()		PORTD &= ~(1<<5)
 			#define RX_LED_OFF()	PORTB |= (1<<0)
 			#define RX_LED_ON()		PORTB &= ~(1<<0)
