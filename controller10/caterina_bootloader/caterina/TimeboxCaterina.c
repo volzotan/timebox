@@ -172,7 +172,7 @@ void SetupHardware(void)
 	MCUCR = (1 << IVCE);
 	MCUCR = (1 << IVSEL);
 	
-	LED_SETUP();
+	//LED_SETUP();
 	CPU_PRESCALE(0); 
 	L_LED_OFF();
 	TX_LED_OFF();
