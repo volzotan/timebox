@@ -110,6 +110,10 @@ void LEDPulse(void)
  */
 int main(void)
 {
+
+    LED_SETUP();
+    TX_LED_ON();
+
 	/* Save the value of the boot key memory before it is overwritten */
 	uint16_t bootKeyPtrVal = *bootKeyPtr;
 	*bootKeyPtr = 0;
