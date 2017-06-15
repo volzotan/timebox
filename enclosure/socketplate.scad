@@ -3,7 +3,7 @@ include <enclosure_util.scad>;
 
 size_top    = [165, 98, 0.1];
 
-// translate([size_top[0]/2 - 39.5, 43, -12]) socketplate();
+translate([size_top[0]/2 - 39.5, 43, -12]) socketplate();
 
 module socketplate(marker=false) { 
     

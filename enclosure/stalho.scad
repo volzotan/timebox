@@ -18,7 +18,7 @@ include <clamptest.scad>;
     
     scr             = 5; // screw distance
     
-    lensplate_trans = [88, 46, -1];
+    lensplate_trans = [88, 48, -1];
     
 // front
 
@@ -28,24 +28,24 @@ include <clamptest.scad>;
     
     sback           = [sfront[0], sfront[1], 10];
     
-%translate([10, 69, 70-14+w]) color("blue") %camera(longlens=true);
+%translate([10, 69, 12+w]) color("blue") %camera(longlens=true);
 %translate([8, 8, 116]) rotate([0, 0, 0]) color("green") batteries();
 //%translate([0, 0, 200]) pcb();
 
-translate([40, -1,  5]) rotate([90, 0, 0]) color("yellow") lensplate(); 
+%translate([40, -1,  3]) rotate([90, 0, 0]) color("yellow") lensplate(); 
 
 translate([0, 0, sfront[1]]) rotate([-90, 0, 0]) front();
 
-//translate([123.5, 90, w]) rotate([0, 0, 180]) clamp();
-//translate([123.5-70, 90, -0.2]) rotate([180, 0, 0]) plate();
+%translate([123, 90, w]) rotate([0, 0, 180]) clamp();
+%translate([123-70, 90, -0.2]) rotate([180, 0, 0]) plate();
 
 //translate([0, 100.5, 0-0.1]) hinge_front(nuttop=true);
 //translate([0, 100.5, 52-0.1]) hinge_front(nutbottom=true);
 
-translate([-17 + 0, 130, 0]) rotate([90, 0, 90]) back();
+%translate([-17 + 0, 130, 0]) rotate([90, 0, 90]) back();
 
 //translate([0, 111.5, 0]) rotate([90, 0, 0]) back();
-translate([0, -300, 0]) rotate([0, 0, 0]) back();
+%translate([0, -300, 0]) rotate([0, 0, 0]) back();
 
 
 //translate([200, 0, 0]) lock3();
@@ -69,8 +69,8 @@ module lock() {
         translate([15, 28.5, 4]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=5.3);
     }
     
-    // print hole support
-    translate([10, 17, 0]) color("red") cube([10, 0.3, 10]);
+    // M5 nut cavity hole support
+    translate([10, 16.2, 0]) color("red") cube([10, 0.3, 10]);
 }
 
 module lock2() {  
@@ -89,40 +89,40 @@ module lock2() {
     }
 }
 
-module lock3() {
-    
-    corn = 3;
-    height = 18;
-    
-    points1 = [[0, 0], [11-corn, 0], [11, corn], [11, height], [corn, height], [0, height-corn]];
-    points2 = [[0, 0], [0.1, 0], [corn, height], [0, height-corn]];
-    
-    difference() {
-        color("green") hull() {
-            translate([0, 14, 0]) rotate([90, 0, 0]) linear_extrude(height=0.1) polygon(points2);
-            translate([0, 9, 0]) rotate([90, 0, 0]) linear_extrude(height=9) polygon(points1); 
-        
-        }
-     
-        translate([2, 2.4, height-9-8.3/2]) cube([10, 4.2+0.3, 8.3]); // some extra clearing vertically, because nut should fit despite overhang (test...?) 
-        translate([11/2, 10, height-9]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=5.3);
-    }
-}
-
-module lock4() {
-    
-    corn = 3;
-    height = 18;
-    
-    points1 = [[0, 0], [11-corn, 0], [11, corn], [11, height], [corn, height], [0, height-corn]];
-
-    difference() {
-        translate([0, 8, 0]) rotate([90, 0, 0]) linear_extrude(height=8) polygon(points1);     
-
-        translate([11/2, 10, height-9]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=5.3);
-        translate([11/2, 6, height-9]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=9);
-    }
-}
+//module lock3() {
+//    
+//    corn = 3;
+//    height = 18;
+//    
+//    points1 = [[0, 0], [11-corn, 0], [11, corn], [11, height], [corn, height], [0, height-corn]];
+//    points2 = [[0, 0], [0.1, 0], [corn, height], [0, height-corn]];
+//    
+//    difference() {
+//        color("green") hull() {
+//            translate([0, 14, 0]) rotate([90, 0, 0]) linear_extrude(height=0.1) polygon(points2);
+//            translate([0, 9, 0]) rotate([90, 0, 0]) linear_extrude(height=9) polygon(points1); 
+//        
+//        }
+//     
+//        translate([2, 2.4, height-9-8.3/2]) cube([10, 4.2+0.3, 8.3]); // some extra clearing vertically, because nut should fit despite overhang (test...?) 
+//        translate([11/2, 10, height-9]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=5.3);
+//    }
+//}
+//
+//module lock4() {
+//    
+//    corn = 3;
+//    height = 18;
+//    
+//    points1 = [[0, 0], [11-corn, 0], [11, corn], [11, height], [corn, height], [0, height-corn]];
+//
+//    difference() {
+//        translate([0, 8, 0]) rotate([90, 0, 0]) linear_extrude(height=8) polygon(points1);     
+//
+//        translate([11/2, 10, height-9]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=5.3);
+//        translate([11/2, 6, height-9]) rotate([90, 0, 0]) cylinder($fn=32, h=20, d=9);
+//    }
+//}
 
 module hinge_front(nuttop=false, nutbottom=false) {
     tol     = 0.8; // tolerance
@@ -212,48 +212,71 @@ module box(red=0, w=0, height=1) {
 
 module front() {
     
-    corn2 = 3;
+    corn2   = 3;
+    red     = 30; // reduction for right cavity
     
-    l1_height       = 45; // right corner
-    l2_height       = 78; // right corner
+    // height of the 3 segments
+    l1_height       = 45; 
+    l2_height       = 78; 
     l3_height       = sfront[2]-(l2_height);
     
-    union() {
+    frontpoints     = [ [0, 0], [0, corn2], [-corn2, 0]];
+    
     difference() {
-        
-        frontpoints     = [ [0, 0], [0, corn2], [-corn2, 0]];
-   
-        union() { 
-            // outer hull
-            box(height=l1_height, red=20);
-            hull() {
-                translate([0, 0, l1_height]) box(height=0.1, red=20);
-                translate([0, 0, l2_height]) box(height=0.1);
-            }
-            translate([0, 0, l2_height]) box(height=l3_height);
-            
-            // lock
-            translate([160, 33, sfront[2]-20]) rotate([90, 0, 90]) lock();
-            translate([0, 33, sfront[2]-20]) rotate([90, 0, 90]) mirror([0, 0, 1]) lock();
-        }
-        
-        // inner hull
-        translate([0, 0, bw]) difference() {
-            //box(height=sfront[2], w=w);
-            
-            union() {
-                box(w=w, height=l1_height, red=20);
-                hull() {
-                    translate([0, 0, l1_height-0.01]) box(w=w, height=0.1, red=20);
-                    translate([0, 0, l2_height+0.01]) box(w=w, height=0.1);
+        union() {
+            difference() {
+                union() { 
+                    // outer hull
+                    box(height=l1_height, red=20);
+                    hull() {
+                        translate([0, 0, l1_height]) box(height=0.1, red=20);
+                        translate([0, 0, l2_height]) box(height=0.1);
+                    }
+                    translate([0, 0, l2_height]) box(height=l3_height);
+                    
+                    // lock
+                    translate([160, 33, sfront[2]-20]) rotate([90, 0, 90]) lock();
+                    translate([0, 33, sfront[2]-20]) rotate([90, 0, 90]) mirror([0, 0, 1]) lock();
                 }
-                translate([0, 0, l2_height]) box(w=w, height=l3_height);
+                
+                // inner hull
+                translate([0, 0, bw]) difference() {
+                    //box(height=sfront[2], w=w);
+                    
+                    union() {
+                        box(w=w, height=l1_height, red=20);
+                        hull() {
+                            translate([0, 0, l1_height-0.01]) box(w=w, height=0.1, red=20);
+                            translate([0, 0, l2_height+0.01]) box(w=w, height=0.1);
+                        }
+                        translate([0, 0, l2_height]) box(w=w, height=l3_height);
+                    }
+           
+                    translate([-1, -0.01+w, -0.01]) rotate([0, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints); 
+                    translate([sfront[0], sfront[1]-0.01-w, -0.01]) rotate([180, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
+                    translate([-0.01+w, sfront[1], -0.01]) rotate([90, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
+                    translate([sfront[0]-red+10-0.01-w, sfront[1], 0.01]) rotate([90, 0, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);          
+                }
             }
-   
-            translate([-1, -0.01, -0.01]) rotate([0, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints); 
-            translate([sfront[0], sfront[1]-0.01, -0.01]) rotate([180, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
-            translate([-0.01, sfront[1], -0.01]) rotate([90, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
-            translate([sfront[0]-0.01, sfront[1], -0.01]) rotate([90, 0, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);          
+            
+            // lensplate hole reinforcement
+            translate([0, 0, 1]) translate(lensplate_trans) {
+                distx = 43;
+                disty = 38; 
+                translate([-distx-4.5, -disty-10])      cube([9, 10, 5]);
+                translate([-distx, -disty])             cylinder($fn=32, h=5, d=9);
+                
+                translate([distx-4.5, -disty-9])        cube([11.5, 10, 5]);
+                translate([distx, -disty-5.5])          cube([9, 10, 5]);
+                translate([distx, -disty])              cylinder($fn=32, h=5, d=9);
+                
+                translate([-distx-4.5, disty])          cube([9, 8, 5]);
+                translate([-distx, disty])              cylinder($fn=32, h=5, d=9);
+                
+                translate([distx-4.5, disty])           cube([12, 8, 5]);
+                translate([distx, disty-4.5])           cube([9, 10, 5]);
+                translate([distx, disty])               cylinder($fn=32, h=5, d=9);
+            }
         }
        
         // lens hole
@@ -281,34 +304,30 @@ module front() {
         
         // left/right 
         translate([-0.01, 100, -0.01]) rotate([90, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
-        translate([sfront[0]+0.01, sfront[1], -0.01]) rotate([90, 0, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
+        translate([sfront[0]-red+10+0.01, sfront[1], -0.01]) rotate([90, 0, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
 
         // lock nut trap
-        translate([148, 44, 94]) cube([20, 8, 3]); //?
-        translate([4, 44, 94]) cube([20, 8, 3]); //?
-    
-    }
-    
-    //translate([190, 40, 40]) cube([10, 20, 40]);
-    
-        // lensplate
-        translate(lensplate_trans) {
+        translate([148, 44, 92]) cube([20, 8.4, 4.4]); //?
+        translate([-8, 44, 92]) cube([20, 8.4, 4.4]); //?
+        
+        // clamp screw holes
+        translate([53, sfront[2], 46]) rotate([90, 0, 0]) color("purple") {
+            dist = 7;
+            translate([dist, dist]) cylinder($fn=32, h=10, d=5.3);
+            translate([70-dist, dist]) cylinder($fn=32, h=10, d=5.3);
+            translate([dist, 44-dist]) cylinder($fn=32, h=10, d=5.3);
+            translate([70-dist, 44-dist]) cylinder($fn=32, h=10, d=5.3);
+        }    
+ 
+        // lensplate nut cavity
+        translate(lensplate_trans) translate([0, 0, 3]) { // ? hight correct?
             distx = 43;
             disty = 38;
-            difference() {
-                translate([0, 0, 1]) union() {
-                    translate([-distx, -disty])   cylinder($fn=32, h=4, d=9);
-                    translate([distx, -disty])    cylinder($fn=32, h=4, d=9);
-                    translate([-distx, disty])    cylinder($fn=32, h=4, d=9);
-                    translate([distx, disty])     cylinder($fn=32, h=4, d=9);
-                }
                 translate([-distx, -disty])   cylinder($fn=6, h=6, d=6.6);
                 translate([distx, -disty])    cylinder($fn=6, h=6, d=6.6);
                 translate([-distx, disty])    cylinder($fn=6, h=6, d=6.6);
                 translate([distx, disty])     cylinder($fn=6, h=6, d=6.6);
-            }    
         }
-           
     }
 }
 
