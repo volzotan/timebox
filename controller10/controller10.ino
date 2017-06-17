@@ -1,10 +1,10 @@
 #include <JeeLib.h>
 
-#include <SPI.h>
 #include <Wire.h>
 #include <EEPROM.h>
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_NeoPixel.h>
 
+#include "global.h"
 #include "constants.h"
 
 ISR(WDT_vect) {
@@ -12,6 +12,13 @@ ISR(WDT_vect) {
 }
 
 //#define DEBUG
+
+// ---------------------------
+
+struct CommunicationInterface ser0 = {&Serial, 0, "",0, 0};
+struct CommunicationInterface ser1 = {&Serial1, 0, "",0, 0};
+
+// ---------------------------
 
 int state           = STATE_INIT;
 int picturesTaken   = 0;
@@ -24,25 +31,30 @@ int zero_uptime     =      80;
 
 // ---------------------------
 
-String serialInputString  = "";
-char serialCommand        = 0;
-int serialParam           = 0;
+Adafruit_NeoPixel neopixel = Adafruit_NeoPixel(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 
 // ---------------------------
 
 void setup() {
+
   Serial.begin(9600);
-  Serial1.begin(115200);
+  Serial1.begin(9600);
+  //Serial1.begin(115200);
+ 
+  Serial.println("% INIT"); delay(200);
 
-//  #ifdef DEBUG
-//    while (!Serial) {
-//       ;
-//    }
-//  #endif
+  ser0.inputBuffer = malloc(sizeof(char) * 100);
+  ser1.inputBuffer = malloc(sizeof(char) * 100);
 
-  Serial.println("init"); delay(200);
-  
   initPins();
+
+  neopixel.begin();
+  neopixel.setPixelColor(0, neopixel.Color(5,5,0));
+  neopixel.show();
+  
+  while (!Serial) {
+    ;
+  }
 
   if (!checkBattHealth()) {
     // battery is empty, abort right now!
@@ -59,9 +71,50 @@ void setup() {
 //  Serial.println("start");
 //  digitalWrite(PIN_ZERO_EN, HIGH);
 //  delay(500);
+
+  selftest();
+  delay(100);
+  selftest();
+  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+//  selftest();
+//  delay(100);
+
 }
 
 void loop() {
+    
   serialEvent();
 
   return;
@@ -70,7 +123,7 @@ void loop() {
 
     case STATE_INIT:
       for(int i=0; i<300; i++) {
-        if (digitalRead(PIN_PUSHBUTTON_CENTER) == 0) {
+        if (digitalRead(PIN_BUTTON) == 0) {
           state = STATE_IDLE;
           Serial.println("idle"); delay(200);
           return;  
@@ -139,3 +192,27 @@ void loop() {
   }
 }
 
+void selftest() {
+  // assume all pins are initialized
+
+  Serial.println("--- SELFTEST ---");
+  
+  // battery 
+  Serial.print("BATT: ");
+  Serial.print(analogRead(PIN_BATT_DIRECT));
+  Serial.print(" | ");
+  Serial.print(getLiPoVoltage(BATT_DIRECT));
+  Serial.print("v | ");
+  Serial.print(getLiPoVoltage(BATT_PERCENTAGE_DIRECT));
+  Serial.println("%");
+  
+  // NeoPixel
+  neopixel.setPixelColor(0, neopixel.Color(0,5,0));
+  neopixel.show();
+
+  // button state
+
+  // zero uart
+  Serial1.println("FOO");
+    
+}
