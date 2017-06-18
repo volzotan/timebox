@@ -57,6 +57,7 @@
 #define ERRORCODE_MESSAGE_EMPTY          101
 #define ERRORCODE_MESSAGE_TOO_LONG       102
 #define ERRORCODE_UNKNOWN_CMD            103
+#define ERRORCODE_INVALID_PARAM          104
 #define ERRORCODE_NOT_AVAILABLE          110
 
 // ----------- MENU -----------

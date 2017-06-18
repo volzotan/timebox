@@ -57,6 +57,18 @@ String calculateTime(int interval, int iterations) {
   return hours + "h" + minutes + "m";
 }
 
+int lastIndexOf(const char * s, char target)
+{
+   int ret = -1;
+   int curIdx = 0;
+   while(s[curIdx] != '\0')
+   {
+      if (s[curIdx] == target) ret = curIdx;
+      curIdx++;
+   }
+   return ret;
+}
+
 void wait(float seconds) {
 
   #ifdef DEBUG

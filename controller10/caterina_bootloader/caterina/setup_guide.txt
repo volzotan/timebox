@@ -1,4 +1,4 @@
-On the controller10 board, the ZERO_EN pin is connected to 
+On the controller10 board, the ZERO_EN pin is connected to PD5.
 This pin is flashed by the bootloader during upload and by the
 arduino Serial functions whenever TX events are occuring.
 To disable this, a modified Caterina bootloader needs to be used.

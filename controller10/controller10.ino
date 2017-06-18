@@ -15,8 +15,8 @@ ISR(WDT_vect) {
 
 // ---------------------------
 
-struct CommunicationInterface ser0 = {&Serial, 0, "",0, 0};
-struct CommunicationInterface ser1 = {&Serial1, 0, "",0, 0};
+struct CommunicationInterface ser0 = {&Serial, 0, "",0, -1};
+struct CommunicationInterface ser1 = {&Serial1, 0, "",0, -1};
 
 // ---------------------------
 
@@ -28,6 +28,10 @@ int picturesTaken   = 0;
 int optInterval     =       2;        // CHANGE
 int optIterations   =    1000;
 int zero_uptime     =      80;
+
+// ---------------------------
+
+long zeroShutdownTimer = -1;
 
 // ---------------------------
 
@@ -67,50 +71,11 @@ void setup() {
     #endif
   }
 
-//  delay(100);
-//  Serial.println("start");
-//  digitalWrite(PIN_ZERO_EN, HIGH);
-//  delay(500);
-
   selftest();
   delay(100);
   selftest();
   delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-//  selftest();
-//  delay(100);
-
+ 
 }
 
 void loop() {

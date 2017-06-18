@@ -59,24 +59,24 @@ void eeprom_clear() {
   }
 }
 
-void eeprom_print(unsigned int start, unsigned int end) { // debug
+void eeprom_print(CommunicationInterface ser, unsigned int start, unsigned int end) { // debug
   int ext_read = 0;
 
   for (unsigned int i=start; i<end; i++) {
     ext_read = readEEPROM(i);
 
     if (i < 100) {
-      Serial.print(" "); 
-      if (i < 10) Serial.print(" "); 
+      ser.port->print(" "); 
+      if (i < 10) ser.port->print(" "); 
     } 
-    Serial.print(i);
-    Serial.print(" "); 
-    Serial.print(ext_read, BIN);
-    Serial.print(" "); 
-    Serial.print(ext_read, HEX);  
-    Serial.print(" "); 
-    Serial.print(ext_read, DEC); 
-    Serial.println();
+    ser.port->print(i);
+    ser.port->print(" "); 
+    ser.port->print(ext_read, BIN);
+    ser.port->print(" "); 
+    ser.port->print(ext_read, HEX);  
+    ser.port->print(" "); 
+    ser.port->print(ext_read, DEC); 
+    ser.port->println();
   }
 }
 
