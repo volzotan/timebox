@@ -28,12 +28,14 @@ include <clamptest.scad>;
     
     sback           = [sfront[0], sfront[1], 10];
     
-//%translate([10, 69, 12+w]) color("blue") %camera(longlens=true);
-%translate([8, 8, 116]) rotate([0, 0, 0]) color("green") batteries();
+%translate([10, 69, 50+12+w]) color("blue") %camera(longlens=true);
+%translate([4, 8, 60]) rotate([0, 0, 0]) color("green") batteries();
 //%translate([0, 0, 200]) pcb();
 
-%translate([40, -1-10,  3]) rotate([90, 0, 0]) color("yellow") lensplate();
-//%translate([40, -1-10,  3]) rotate([90, 0, 0]) color("yellow") lensplate2(); 
+//%translate([40, -1-10,  3]) rotate([90, 0, 0]) color("yellow") lensplate();
+%translate([40, -1-10,  89]) rotate([-90, 0, 0]) color("yellow") lensplate2(); 
+
+%translate([0, 300,  3]) rotate([0, 0, 0]) color("yellow") lensplate2(); 
 
 translate([0, 0, sfront[1]]) rotate([-90, 0, 0]) front();
 
@@ -43,7 +45,7 @@ translate([0, 0, sfront[1]]) rotate([-90, 0, 0]) front();
 //translate([0, 100.5, 0-0.1]) hinge_front(nuttop=true);
 //translate([0, 100.5, 52-0.1]) hinge_front(nutbottom=true);
 
-%translate([-17 + 0, 130, 0]) rotate([90, 0, 90]) back();
+//%translate([-17 + 0, 130, 0]) rotate([90, 0, 90]) back();
 
 //translate([0, 111.5, 0]) rotate([90, 0, 0]) back();
 %translate([0, -300, 0]) rotate([0, 0, 0]) back();
@@ -193,6 +195,10 @@ module front() {
                 }
             }
             
+            // lensplate reinforcement
+            translate([lensplate_trans[0], lensplate_trans[1], bw]) 
+                cylinder($fn=128, d1=90, d2=84, h=1);
+            
             // lensplate hole reinforcement
             intersection() {
                 translate([0, 0, 1]) translate(lensplate_trans) {
@@ -201,7 +207,7 @@ module front() {
                     translate([-distx-5, -disty-10])        cube([10, 10, 5]);
                     translate([-distx, -disty])             cylinder($fn=6, h=5, d=10);
                     
-                    translate([distx-5, -disty-10, 1])      cube([12.5, 10, 5]);
+                    translate([distx-5, -disty-10])      cube([12.5, 10, 5]);
                     translate([distx, -disty-5.7])          cube([9, 10, 5]);
                     translate([distx, -disty])              cylinder($fn=6, h=5, d=10);
                     
@@ -242,7 +248,8 @@ module front() {
        
         // lens hole
         translate(lensplate_trans) {
-            translate() cylinder($fn=128, h=10, d=79);
+            tol = 0.3;
+            translate() cylinder($fn=128, h=10, d=inner_diam+2*0.8+2*tol);
             
             // screws
             distx = 43;
@@ -252,6 +259,12 @@ module front() {
             translate([-distx, disty])    cylinder($fn=32, h=10, d=3.3);
             translate([distx, disty])     cylinder($fn=32, h=10, d=3.3);
         }
+        
+        // frontplate seal
+//        translate([lensplate_trans[0], lensplate_trans[1], -1]) color("red") difference() {
+//            translate([]) cylinder($fn=128, h=1.6, d=82.6);
+//            translate([0, 0, -1]) cylinder($fn=128, h=3, d=81.6);
+//        }
         
         // top
         translate([-1, -0.01, -0.01]) rotate([0, 90, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
@@ -356,6 +369,15 @@ module back() {
     
     translate([90, 6, 5]) rotate([0, 0, 90]) pcb();
     translate([100, 80, 5]) rotate([0, 0, -90]) zero();
+    
+    color("red") { // ?
+        translate([28, 9]) cylinder($fn=6, h=10, d=5); // ? M2.5 Nut
+        translate([87, 9]) cylinder($fn=6, h=10, d=5); // ? M2.5 Nut
+        translate([103.5, 18.5]) cylinder($fn=6, h=10, d=5); // ? M2.5 Nut
+        translate([127, 18.5]) cylinder($fn=6, h=10, d=5); // ? M2.5 Nut
+        translate([103.5, 76.5]) cylinder($fn=6, h=10, d=5); // ? M2.5 Nut
+        translate([127, 76.5]) cylinder($fn=6, h=10, d=5); // ? M2.5 Nut
+    }
 }
 
 module lensplate() {
@@ -415,27 +437,29 @@ module lensplate2() {
                 translate([baseplate[0] - crad/2, baseplate[1] - crad/2, 0]) cylinder($fn=32, h=6, d=crad);
                 translate([crad/2, baseplate[1] - crad/2, 0]) cylinder($fn=32, h=6, d=crad);
             }
+            
+            // seal lid
+            translate([baseplate[0]/2, baseplate[1]/2, 0]) cylinder($fn=64, h=8, d=inner_diam+2*0.8);
         }
         
         // lens hole cutter
-        translate([baseplate[0]/2, baseplate[1]/2, -1]) cylinder($fn=128, h=height+2, d=outer_diam);
-    
+        translate([0, 0, 0]) union() {
+        translate([baseplate[0]/2, baseplate[1]/2, -.1]) cylinder($fn=128, h=4+0.2, d=outer_diam);
+        translate([baseplate[0]/2, baseplate[1]/2, 4]) cylinder($fn=128, h=1.2, d1=outer_diam, d2=inner_diam);
+        translate([baseplate[0]/2, baseplate[1]/2, 3+1.2-.1]) cylinder($fn=128, h=5, d=inner_diam);
+        }
+            
         // screwholes
         translate([scr, scr, -0.1]) cylinder($fn=32, h=10, d=3.3);
         translate([baseplate[0]-scr, scr, -0.1]) cylinder($fn=32, h=10, d=3.3);
         translate([scr, baseplate[1]-scr, -0.1]) cylinder($fn=32, h=10, d=3.3);
         translate([baseplate[0]-scr, baseplate[1]-scr, -0.1]) cylinder($fn=32, h=10, d=3.3);
         
-        // screwhole nuttraps
-        translate([scr, scr, 3]) cylinder($fn=32, h=5, d=6);
-        translate([baseplate[0]-scr, scr, 3]) cylinder($fn=32, h=5, d=6);
-        translate([scr, baseplate[1]-scr, 3]) cylinder($fn=32, h=5, d=6);
-        translate([baseplate[0]-scr, baseplate[1]-scr, 3]) cylinder($fn=32, h=5, d=6);
-    }
-    
-    translate([0, 0, 1]) difference() {
-        translate([baseplate[0]/2, baseplate[1]/2, 0]) cylinder($fn=128, h=1, d=outer_diam);    
-        translate([baseplate[0]/2, baseplate[1]/2, 0-0.01]) cylinder($fn=128, h=1.2, d2=outer_diam, d1=inner_diam);    
+        // screwhole headspace
+        translate([scr, scr, -0.1]) cylinder($fn=32, h=3, d=6);
+        translate([baseplate[0]-scr, scr, -0.1]) cylinder($fn=32, h=3, d=6);
+        translate([scr, baseplate[1]-scr, -0.1]) cylinder($fn=32, h=3, d=6);
+        translate([baseplate[0]-scr, baseplate[1]-scr, -0.1]) cylinder($fn=32, h=3, d=6);
     }
     
     // hole print support
@@ -470,8 +494,10 @@ module zero() {
 }
 
 module batteries() {
-    translate([9, 9, 0]) cylinder($fn=32, h=65, d=18);
-    translate([18+9+2, 9, 0]) cylinder($fn=32, h=65, d=18);
-    translate([9, 18+9+2, 0]) cylinder($fn=32, h=65, d=18);
-    translate([18+9+2, 18+9+2, 0]) cylinder($fn=32, h=65, d=18);
+    cube([44, 43, 80]);
+    
+    //translate([9, 9, 0]) cylinder($fn=32, h=65, d=18);
+    //translate([18+9+2, 9, 0]) cylinder($fn=32, h=65, d=18);
+    //translate([9, 18+9+2, 0]) cylinder($fn=32, h=65, d=18);
+    //translate([18+9+2, 18+9+2, 0]) cylinder($fn=32, h=65, d=18);
 }
