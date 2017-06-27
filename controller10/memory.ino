@@ -39,18 +39,40 @@ unsigned int eeprom_read2ByteValue(int startpos, int endpos) {
 }
 
 void eeprom_saveto() {
-  eeprom_write2ByteValue(optInterval, EEPROM_INTERVAL, EEPROM_INTERVAL+1);
-  eeprom_write2ByteValue(optIterations, EEPROM_ITERATIONS, EEPROM_ITERATIONS+1);
+  writeEEPROM(EEPROM_IN_USAGE, 1);
+  
+  eeprom_write2ByteValue(optInterval,               EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
+  eeprom_write2ByteValue(optIterations,             EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
+  eeprom_write2ByteValue(directBootWait,            EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
+  eeprom_write2ByteValue(directUptime,              EEPROM_DIRECT_UPTIME,       EEPROM_DIRECT_UPTIME+1);
+  eeprom_write2ByteValue(zeroBootWait,              EEPROM_ZERO_BOOT_WAIT,      EEPROM_ZERO_BOOT_WAIT+1);
+  eeprom_write2ByteValue(zeroUptime,                EEPROM_ZERO_UPTIME,         EEPROM_ZERO_UPTIME+1);
 }
 
 void eeprom_reset() {
-  eeprom_write2ByteValue(INTERVAL_DEFAULT_VAL, EEPROM_INTERVAL, EEPROM_INTERVAL+1);
-  eeprom_write2ByteValue(ITERATIONS_DEFAULT_VAL, EEPROM_ITERATIONS, EEPROM_ITERATIONS+1);
+  writeEEPROM(EEPROM_IN_USAGE, 1);
+  
+  eeprom_write2ByteValue(DEFAULT_INTERVAL,          EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
+  eeprom_write2ByteValue(DEFAULT_INTERATIONS,       EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
+  eeprom_write2ByteValue(DEFAULT_DIRECT_BOOT_WAIT,  EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
+  eeprom_write2ByteValue(DEFAULT_DIRECT_UPTIME,     EEPROM_DIRECT_UPTIME,       EEPROM_DIRECT_UPTIME+1);
+  eeprom_write2ByteValue(DEFAULT_ZERO_BOOT_WAIT,    EEPROM_ZERO_BOOT_WAIT,      EEPROM_ZERO_BOOT_WAIT+1);
+  eeprom_write2ByteValue(DEFAULT_ZERO_UPTIME,       EEPROM_ZERO_UPTIME,         EEPROM_ZERO_UPTIME+1);
 }
 
 int initFromEEPROM() {
-  optInterval = eeprom_read2ByteValue(EEPROM_INTERVAL, EEPROM_INTERVAL+1);
-  optIterations = eeprom_read2ByteValue(EEPROM_ITERATIONS, EEPROM_ITERATIONS+1);
+  if (readEEPROM(EEPROM_IN_USAGE <= 0) {
+    return 1;  
+  }
+  
+  optInterval           = eeprom_read2ByteValue(    EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
+  optIterations         = eeprom_read2ByteValue(    EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
+  directBootWait        = eeprom_read2ByteValue(    EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
+  directUptime          = eeprom_read2ByteValue(    EEPROM_DIRECT_UPTIME,       EEPROM_DIRECT_UPTIME+1);
+  zeroBootWait          = eeprom_read2ByteValue(    EEPROM_ZERO_BOOT_WAIT,      EEPROM_ZERO_BOOT_WAIT+1);
+  zeroUptime            = eeprom_read2ByteValue(    EEPROM_ZERO_UPTIME,         EEPROM_ZERO_UPTIME+1);
+
+  return 0;
 }
 
 void eeprom_clear() {

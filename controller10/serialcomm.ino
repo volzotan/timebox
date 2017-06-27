@@ -8,6 +8,7 @@
  *  S  ---  Shutdown  // maybe add delay time?  S 10 for example?
  *  R  ---  Reboot    // maybe add delay time?  S 10 for example?
  *  T  ---  Time
+ *  U  ---  Get Uptime
  *  C  ---  Camera On
  *  E  ---  Print EEPROM
  *  
@@ -66,8 +67,6 @@ void processCommand(char inChar, CommunicationInterface ser) {
       
       if (spacePos > 0) {        
         sscanf(ser.inputBuffer, "%*s %d", &ser.serialParam);
-        ser.port->print("-->");
-        ser.port->println(ser.serialParam);
       }
       
       executeCommand(ser);
@@ -96,13 +95,19 @@ void executeCommand(CommunicationInterface ser) {
       
     case 'S': // Shutdown 
       if (ser.serialParam > 0) {
-        zeroShutdownTimer = millis();
-        zeroShutdownTimer += ser.serialParam * 1000; 
+        if (state != STATE_ZERO_RUNNING) {
+          errorSerial(ERRORCODE_INVALID_PARAM);
+          break;
+        }
+        zeroShutdownTimer = millis() + ser.serialParam * 1000; 
       } else {
-        switchZeroOn(false);  
-        zeroShutdownTimer = -1;
+        if (state == STATE_ZERO_RUNNING) {
+          state = STATE_ZERO_STOP;  
+        } else {
+          switchZeroOn(false);  
+          zeroShutdownTimer = -1;
+        }
       }
-      
       okSerial(ser);
       break;
       

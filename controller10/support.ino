@@ -93,7 +93,7 @@ void switchZeroOn(boolean switchOn) {
   if (switchOn) {
     digitalWrite(PIN_ZERO_EN, HIGH);
   } else {
-    digitalWrite(PIN_ZERO_EN, HIGH);  
+    digitalWrite(PIN_ZERO_EN, LOW);  
   }
 }
 
@@ -114,7 +114,6 @@ void switchCameraOn(boolean switchOn) {
     digitalWrite(PIN_CAMERA_EN, HIGH);  
   }
 }
-
 
 // -------------------------------- DISPLAY -------------------------------- //
 

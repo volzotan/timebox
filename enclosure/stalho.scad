@@ -9,8 +9,8 @@ include <clamptest.scad>;
     baseplate       = [96, 86, 3];
     crad            = 6; 
     
-    outer_diam = 79 + 0.3; // upper part of the filter
-    inner_diam = 77 + 0.3; // screw part of the filter
+    outer_diam = 79 + 0.5; // upper part of the filter
+    inner_diam = 77 + 0.5; // screw part of the filter
     height = 6;
     
     // filter height: 6.6
@@ -28,14 +28,13 @@ include <clamptest.scad>;
     
     sback           = [sfront[0], sfront[1], 10];
     
-%translate([10, 69, 50+12+w]) color("blue") %camera(longlens=true);
-%translate([4, 8, 60]) rotate([0, 0, 0]) color("green") batteries();
+//%translate([10, 69, 50+12+w]) color("blue") %camera(longlens=true);
+//%translate([4, 8, 6]) rotate([0, 0, 0]) color("green") batteries();
 //%translate([0, 0, 200]) pcb();
 
 //%translate([40, -1-10,  3]) rotate([90, 0, 0]) color("yellow") lensplate();
 %translate([40, -1-10,  89]) rotate([-90, 0, 0]) color("yellow") lensplate2(); 
-
-%translate([0, 300,  3]) rotate([0, 0, 0]) color("yellow") lensplate2(); 
+//%translate([0, 300,  3]) rotate([0, 0, 0]) color("yellow") lensplate2(); 
 
 translate([0, 0, sfront[1]]) rotate([-90, 0, 0]) front();
 
@@ -45,7 +44,7 @@ translate([0, 0, sfront[1]]) rotate([-90, 0, 0]) front();
 //translate([0, 100.5, 0-0.1]) hinge_front(nuttop=true);
 //translate([0, 100.5, 52-0.1]) hinge_front(nutbottom=true);
 
-//%translate([-17 + 0, 130, 0]) rotate([90, 0, 90]) back();
+%translate([-17 + 0, 130, 0]) rotate([90, 0, 90]) back();
 
 //translate([0, 111.5, 0]) rotate([90, 0, 0]) back();
 %translate([0, -300, 0]) rotate([0, 0, 0]) back();
@@ -55,6 +54,9 @@ translate([0, 0, sfront[1]]) rotate([-90, 0, 0]) front();
 //translate([160, 100, 76]) rotate([0, 0, 180])lock3();
 //translate([220, 0, 0]) rotate([0, 0, 0])lock4();
 
+// length test bolts
+//translate([161, 100, 50]) rotate([90, 0, 0]) cylinder($fn=32, h=10, d=5.3);
+//translate([-10-5, 310, 50]) rotate([0, 90, 0]) cylinder($fn=32, h=8, d=5.3);
 
 module lock() {
     points0 = [[0, 0], [0, 0.1], [0.1, 0.1]];   
@@ -128,19 +130,19 @@ module lock2() {
 //}
 
 module box(red=0, w=0, height=1) {
-    corn1            = 9;
+    corn1            = 3;
     corn2            = 3;
     corn3            = 3;
-    corn4            = 9;
+    corn4            = 3;
     
-    points_int = [  [w              , corn1+w],
-                    [corn1+w         , 0+w],
-                    [sfront[0]-red-corn2-w, 0+w],
-                    [sfront[0]-red-w    , corn2+w],
-                    [sfront[0]-red-w    , sfront[1]-corn3-w],
-                    [sfront[0]-red-corn3-w, sfront[1]-w],
-                    [corn4+w         , sfront[1]-w],
-                    [0+w            , sfront[1]-corn4-w],
+    points_int = [  [w                      , corn1+w],
+                    [corn1+w                , 0+w],
+                    [sfront[0]-red-corn2-w  , 0+w],
+                    [sfront[0]-red-w        , corn2+w],
+                    [sfront[0]-red-w        , sfront[1]-corn3-w],
+                    [sfront[0]-red-corn3-w  , sfront[1]-w],
+                    [corn4+w                , sfront[1]-w],
+                    [0+w                    , sfront[1]-corn4-w],
     ];
     
     linear_extrude(height=height) polygon(points_int);
@@ -196,10 +198,9 @@ module front() {
             }
             
             // lensplate reinforcement
-            translate([lensplate_trans[0], lensplate_trans[1], bw]) 
-                cylinder($fn=128, d1=90, d2=84, h=1);
+            translate([lensplate_trans[0], lensplate_trans[1], bw]) cylinder($fn=128, d1=90, d2=84, h=1);
             
-            // lensplate hole reinforcement
+            // lensplate screw hole reinforcement
             intersection() {
                 translate([0, 0, 1]) translate(lensplate_trans) {
                     distx = 43;
@@ -222,24 +223,24 @@ module front() {
                 box(height=l1_height, red=20);
             }
             
-            translate([50, sfront[1]-0.01+0, 43]) color("orange") {
-                difference() {
-                    hull() {
-                        cube([70+6, 0.1, 44+6]);
-                        translate([1.5, 0.5, 1.5]) cube([70+3, 0.1, 44+3]);
-                    }
-                    translate([3-0.2, -1, 3-0.2]) cube([70+2*0.2, 6, 44+2*0.2+0.4]);
-                }
-            }
+            // lensplate seal
+//            translate([50, sfront[1]-0.01+0, 43]) color("orange") {
+//                difference() {
+//                    hull() {
+//                        cube([70+6, 0.1, 44+6]);
+//                        translate([1.5, 0.5, 1.5]) cube([70+3, 0.1, 44+3]);
+//                    }
+//                    translate([3-(2*0.3)/2, -1, 3-(2*0.3)/2]) cube([70+2*0.3, 6, 44+2*0.23+0.4]);
+//                }
+//            }
             
             // lid
-            
             translate([0, 0, sfront[2]-3.2]) color("green") difference() {
                 translate([0, 0, 0]) box(height=2+1.2);
                 
                 hull() {
-                translate([0, 0, 0-0.01]) box(height=.01, w=w);
-                translate([0, 0, 1.2+0.02]) box(height=.01, w=2.4);
+                    translate([0, 0, 0-0.01]) box(height=.01, w=w);
+                    translate([0, 0, 1.2+0.02]) box(height=.01, w=2.4);
                 }
                 
                 translate([0, 0, 1.2]) box(height=2+.1, w=2.4);
@@ -248,7 +249,7 @@ module front() {
        
         // lens hole
         translate(lensplate_trans) {
-            tol = 0.3;
+            tol = 0.5;
             translate() cylinder($fn=128, h=10, d=inner_diam+2*0.8+2*tol);
             
             // screws
@@ -281,8 +282,8 @@ module front() {
         translate([sfront[0]-red+10+0.01, sfront[1], -0.01]) rotate([90, 0, 0]) linear_extrude(height=sfront[0]+2) polygon(frontpoints);
 
         // lock nut trap
-        translate([148.2, 44-0.2, 92]) cube([20, 8.3, 4.3]);
-        translate([-8.2, 44-0.2, 92]) cube([20, 8.3, 4.3]);
+        translate([148.5, 44-0.2, 92]) cube([20, 8.3, 4.3]);
+        translate([-8.5, 44-0.2, 92]) cube([20, 8.3, 4.3]);
         
         // clamp screw holes
         translate([53, sfront[2], 46]) rotate([90, 0, 0]) color("purple") {

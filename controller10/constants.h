@@ -16,7 +16,7 @@
  
 #define PIN_EXT1                        MISO // PB3
 #define PIN_EXT2                        MOSI // PB2
-#define PIN_EXT3                        SCK // PB1
+#define PIN_EXT3                         SCK // PB1
 
 // #define PIN_DISPLAY_RST                    4 // PD4
 // #define PIN_DISPLAY_EN                    12 // PD6
@@ -26,8 +26,17 @@
 #define LIPO_CELL_MIN                    3.7
 #define LIPO_CELL_MAX                    4.2
 
-#define INTERVAL_DEFAULT_VAL               1
-#define ITERATIONS_DEFAULT_VAL           100
+// defaults
+
+#define DEFAULT_INTERVAL                   1
+#define DEFAULT_ITERATIONS               100
+
+// actual running time = boot_wait + uptime
+
+#define DEFAULT_DIRECT_BOOT_WAIT           5
+#define DEFAULT_DIRECT_UPTIME             33
+#define DEFAULT_ZERO_BOOT_WAIT            10
+#define DEFAULT_ZERO_UPTIME               50
 
 // ----------- MISC -----------
 
@@ -39,10 +48,6 @@
 #define VDBASEVOLTAGE                    5.1
 #define VDRESISTOR1                       10
 #define VDRESISTOR2                       10
-
-// eeprom positions
-#define EEPROM_INTERVAL                   10
-#define EEPROM_ITERATIONS                 20  
 
 #define BATT_ALL                           0
 #define BATT_CELL_1                        1
@@ -62,8 +67,27 @@
 
 // ----------- MENU -----------
 
-#define STATE_INIT                         4
-#define STATE_IDLE                         3
-#define STATE_SLEEP                        5
-#define STATE_ZERO                         6
-#define STATE_STOP                         8
+#define STATE_INIT                        10
+#define STATE_IDLE                        20
+#define STATE_SLEEP                       30
+
+#define STATE_DIRECT_ON                   40
+#define STATE_DIRECT_SHUTTER              41
+#define STATE_DIRECT_OFF                  42
+
+#define STATE_ZERO_START                  50
+#define STATE_ZERO_BOOTED                 51
+#define STATE_ZERO_RUNNING                52
+#define STATE_ZERO_STOP                   53
+
+#define STATE_STOP                        60
+
+// ----------- EEPROM POSITIONS -----------
+
+#define EEPROM_IN_USAGE                    3
+#define EEPROM_INTERVAL                   10
+#define EEPROM_ITERATIONS                 20  
+#define EEPROM_DIRECT_BOOT_WAIT           30  
+#define EEPROM_DIRECT_UPTIME              40  
+#define EEPROM_ZERO_BOOT_WAIT             50  
+#define EEPROM_ZERO_UPTIME                60  
