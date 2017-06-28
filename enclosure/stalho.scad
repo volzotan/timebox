@@ -23,7 +23,7 @@ include <clamptest.scad>;
 // front
 
     sfront          = [160, 94, 100]; 
-    w               = 1.6;              // wall thickness
+    w               = 2.4;              // wall thickness
     bw              = 1.6;              // bottom thickness
     
     sback           = [sfront[0], sfront[1], 10];
