@@ -53,7 +53,7 @@ void eeprom_reset() {
   writeEEPROM(EEPROM_IN_USAGE, 1);
   
   eeprom_write2ByteValue(DEFAULT_INTERVAL,          EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
-  eeprom_write2ByteValue(DEFAULT_INTERATIONS,       EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
+  eeprom_write2ByteValue(DEFAULT_ITERATIONS,        EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
   eeprom_write2ByteValue(DEFAULT_DIRECT_BOOT_WAIT,  EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
   eeprom_write2ByteValue(DEFAULT_DIRECT_UPTIME,     EEPROM_DIRECT_UPTIME,       EEPROM_DIRECT_UPTIME+1);
   eeprom_write2ByteValue(DEFAULT_ZERO_BOOT_WAIT,    EEPROM_ZERO_BOOT_WAIT,      EEPROM_ZERO_BOOT_WAIT+1);
@@ -61,7 +61,7 @@ void eeprom_reset() {
 }
 
 int initFromEEPROM() {
-  if (readEEPROM(EEPROM_IN_USAGE <= 0) {
+  if (readEEPROM(EEPROM_IN_USAGE) <= 0) {
     return 1;  
   }
   

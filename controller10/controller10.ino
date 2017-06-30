@@ -11,7 +11,7 @@ ISR(WDT_vect) {
   Sleepy::watchdogEvent();
 }
 
-//#define DEBUG
+#define DEBUG
 
 // ---------------------------
 
@@ -64,10 +64,12 @@ void setup() {
   neopixel.begin();
   neopixel.setPixelColor(0, neopixel.Color(5,5,0));
   neopixel.show();
-  
-  while (!Serial) {
-    ;
-  }
+
+  #ifdef DEBUG
+    while (!Serial) {
+      ;
+    }
+  #endif
 
   if (!checkBattHealth()) {
     // battery is empty, abort right now!
@@ -104,14 +106,14 @@ void loop() {
         }
       }
       
-      Serial.println("start"); delay(200);
+      Serial.println("% start"); delay(200);
       state = STATE_ZERO_START;
     break;  
     
 
     case STATE_IDLE:
       delay(1000);
-      Serial.println("idle");
+      Serial.println("% idle");
     break;  
     
     
@@ -120,18 +122,18 @@ void loop() {
       if (!checkBattHealth()) {
         // battery is empty, abort right now!
         
-        Serial.println("stopping!...");
+        Serial.println("% stopping!...");
         #ifndef DEBUG
           state = STATE_STOP;
         #else
-          Serial.println("stopping aborted (debug mode)");
+          Serial.println("% stopping aborted (debug mode)");
         #endif
 
         delay(100);
       }
     
       #ifdef DEBUG
-        Serial.println("start sleeping");
+        Serial.println("% start sleeping");
         delay(100);
       #endif
 
@@ -247,6 +249,6 @@ void selftest() {
   // button state
 
   // zero uart
-  Serial1.println("FOO");
+  // Serial1.println("FOO");
     
 }

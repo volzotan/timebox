@@ -11,6 +11,7 @@
  *  U  ---  Get Uptime
  *  C  ---  Camera On
  *  E  ---  Print EEPROM
+ *  K  ---  Kill EEPROM data
  *  
  *  [...]
  */
@@ -96,7 +97,7 @@ void executeCommand(CommunicationInterface ser) {
     case 'S': // Shutdown 
       if (ser.serialParam > 0) {
         if (state != STATE_ZERO_RUNNING) {
-          errorSerial(ERRORCODE_INVALID_PARAM);
+          errorSerial(ERRORCODE_INVALID_PARAM, ser);
           break;
         }
         zeroShutdownTimer = millis() + ser.serialParam * 1000; 
@@ -131,6 +132,11 @@ void executeCommand(CommunicationInterface ser) {
       eeprom_print(ser, 0, 512);
       break; 
       
+    case 'E': // Kill EEPROM data
+      eeprom_reset();
+      okSerial(ser);
+      break; 
+      
     default:
       errorSerial(ERRORCODE_UNKNOWN_CMD, ser);
   }  
@@ -152,5 +158,5 @@ void errorSerial(int errcode, CommunicationInterface ser) {
 }
 
 void okSerial(CommunicationInterface ser) {
-  ser.port->print("K");
+  ser.port->println("K");
 }
