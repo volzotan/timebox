@@ -1,6 +1,6 @@
 include <camera.scad>;
 
-size = [80, 43, 10]; // only clamp
+size = [80, 43, 11]; // only clamp
 
 fins = [[4, 1.4], [0.4, 4], [4, 4]];
 
@@ -17,7 +17,7 @@ offset_screw = 11;
 //translate([0, 0, 0]) clamp();
 //translate([0, 0, -10]) angle_corrector();
 //translate([0, 50, 0]) plate();
-//translate([100, 0, 0]) pressure_nose();
+//translate([20, 14, 1.5]) rotate([0, -90, 0]) pressure_nose();
 
 //clamp();
 //translate([0, size[1], 5]) rotate([180, 0, 0]) angle_corrector();
@@ -31,6 +31,7 @@ translate([100, 0, 0]) pressure_nose();
 
 
 module angle_corrector() {
+    intersection() {
     difference() {
         translate([0, 0, 0]) cube([80, 43, 4.3]);
         translate([size[0]+1, size[1]+.01, -.01]) rotate([0, 0, 180]) cutter(3.8, length=82); 
@@ -44,22 +45,28 @@ module angle_corrector() {
             translate([size[0]-dist, size[1]-dist]) cylinder($fn=32, h=12, d=5.3);
         }
     }
+    
+    block(size[2]+10);
+    }
 }
 
 module plate() {
-    size = [80, 40, 6];
+    size = [80, 40, 5.5];
 
     difference() {
-        union() {
+        intersection() {
+            union() {
 
-            points_cube = [[0, 0], [size[1], 0], [size[1], size[2]-1], [size[1]-1, size[2]], [1, size[2]], [0, size[2]-1]];
-            translate([0, , 0]) rotate([90, 0, 90]) linear_extrude(height=size[0]) polygon(points_cube);
+                points_cube = [[0, 0], [size[1], 0], [size[1], size[2]-1], [size[1]-1, size[2]], [1, size[2]], [0, size[2]-1]];
+                translate([0, , 0]) rotate([90, 0, 90]) linear_extrude(height=size[0]) polygon(points_cube);
 
-            intersection() {
-                translate([-1, size[1]+2, 0]) rotate([180, 0, 0]) cutter(3.0, length=82); 
-                translate([0, 0, -size[2]]) cube(size);
-            }
-        }    
+                intersection() {
+                    translate([-1, size[1]+2, 0]) rotate([180, 0, 0]) cutter(3.0, length=82); 
+                    translate([0, 0, -size[2]]) cube(size);
+                }
+            }    
+            translate([0, 0, -10]) block(20, size=size);
+        }
         
         dist = 7;
         translate([0, 0, -10]) {
@@ -68,42 +75,47 @@ module plate() {
             translate([dist, size[1]-dist]) cylinder($fn=32, h=22, d=5.3);
             translate([size[0]-dist, size[1]-dist]) cylinder($fn=32, h=22, d=5.3);
         }
-        translate([0, 0, 2.0]) {
+        translate([0, 0, 1.5]) {
             translate([dist, dist]) cylinder($fn=32, h=12, d=9);
             translate([size[0]-dist, dist]) cylinder($fn=32, h=12, d=9);
             translate([dist, size[1]-dist]) cylinder($fn=32, h=12, d=9);
             translate([size[0]-dist, size[1]-dist]) cylinder($fn=32, h=12, d=9);
         }
         translate([size[0]/2, size[1]/2, -10]) cylinder($fn=32, h=22, d=7);
-        translate([size[0]/2, size[1]/2, -10]) cylinder($fn=6, h=10+6+1-2, d=13.15);  // +1 safety margin for long fastening screws
+        translate([size[0]/2, size[1]/2, -10]) cylinder($fn=6, h=10+6+1-2-0.5, d=13.15);  // +1 safety margin for long fastening screws
     }
-    
-//    translate([0+2, 0+2, 2.0-.2]) cube([10, 10, 0.2]);
-//    translate([size[0]-10-2, 2, 2.0-.2]) cube([10, 10, 0.2]);
-//    translate([size[0]-10-2, size[1]-10-2, 2.0-.2]) cube([10, 10, 0.2]);
-//    translate([2, size[1]-10-2, 2.0-.2]) cube([10, 10, 0.2]);
 }
 
-    module clamp() {
+module clamp() {
     difference() {
         union() {
             difference() {
-                union() {
-                    points_cube = [ [0, 0], 
-                                    [size[1], 0], 
-                                    [size[1], size[2]-1], 
-                                    [size[1]-1, size[2]], 
-                                    [1, size[2]], 
-                                    [0, size[2]-1]];
-                    translate([0, , 0]) rotate([90, 0, 90]) linear_extrude(height=size[0]) polygon(points_cube);
-                
-                    points = [  [0, 0], 
-                                [14, 0], 
-                                [14, size[2]], 
-                                [14-1, size[2]+1], 
-                                [1, size[2]+1], 
-                                [0, size[2]]];
-                    translate([0, 5+offset_screw, 0]) rotate([90, 0, 90]) linear_extrude(height=30) polygon(points);
+                intersection() {
+                    union() {
+                        points_cube = [ [0, 0], 
+                                        [size[1], 0], 
+                                        [size[1], size[2]-1], 
+                                        [size[1]-1, size[2]], 
+                                        [1, size[2]], 
+                                        [0, size[2]-1]];
+                        //translate([0, , 0]) rotate([90, 0, 90]) linear_extrude(height=size[0]) polygon(points_cube);
+                    
+                        hull() {
+                            block(.1);
+                            translate([0, 0, 10.5-.1]) block(.1);
+                            translate([0, 0, 11-.1]) block(.1, red=0.5);
+                        }
+                        
+                        points = [  [0, 0], 
+                                    [14, 0], 
+                                    [14, size[2]], 
+                                    [14-1, size[2]+1], 
+                                    [1, size[2]+1], 
+                                    [0, size[2]]];
+                        //translate([0, 5+offset_screw, 0]) rotate([90, 0, 90]) linear_extrude(height=30) polygon(points);
+                    }
+                    
+                    block(size[2]+10);
                 }
                         
                 tol = 0.2;
@@ -117,7 +129,7 @@ module plate() {
                     translate([dist, size[1]-dist]) cylinder($fn=32, h=12, d=5.3);
                     translate([size[0]-dist, size[1]-dist]) cylinder($fn=32, h=12, d=5.3);
                 }
-                translate([0, 0, 4]) {
+                translate([0, 0, 3.5]) {
                     translate([dist, dist+offset]) cylinder($fn=6, h=12, d=9.6);
                     translate([size[0]-dist, dist+offset]) cylinder($fn=6, h=12, d=9.6);
                     translate([dist, size[1]-dist]) cylinder($fn=6, h=12, d=9.6);
@@ -194,6 +206,16 @@ module pressure_nose() {
             // screw hole
             translate([-1, 9, 1+5.5-bottom_height-tol2]) rotate([0, 90, 0]) cylinder($fn=32, h=1.5, d=5.4);    
         }   
+    }
+}
+
+module block(height, size=size, red=0) {
+    crad = 2;
+    hull() {
+        translate([crad+red, crad+red]) cylinder($fn=32, h=height, r=crad);
+        translate([size[0]-crad-red, crad+red]) cylinder($fn=32, h=height, r=crad);
+        translate([crad+red, size[1]-crad-red]) cylinder($fn=32, h=height, r=crad);
+        translate([size[0]-crad-red, size[1]-crad-red]) cylinder($fn=32, h=height, r=crad);
     }
 }
 
