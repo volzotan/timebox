@@ -4,4 +4,5 @@ struct CommunicationInterface {
   String serialInputString;
   char serialCommand;
   int serialParam; 
+  int serialParam2; 
 };

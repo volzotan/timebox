@@ -40,6 +40,9 @@
 #define DEFAULT_ZERO_BOOT_WAIT            10
 #define DEFAULT_ZERO_UPTIME               50
 
+#define DEFAULT_ZERO_BRIGHTNESS_THRESHOLD 100
+#define DEFAULT_ZERO_EXPOSURE_CORRECTION   5
+
 // ----------- MISC -----------
 
 #define VERSION                         10.0
@@ -96,4 +99,6 @@
 #define EEPROM_DIRECT_UPTIME              40  
 #define EEPROM_ZERO_BOOT_WAIT             50  
 #define EEPROM_ZERO_UPTIME                60 
-#define EEPROM_PROGRAM_MODE              100  
+#define EEPROM_ZERO_BRIGHTNESS_THRESHOLD  70 
+#define EEPROM_ZERO_EXPOSURE_CORRECTION   80
+#define EEPROM_PROGRAM_MODE              100 

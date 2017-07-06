@@ -21,8 +21,8 @@ ISR(WDT_vect) {
 
 // ---------------------------
 
-struct CommunicationInterface ser0 = {&Serial,  0, "", 0, -1};
-struct CommunicationInterface ser1 = {&Serial1, 0, "", 0, -1};
+struct CommunicationInterface ser0 = {&Serial,  0, "", 0, -1, -1};
+struct CommunicationInterface ser1 = {&Serial1, 0, "", 0, -1, -1};
 
 // ---------------------------
 
@@ -38,10 +38,14 @@ int programMode     = MODE_ZERO;     // zero or optocoupler?
 int optInterval     =    -1;         
 int optIterations   =    -1;
 
-long directBootWait = DEFAULT_DIRECT_BOOT_WAIT;
-long directUptime   = DEFAULT_DIRECT_UPTIME;
-long zeroBootWait   = DEFAULT_ZERO_BOOT_WAIT;
-long zeroUptime     = DEFAULT_ZERO_UPTIME;
+int directBootWait  = DEFAULT_DIRECT_BOOT_WAIT;
+int directUptime    = DEFAULT_DIRECT_UPTIME;
+int zeroBootWait    = DEFAULT_ZERO_BOOT_WAIT;
+int zeroUptime      = DEFAULT_ZERO_UPTIME;
+
+// zero only params
+int zeroBrightnessThreshold = DEFAULT_ZERO_BRIGHTNESS_THRESHOLD;
+int zeroExposureCorrection  = DEFAULT_ZERO_EXPOSURE_CORRECTION;
 
 // ---------------------------
 

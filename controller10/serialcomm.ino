@@ -14,6 +14,9 @@
  *  E  ---  Print EEPROM
  *  K  ---  Kill/reset EEPROM data
  *  
+ *  Q  ---  Read Value
+ *  W  ---  Write Value
+ *  
  *  [...]
  */
 
@@ -149,6 +152,36 @@ void executeCommand(CommunicationInterface ser) {
       eeprom_reset();
       okSerial(ser);
       break; 
+
+    case 'Q': // Read value
+      int* ptr;
+      ptr = mapVariable(ser.serialParam);
+      if (ptr == NULL) {
+        errorSerial(ERRORCODE_INVALID_PARAM, ser);
+        break;
+      }
+      
+      ser.port->print("K ");
+      ser.port->println(*ptr);
+      break;
+
+    case 'W': // Write value
+      if (ser.serialParam2 < 0) {
+        errorSerial(ERRORCODE_INVALID_PARAM, ser);
+        break;
+      }
+      
+      int* ptr_var;
+      ptr_var = mapVariable(ser.serialParam);
+      if (ptr_var == NULL) {
+        errorSerial(ERRORCODE_INVALID_PARAM, ser);
+        break;
+      }
+
+      *ptr_var = ser.serialParam2;
+      
+      okSerial(ser);
+      break;
       
     default:
       errorSerial(ERRORCODE_UNKNOWN_CMD, ser);

@@ -10,7 +10,7 @@ void eeprom_writeByteValue(boolean var, int pos) {
   writeEEPROM(pos, var);
 }
 
-void eeprom_write2ByteValue(int var, int startpos, int endpos) {
+void eeprom_write2ByteValue(int var, int startpos) {
   int bitmask = 255;
   int i = 0;
   int j = 0;
@@ -18,7 +18,7 @@ void eeprom_write2ByteValue(int var, int startpos, int endpos) {
   i = var >> 8;
   j = var & bitmask;
   writeEEPROM(startpos, i);
-  writeEEPROM(endpos, j);
+  writeEEPROM(startpos+1, j);
 }
 
 boolean eeprom_readByteValue(int pos) {
@@ -26,13 +26,13 @@ boolean eeprom_readByteValue(int pos) {
   return value;
 }
 
-unsigned int eeprom_read2ByteValue(int startpos, int endpos) {
+unsigned int eeprom_read2ByteValue(int startpos) {
   int i = 0;
   int j = 0;
   int value;
 
   i = readEEPROM(startpos); 
-  j = readEEPROM(endpos);
+  j = readEEPROM(startpos+1);
   value = (i << 8) + j;
 
   return value;
@@ -41,41 +41,82 @@ unsigned int eeprom_read2ByteValue(int startpos, int endpos) {
 void eeprom_saveto() {
   writeEEPROM(EEPROM_IN_USAGE, 1);
   
-  eeprom_write2ByteValue(programMode,               EEPROM_PROGRAM_MODE,        EEPROM_PROGRAM_MODE+1);
-  eeprom_write2ByteValue(optInterval,               EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
-  eeprom_write2ByteValue(optIterations,             EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
-  eeprom_write2ByteValue(directBootWait,            EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
-  eeprom_write2ByteValue(directUptime,              EEPROM_DIRECT_UPTIME,       EEPROM_DIRECT_UPTIME+1);
-  eeprom_write2ByteValue(zeroBootWait,              EEPROM_ZERO_BOOT_WAIT,      EEPROM_ZERO_BOOT_WAIT+1);
-  eeprom_write2ByteValue(zeroUptime,                EEPROM_ZERO_UPTIME,         EEPROM_ZERO_UPTIME+1);
+  eeprom_write2ByteValue(programMode,                             EEPROM_PROGRAM_MODE);
+  eeprom_write2ByteValue(optInterval,                             EEPROM_INTERVAL);
+  eeprom_write2ByteValue(optIterations,                           EEPROM_ITERATIONS);
+  eeprom_write2ByteValue(directBootWait,                          EEPROM_DIRECT_BOOT_WAIT);
+  eeprom_write2ByteValue(directUptime,                            EEPROM_DIRECT_UPTIME);
+  eeprom_write2ByteValue(zeroBootWait,                            EEPROM_ZERO_BOOT_WAIT);
+  eeprom_write2ByteValue(zeroUptime,                              EEPROM_ZERO_UPTIME);
+  eeprom_write2ByteValue(zeroBrightnessThreshold,                 EEPROM_ZERO_BRIGHTNESS_THRESHOLD);
+  eeprom_write2ByteValue(zeroExposureCorrection,                  EEPROM_ZERO_EXPOSURE_CORRECTION);
 }
 
 void eeprom_reset() {
   writeEEPROM(EEPROM_IN_USAGE, 1);
 
-  eeprom_write2ByteValue(DEFAULT_PROGRAM_MODE,      EEPROM_PROGRAM_MODE,        EEPROM_PROGRAM_MODE+1);
-  eeprom_write2ByteValue(DEFAULT_INTERVAL,          EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
-  eeprom_write2ByteValue(DEFAULT_ITERATIONS,        EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
-  eeprom_write2ByteValue(DEFAULT_DIRECT_BOOT_WAIT,  EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
-  eeprom_write2ByteValue(DEFAULT_DIRECT_UPTIME,     EEPROM_DIRECT_UPTIME,       EEPROM_DIRECT_UPTIME+1);
-  eeprom_write2ByteValue(DEFAULT_ZERO_BOOT_WAIT,    EEPROM_ZERO_BOOT_WAIT,      EEPROM_ZERO_BOOT_WAIT+1);
-  eeprom_write2ByteValue(DEFAULT_ZERO_UPTIME,       EEPROM_ZERO_UPTIME,         EEPROM_ZERO_UPTIME+1);
+  eeprom_write2ByteValue(DEFAULT_PROGRAM_MODE,                    EEPROM_PROGRAM_MODE);
+  eeprom_write2ByteValue(DEFAULT_INTERVAL,                        EEPROM_INTERVAL);
+  eeprom_write2ByteValue(DEFAULT_ITERATIONS,                      EEPROM_ITERATIONS);
+  eeprom_write2ByteValue(DEFAULT_DIRECT_BOOT_WAIT,                EEPROM_DIRECT_BOOT_WAIT);
+  eeprom_write2ByteValue(DEFAULT_DIRECT_UPTIME,                   EEPROM_DIRECT_UPTIME);
+  eeprom_write2ByteValue(DEFAULT_ZERO_BOOT_WAIT,                  EEPROM_ZERO_BOOT_WAIT);
+  eeprom_write2ByteValue(DEFAULT_ZERO_UPTIME,                     EEPROM_ZERO_UPTIME);
+  eeprom_write2ByteValue(DEFAULT_ZERO_BRIGHTNESS_THRESHOLD,       EEPROM_ZERO_BRIGHTNESS_THRESHOLD);
+  eeprom_write2ByteValue(DEFAULT_ZERO_EXPOSURE_CORRECTION,        EEPROM_ZERO_EXPOSURE_CORRECTION);
 }
 
 int initFromEEPROM() {
-  if (readEEPROM(EEPROM_IN_USAGE) <= 0) {
+  if (readEEPROM(EEPROM_IN_USAGE) != 1) {
     return 1;  
   }
   
-  programMode           = eeprom_read2ByteValue(    EEPROM_PROGRAM_MODE,        EEPROM_PROGRAM_MODE+1);
-  optInterval           = eeprom_read2ByteValue(    EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
-  optIterations         = eeprom_read2ByteValue(    EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
-  directBootWait        = eeprom_read2ByteValue(    EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
-  directUptime          = eeprom_read2ByteValue(    EEPROM_DIRECT_UPTIME,       EEPROM_DIRECT_UPTIME+1);
-  zeroBootWait          = eeprom_read2ByteValue(    EEPROM_ZERO_BOOT_WAIT,      EEPROM_ZERO_BOOT_WAIT+1);
-  zeroUptime            = eeprom_read2ByteValue(    EEPROM_ZERO_UPTIME,         EEPROM_ZERO_UPTIME+1);
+  programMode               = eeprom_read2ByteValue(              EEPROM_PROGRAM_MODE);
+  optInterval               = eeprom_read2ByteValue(              EEPROM_INTERVAL);
+  optIterations             = eeprom_read2ByteValue(              EEPROM_ITERATIONS);
+  directBootWait            = eeprom_read2ByteValue(              EEPROM_DIRECT_BOOT_WAIT);
+  directUptime              = eeprom_read2ByteValue(              EEPROM_DIRECT_UPTIME);
+  zeroBootWait              = eeprom_read2ByteValue(              EEPROM_ZERO_BOOT_WAIT);
+  zeroUptime                = eeprom_read2ByteValue(              EEPROM_ZERO_UPTIME);
+  zeroBrightnessThreshold   = eeprom_read2ByteValue(              EEPROM_ZERO_BRIGHTNESS_THRESHOLD);
+  zeroExposureCorrection    = eeprom_read2ByteValue(              EEPROM_ZERO_EXPOSURE_CORRECTION);
 
   return 0;
+}
+
+int* mapVariable(int key) {
+    switch (key) {
+      case 0: 
+        return &programMode;
+      break;
+
+      case 1: 
+        return &optInterval;
+      break;
+
+      case 2: 
+        return &optIterations;
+      break;
+
+      case 3: 
+        return &directBootWait;
+      break;
+
+      case 4: 
+        return &directUptime;
+      break;
+
+      case 5: 
+        return &zeroBootWait;
+      break;
+
+      case 6: 
+        return &zeroUptime;
+      break;
+
+      default:
+        return NULL;
+    }
 }
 
 void initPrint(CommunicationInterface ser) {
