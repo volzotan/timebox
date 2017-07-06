@@ -41,6 +41,7 @@ unsigned int eeprom_read2ByteValue(int startpos, int endpos) {
 void eeprom_saveto() {
   writeEEPROM(EEPROM_IN_USAGE, 1);
   
+  eeprom_write2ByteValue(programMode,               EEPROM_PROGRAM_MODE,        EEPROM_PROGRAM_MODE+1);
   eeprom_write2ByteValue(optInterval,               EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
   eeprom_write2ByteValue(optIterations,             EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
   eeprom_write2ByteValue(directBootWait,            EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
@@ -51,7 +52,8 @@ void eeprom_saveto() {
 
 void eeprom_reset() {
   writeEEPROM(EEPROM_IN_USAGE, 1);
-  
+
+  eeprom_write2ByteValue(DEFAULT_PROGRAM_MODE,      EEPROM_PROGRAM_MODE,        EEPROM_PROGRAM_MODE+1);
   eeprom_write2ByteValue(DEFAULT_INTERVAL,          EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
   eeprom_write2ByteValue(DEFAULT_ITERATIONS,        EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
   eeprom_write2ByteValue(DEFAULT_DIRECT_BOOT_WAIT,  EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
@@ -65,6 +67,7 @@ int initFromEEPROM() {
     return 1;  
   }
   
+  programMode           = eeprom_read2ByteValue(    EEPROM_PROGRAM_MODE,        EEPROM_PROGRAM_MODE+1);
   optInterval           = eeprom_read2ByteValue(    EEPROM_INTERVAL,            EEPROM_INTERVAL+1);
   optIterations         = eeprom_read2ByteValue(    EEPROM_ITERATIONS,          EEPROM_ITERATIONS+1);
   directBootWait        = eeprom_read2ByteValue(    EEPROM_DIRECT_BOOT_WAIT,    EEPROM_DIRECT_BOOT_WAIT+1);
@@ -73,6 +76,43 @@ int initFromEEPROM() {
   zeroUptime            = eeprom_read2ByteValue(    EEPROM_ZERO_UPTIME,         EEPROM_ZERO_UPTIME+1);
 
   return 0;
+}
+
+void initPrint(CommunicationInterface ser) {
+  ser.port->print("    ");
+  ser.port->print("programMode");
+  ser.port->print(": ");
+  ser.port->println(programMode);
+  
+  ser.port->print("    ");
+  ser.port->print("optInterval");
+  ser.port->print(": ");
+  ser.port->println(optInterval);
+  
+  ser.port->print("    ");
+  ser.port->print("optIterations");
+  ser.port->print(": ");
+  ser.port->println(optIterations);
+  
+  ser.port->print("    ");
+  ser.port->print("directBootWait");
+  ser.port->print(": ");
+  ser.port->println(directBootWait);
+  
+  ser.port->print("    ");
+  ser.port->print("directUptime");
+  ser.port->print(": ");
+  ser.port->println(directUptime);
+  
+  ser.port->print("    ");
+  ser.port->print("zeroBootWait");
+  ser.port->print(": ");
+  ser.port->println(zeroBootWait);
+  
+  ser.port->print("    ");
+  ser.port->print("zeroUptime");
+  ser.port->print(": ");
+  ser.port->println(zeroUptime);  
 }
 
 void eeprom_clear() {

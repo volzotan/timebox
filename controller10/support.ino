@@ -73,9 +73,8 @@ void wait(float seconds) {
 
   #ifdef DEBUG
     for (int i = 0; i < (int) seconds; ++i) {
-      delay(500);
-      delay(500);
-      Serial.println("sleep");
+      delay(1000);
+      Serial.println("> sleep");
     }
     return;
   #endif
@@ -86,6 +85,8 @@ void wait(float seconds) {
 
   Sleepy::loseSomeTime((int) ((seconds - ((int) seconds)) * 1000));
 }
+
+// -------------------------------- MISC -------------------------------- //
 
 // -------------------------------- OPERATIONS -------------------------------- //
 
@@ -153,20 +154,18 @@ boolean checkBattHealth() {
   float c1 = 0;
   float c2 = 0;
 
-
     c0 = getLiPoVoltage(BATT_DIRECT);
 
     if (c0 < 1.0) {
-      Serial.println(F("Batt Health: not connected"));
+      DEBUG_PRINT(F("Batt Health: not connected"));
       delay(100);
       // whatever. probably USB powered.
       return true;
     }
 
     if (c0 > 1.0 && c0 < LIPO_CELL_MIN*2) {
-      Serial.print(F("Battery voltage below threshold! ["));
-      Serial.print(String(c0));
-      Serial.println("]");
+      DEBUG_PRINT(F("Battery voltage below threshold!"));
+      DEBUG_PRINT(String(c0));
       
       delay(100);
       return false;

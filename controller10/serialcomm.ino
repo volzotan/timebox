@@ -7,11 +7,12 @@
  *  
  *  S  ---  Shutdown  // maybe add delay time?  S 10 for example?
  *  R  ---  Reboot    // maybe add delay time?  S 10 for example?
+ *  L  ---  Remaining Lifetime/Uptime
  *  T  ---  Time
  *  U  ---  Get Uptime
  *  C  ---  Camera On
  *  E  ---  Print EEPROM
- *  K  ---  Kill EEPROM data
+ *  K  ---  Kill/reset EEPROM data
  *  
  *  [...]
  */
@@ -111,9 +112,16 @@ void executeCommand(CommunicationInterface ser) {
       }
       okSerial(ser);
       break;
-      
+
+    case 'L': // Remaining Lifetime
+      ser.port->print("K ");
+      ser.port->println(zeroShutdownTimer-millis());
+      break;
+     
     case 'T': // Time 
-      errorSerial(ERRORCODE_NOT_AVAILABLE, ser);
+      //errorSerial(ERRORCODE_NOT_AVAILABLE, ser);
+      ser.port->print("K ");
+      ser.port->println(millis());
       break;    
 
     case 'C': // Camera On 
@@ -129,10 +137,15 @@ void executeCommand(CommunicationInterface ser) {
       break; 
 
     case 'E': // Print EEPROM
-      eeprom_print(ser, 0, 512);
+      if (ser.serialParam > 0 && ser.serialParam <= 512) {
+        eeprom_print(ser, 0, ser.serialParam);
+      } else {
+        eeprom_print(ser, 0, 512);
+      }
+      // okSerial?
       break; 
       
-    case 'E': // Kill EEPROM data
+    case 'K': // Kill EEPROM data
       eeprom_reset();
       okSerial(ser);
       break; 

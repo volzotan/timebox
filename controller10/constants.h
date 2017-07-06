@@ -28,13 +28,15 @@
 
 // defaults
 
-#define DEFAULT_INTERVAL                   1
+#define DEFAULT_PROGRAM_MODE       MODE_ZERO
+
+#define DEFAULT_INTERVAL                2*60
 #define DEFAULT_ITERATIONS               100
 
 // actual running time = boot_wait + uptime
 
-#define DEFAULT_DIRECT_BOOT_WAIT           5
-#define DEFAULT_DIRECT_UPTIME             33
+#define DEFAULT_DIRECT_BOOT_WAIT           8
+#define DEFAULT_DIRECT_UPTIME             35
 #define DEFAULT_ZERO_BOOT_WAIT            10
 #define DEFAULT_ZERO_UPTIME               50
 
@@ -55,6 +57,9 @@
 #define BATT_DIRECT                       -1 
 #define BATT_PERCENTAGE_CELL              -3
 #define BATT_PERCENTAGE_DIRECT            -4
+
+#define MODE_DIRECT                       10
+#define MODE_ZERO                         20
 
 // ----------- ERROR CODES -----------
 
@@ -90,4 +95,5 @@
 #define EEPROM_DIRECT_BOOT_WAIT           30  
 #define EEPROM_DIRECT_UPTIME              40  
 #define EEPROM_ZERO_BOOT_WAIT             50  
-#define EEPROM_ZERO_UPTIME                60  
+#define EEPROM_ZERO_UPTIME                60 
+#define EEPROM_PROGRAM_MODE              100  
