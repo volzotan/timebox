@@ -181,12 +181,12 @@ float voltageDivider(float input) {
 float getLiPoVoltage(int cell) {
   float acc = 0;
 
-  for (int i=0; i<10; i++) {
+  for (int i=0; i<50; i++) {
     acc += getLiPoVoltageRaw(cell);
-    delay(1);  
+    //delay(1);  
   }
 
-  return acc/10.0; 
+  return acc/50.0; 
 }
 
 float getLiPoVoltageRaw(int cell) {

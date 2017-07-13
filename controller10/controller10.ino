@@ -209,7 +209,7 @@ void loop() {
       // start zero time measurement for correct interval times
       // start shutdown timer
       zeroRealUptimeTimer = millis();
-      zeroShutdownTimer = millis() + (zeroBootWait + zeroUptime) * 1000;
+      zeroShutdownTimer = millis() + (zeroBootWait + zeroUptime) * 1000L;
       switchZeroOn(true);
       
       wait(zeroBootWait);
