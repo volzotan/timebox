@@ -48,8 +48,6 @@ void eeprom_saveto() {
   eeprom_write2ByteValue(directUptime,                            EEPROM_DIRECT_UPTIME);
   eeprom_write2ByteValue(zeroBootWait,                            EEPROM_ZERO_BOOT_WAIT);
   eeprom_write2ByteValue(zeroUptime,                              EEPROM_ZERO_UPTIME);
-  eeprom_write2ByteValue(zeroBrightnessThreshold,                 EEPROM_ZERO_BRIGHTNESS_THRESHOLD);
-  eeprom_write2ByteValue(zeroExposureCorrection,                  EEPROM_ZERO_EXPOSURE_CORRECTION);
 }
 
 void eeprom_reset() {
@@ -62,8 +60,6 @@ void eeprom_reset() {
   eeprom_write2ByteValue(DEFAULT_DIRECT_UPTIME,                   EEPROM_DIRECT_UPTIME);
   eeprom_write2ByteValue(DEFAULT_ZERO_BOOT_WAIT,                  EEPROM_ZERO_BOOT_WAIT);
   eeprom_write2ByteValue(DEFAULT_ZERO_UPTIME,                     EEPROM_ZERO_UPTIME);
-  eeprom_write2ByteValue(DEFAULT_ZERO_BRIGHTNESS_THRESHOLD,       EEPROM_ZERO_BRIGHTNESS_THRESHOLD);
-  eeprom_write2ByteValue(DEFAULT_ZERO_EXPOSURE_CORRECTION,        EEPROM_ZERO_EXPOSURE_CORRECTION);
 }
 
 int initFromEEPROM() {
@@ -78,8 +74,6 @@ int initFromEEPROM() {
   directUptime              = eeprom_read2ByteValue(              EEPROM_DIRECT_UPTIME);
   zeroBootWait              = eeprom_read2ByteValue(              EEPROM_ZERO_BOOT_WAIT);
   zeroUptime                = eeprom_read2ByteValue(              EEPROM_ZERO_UPTIME);
-  zeroBrightnessThreshold   = eeprom_read2ByteValue(              EEPROM_ZERO_BRIGHTNESS_THRESHOLD);
-  zeroExposureCorrection    = eeprom_read2ByteValue(              EEPROM_ZERO_EXPOSURE_CORRECTION);
 
   return 0;
 }

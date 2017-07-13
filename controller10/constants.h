@@ -41,7 +41,8 @@
 #define DEFAULT_ZERO_UPTIME               50
 
 #define DEFAULT_ZERO_BRIGHTNESS_THRESHOLD 100
-#define DEFAULT_ZERO_EXPOSURE_CORRECTION   5
+#define DEFAULT_ZERO_EXPOSURE_LOW         -5
+#define DEFAULT_ZERO_EXPOSURE_NORMAL      +1
 
 // ----------- MISC -----------
 
@@ -100,5 +101,6 @@
 #define EEPROM_ZERO_BOOT_WAIT             50  
 #define EEPROM_ZERO_UPTIME                60 
 #define EEPROM_ZERO_BRIGHTNESS_THRESHOLD  70 
-#define EEPROM_ZERO_EXPOSURE_CORRECTION   80
+#define EEPROM_ZERO_EXPOSURE_LOW          80
+#define EEPROM_ZERO_EXPOSURE_NORMAL       90
 #define EEPROM_PROGRAM_MODE              100 

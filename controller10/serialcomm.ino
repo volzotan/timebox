@@ -14,6 +14,8 @@
  *  E  ---  Print EEPROM
  *  K  ---  Kill/reset EEPROM data
  *  
+ *  M  ---  Retrieve Zero Configuration Set // TODO
+ *  
  *  Q  ---  Read Value
  *  W  ---  Write Value
  *  

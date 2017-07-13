@@ -43,10 +43,6 @@ int directUptime    = DEFAULT_DIRECT_UPTIME;
 int zeroBootWait    = DEFAULT_ZERO_BOOT_WAIT;
 int zeroUptime      = DEFAULT_ZERO_UPTIME;
 
-// zero only params
-int zeroBrightnessThreshold = DEFAULT_ZERO_BRIGHTNESS_THRESHOLD;
-int zeroExposureCorrection  = DEFAULT_ZERO_EXPOSURE_CORRECTION;
-
 // ---------------------------
 
 long zeroRealUptimeTimer  = -1;
@@ -105,20 +101,7 @@ void setup() {
 
   DEBUG_PRINT(getLiPoVoltage(BATT_DIRECT));
 
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
-  selftest(); delay(100);
- 
+  selftest(); delay(100); 
 }
 
 void loop() {
