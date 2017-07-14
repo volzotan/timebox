@@ -8,12 +8,15 @@ import datetime
 import math
 import logging
 import numpy as np
+import serial
 
 import gi
 gi.require_version('GExiv2', '0.10')
 from gi.repository import GExiv2
 
 # --- --- --- --- --- --- --- --- --- ---
+
+DEBUG               = True
 
 LOG_BASE_DIR        = "./"
 LOG_FILENAME_DEBUG  = "debug.log"
@@ -22,6 +25,14 @@ LOG_LEVEL_CONSOLE   = logging.DEBUG
 
 RAW_DIR             = None
 FILE_EXTENSION      = ".arw"
+
+SERIAL_PORT         = "/dev/tty.ACM0"
+SERIAL_BAUDRATE     = 9600
+SERIAL_TIMEOUT      = 1 # in sec
+
+REPEAT_MODE         = True
+REPEAT_INTERVAL     = 20
+REPERAT_ITERATIONS  = 120
 
 AUTOFOCUS_ENABLED   = False
 DOUBLEEXPOSURE_ENABLED = True
@@ -58,7 +69,7 @@ def initLog():
     log.setLevel(logging.DEBUG)
 
     # create formatter
-    formatter = logging.Formatter('%(asctime)s | %(name)s [%(levelname)s] %(message)s')
+    formatter = logging.Formatter('%(asctime)s | %(name)s [%(levelname)-5s] %(message)s')
 
     # console handler and set level to debug
     consoleHandler = logging.StreamHandler()
@@ -101,6 +112,23 @@ def determine_environment():
         RAW_DIR = "/home/pi/RAW"
     else:
         PLATFORM = "UNKNOWN"
+
+
+def communicate(cmd):
+    response = ""
+    ser = None
+
+    try:
+        ser = serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
+        response = ser.read(100)
+    except Exception as e:
+        log.error("comm failed: ".format(e))
+        raise e
+    finally:
+        if ser is not None:
+            ser.close()
+
+    return response
 
 
 def get_uptime():
@@ -228,7 +256,7 @@ def check_camera():
     try:
         output = subprocess.check_output(["gphoto2" ,"--summary"], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as cpe:
-        log.info("first connect FAIL")
+        log.info("first connect camera check FAIL")
         log.error(cpe)
         time.sleep(10)
 
@@ -304,6 +332,38 @@ def autofocus():
         return
     time.sleep(WAIT_AUTOFOCUS)
 
+def print_config():
+
+    FORMAT = "  {:<24}: {}"
+
+    log.debug(" ")
+    log.debug("CONFIGURATION:")
+
+    log.debug(FORMAT.format("RAW_DIR", RAW_DIR))
+    log.debug(FORMAT.format("FILE_EXTENSION", FILE_EXTENSION))
+
+    log.debug(FORMAT.format("SERIAL_PORT", SERIAL_PORT))
+    log.debug(FORMAT.format("SERIAL_BAUDRATE", SERIAL_BAUDRATE))
+    log.debug(FORMAT.format("SERIAL_TIMEOUT", SERIAL_TIMEOUT))
+
+    log.debug(FORMAT.format("REPEAT_MODE", REPEAT_MODE))
+    log.debug(FORMAT.format("REPEAT_INTERVAL", REPEAT_INTERVAL))
+    log.debug(FORMAT.format("REPERAT_ITERATIONS", REPERAT_ITERATIONS))
+
+    log.debug(FORMAT.format("AUTOFOCUS_ENABLED", AUTOFOCUS_ENABLED))
+    log.debug(FORMAT.format("DOUBLEEXPOSURE_ENABLED", DOUBLEEXPOSURE_ENABLED))
+    log.debug(FORMAT.format("WAIT_EXPOSURE_COMP", WAIT_EXPOSURE_COMP))
+    log.debug(FORMAT.format("WAIT_AUTOFOCUS", WAIT_AUTOFOCUS))
+
+    log.debug(FORMAT.format("EXPOSURE_THRESHOLD", EXPOSURE_THRESHOLD))
+    log.debug(FORMAT.format("FREE_DISK_THRESHOLD", FREE_DISK_THRESHOLD))
+
+    log.debug(FORMAT.format("EXPOSURE_LOW", EXPOSURE_LOW))
+    log.debug(FORMAT.format("EXPOSURE_NORMAL", EXPOSURE_NORMAL))
+
+    log.debug(FORMAT.format("PLATFORM", PLATFORM))
+
+    log.debug(" ")
 
 def exit(error=False):
     log.info("uptime: {}".format(get_uptime()))
@@ -311,23 +371,26 @@ def exit(error=False):
     if error:
         log.info("shutdown!")
         log.debug("--- --- --- --- --- --- --- --- --- ---")
-        # if PLATFORM == "PI":
-        #     time.sleep(1)
-        #     subprocess.call(["sudo", "shutdown", "now"]) 
+        if not DEBUG and PLATFORM == "PI":
+            time.sleep(1)
+            #subprocess.call(["echo", "S 5", ">>", "/dev/tty.ACM0"]) 
+            communicate("S 5")
+            subprocess.call(["sudo", "shutdown", "now"]) 
         sys.exit(1)
     else:
         log.info("success")
         log.debug("--- --- --- --- --- --- --- --- --- ---")
-        if PLATFORM == "PI":
+        if not REPEAT_MODE and not DEBUG and PLATFORM == "PI":
             time.sleep(1)
+            #subprocess.call(["echo", "S 5", ">>", "/dev/tty.ACM0"]) 
+            communicate("S 5")
             subprocess.call(["sudo", "shutdown", "now"]) 
         sys.exit(0)
 
 # ---------- ---------- ---------- ---------- ---------- ---------- #
 
-def run():
-
-    print("init.") #, sep="")
+def prepare():
+    print("prepare.") #, sep="")
 
     determine_environment() # set directory variables and change working directory
 
@@ -337,9 +400,16 @@ def run():
         log.info("no autostart")
         sys.exit(0)    
 
-    log.info("init")
+    log.info("prepare")
     if not check_prerequisites():
         exit(error=True)
+
+    print_config()
+
+
+def run():
+
+    log.debug("init")
 
     (path, filename) = acquire_filename(RAW_DIR)
     full_name = None
@@ -376,20 +446,31 @@ def run():
                 adjust_exposure(EXPOSURE_LOW)
                 full_name_2 = os.path.join(path, "x_" + filename)
                 take_image(full_name_2)
-                adjust_exposure(+1)
+                adjust_exposure(EXPOSURE_NORMAL)
             except RuntimeError as e:
                 log.error(traceback.format_exc())
                 exit(error=True)
 
         os.remove(jpeg_full_name)
 
-    exit()
+    if not REPEAT_MODE:
+        exit()
 
 
 if (__name__ == "__main__"):
     try:
-        run()
+        prepare()
+
+        if not REPEAT_MODE:
+            run()
+        else:
+            for i in range(0, REPERAT_ITERATIONS):
+                log.info("repeat mode iteration: {}".format(i))
+                run()
+                time.sleep(REPEAT_INTERVAL)
+            exit()
     except Exception as e:
         print(e)
+        print(traceback.format_exc())
         log.error(traceback.format_exc())
         exit(error=True)
