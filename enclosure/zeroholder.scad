@@ -1,5 +1,5 @@
 crad = 5;
-height = 3.7;
+height = 4;
 
 % translate([2, 32, -20+2+.7+10]) {
     rotate([90, 0, 0]) color("green") import(file = "RaspberryPiZero.STL");
@@ -20,8 +20,10 @@ height = 3.7;
     translate([-65+6.5, 40-3, 1]) color("black") cube([16, 5, 5]);
 }
 
-//bottom();
-//%translate([0, 0, 4]) top();
+bottom();
+%translate([0, 0, 24]) top();
+
+translate([0, -10, 10]) rotate([180, 0, 0]) top();
 
 translate([100, 0, 0]) controller_bottom();
 translate([100, -5, 0]) rotate([0, 0, 0]) mirror([0, 1]) controller_top();
@@ -231,12 +233,19 @@ module top() {
             block(65, 30, height, crad=3.5, red=0.5);
         } 
         
+        // sd card connector cutout
+        translate([-0.1, (34-18)/2, -0.1]) hull() {
+            translate([0, 0, 3+3.0-0.3]) cube([0.1, 18, 0.1]);
+            cube([3.1, 18, 3.5]);
+        }
+        
+        
         // connector cutout
         translate([9-.5, 33-7, -.1]) cube([14, 12, 10]);                // pin
         translate([8-.5, -1, -.1]) cube([14, 10, height-1.2]);          // HDMI
         translate([38-.5, -1, -.1]) cube([24, 10, height-2.1]);         // USB
         translate([60, 8-.5, -.1]) cube([23, 19, 3.5]);                 // camera
-        translate([-1, 8-.5, -.1]) color("red") cube([23, 19, 3.5]);    // SD
+        
         
         // screws
         translate([0, -.5, -1]) {
@@ -256,6 +265,9 @@ module top() {
             translate([6-.5+58, 6+23, height]) cylinder($fn=6, h=5, d=6);
         }
         
+        // LED hole
+        translate([60, 9]) cylinder($fn=32, h=10, d=3);
+        
     
         // force printer to do holes at once
         translate([0, 0, height]) {
@@ -274,6 +286,7 @@ module top() {
 }
 
 module bottom() {
+        
     difference() {
         hull() {
             block(69, 34, height, crad=crad);
@@ -296,11 +309,15 @@ module bottom() {
         
         // camera connector cutout
         translate([65, (34-18)/2, height-1]) cube([10, 18, 3]);
+        
         // sd card connector cutout
-        translate([-1, (34-18)/2, height-1]) cube([10, 18, 3]);
+        translate([-0.1, (34-18)/2, 0.5]) hull() {
+            translate([0, 0, 2.2]) cube([2.61, 18, 3]);
+            cube([0.1, 18, 0.1]);
+        }
 
         // pi cutout
-        translate([2, 2, height-1]) hull() {
+        translate([2, 2, height-1.3]) hull() {
             block(65, 30, height, crad=3.5, red=0.5);
         }    
 
