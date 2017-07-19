@@ -1,3 +1,5 @@
+include </Users/volzotan/GIT/timebox/eagle/controller10/controller10.scad>
+
 crad = 5;
 height = 4;
 
@@ -6,17 +8,18 @@ height = 4;
     translate([7, 0, 21.1]) color("black") cube([13, 8, 5]);
 }
 
-% translate([170-2.5-20, 2.5, 10+5]) {
-    rotate([0, 0, 90]) color("purple") import(file = "controller10.dxf");
+% translate([170-2.5-20, 2.5, 5]) {
+    //rotate([0, 0, 90]) color("purple") import(file = "controller10.dxf");
+    rotate([0, 0, 90]) controller10();
     
-    translate([-75+0.2, 13, 0]) color("yellow") cube([10, 5, 6]);
-    translate([-75+0.2, 13+5+9, 0]) color("yellow") cube([10, 5, 6]);
+    translate([-75+0.2, 12.75, 0]) color("yellow") cube([10, 5, 6]);
+    translate([-75+0.2, 12.75+14, 0]) color("yellow") cube([10, 5, 6]);
     
-    translate([-5, 9.5, 0]) color("grey") cube([5, 8, 3]);
-    translate([0-22-8, 0, 0]) color("white") cube([22, 7.5, 3]);
+    translate([-5, 10, 0]) color("grey") cube([5, 8, 3]);
+    //translate([0-22-8, 0, 0]) color("white") cube([22, 7.5, 3]);
    
-    translate([0-14-7, 40-3, 1]) color("black") cube([14, 6, 5]);
-    translate([0-10-6.5, 22, 1]) color("black") cube([10, 5, 9+1]);
+    translate([0-14-6.5, 40-3, 1]) color("black") cube([14, 6, 5]);
+    //translate([0-10-6.5, 22, 1]) color("black") cube([10, 5, 9+1]);
     translate([-65+6.5, 40-3, 1]) color("black") cube([16, 5, 5]);
 }
 
@@ -27,7 +30,7 @@ translate([0, -10, 6]) rotate([180, 0, 0]) top();
 
 translate([80, 0, 0]) controller_bottom();
 translate([80, -5, 0]) rotate([0, 0, 0]) mirror([0, 1]) controller_top();
-%  translate([80, 0, 24]) rotate([180, 0, 0]) mirror([0, 1]) controller_top();
+%  translate([80, 0, 14]) rotate([180, 0, 0]) mirror([0, 1]) controller_top();
 
 module controller_top() {
     height = 7.5+1.2;
@@ -77,18 +80,18 @@ module controller_top() {
         translate([1.7+6.8, 35, 2]) cube([17, 10, 10]);
         
         // connector cutout
-        translate([68-17-6, 35, 2]) cube([17, 10, 10]);
+        translate([68-17-5.5, 35, 2]) cube([17, 10, 10]);
         
         // usb cutout
-        translate([65, 1.7+8.3, 6]) rotate([0, 90, 0]) hull() {
+        translate([65, 1.7+8.75, 6]) rotate([0, 90, 0]) hull() {
             translate([+1, +1, -1]) cylinder($fn=32, h=10, r=1);
             translate([+1, 12-1, -1]) cylinder($fn=32, h=10, r=1);
             translate([-10, 0, 0]) cube([10, 12, 10]);
         }
         
         // power cutout
-        translate([-1, 15, 1.2]) cube([7, 6, 10]);
-        translate([-1, 29, 1.2]) cube([7, 6, 10]);
+        translate([-1, 14.75, 1.2]) cube([7, 6, 10]);
+        translate([-1, 28.75, 1.2]) cube([7, 6, 10]);
         
         // screws
         translate([0, -.5, -1]) {
@@ -103,11 +106,11 @@ module controller_top() {
         
         // button cutout
         //translate([37.5, -1, -1]) cube([22, 12, 7]);
-        translate([52, 5, -1]) cylinder($fn=32, h=10, d=5); // ? pos
-        translate([45, 5, -1]) cylinder($fn=32, h=10, d=3.5); // ? pos
+        translate([52, 6.75, -1]) cylinder($fn=32, h=10, d=5); 
+        translate([43.25, 6.75, -1]) cylinder($fn=32, h=10, d=5);
         
         // SPI cutout
-        translate([50, 23.5, -1]) cube([12, 7, 7]);
+        translate([50, 23.25, -1]) cube([12, 7, 7]);
     }
     
     // hole reinforcement
@@ -166,7 +169,7 @@ module controller_bottom() {
         translate([50, 35, height_holder+1]) cube([15, 10, 10]);
      
         // usb cutout
-        translate([65, 1.7+8.3, 5]) rotate([0, 90, 0]) hull() {
+        translate([65, 1.7+8.75, 5]) rotate([0, 90, 0]) hull() {
             translate([+1, +1, -1]) cylinder($fn=32, h=10, r=1);
             translate([+1, 12-1, -1]) cylinder($fn=32, h=10, r=1);
             translate([-10, 0, 0]) cube([10, 12, 10]);
