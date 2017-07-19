@@ -6,7 +6,7 @@ height = 4;
     translate([7, 0, 21.1]) color("black") cube([13, 8, 5]);
 }
 
-% translate([170-2.5, 2.5, 10+5]) {
+% translate([170-2.5-20, 2.5, 10+5]) {
     rotate([0, 0, 90]) color("purple") import(file = "controller10.dxf");
     
     translate([-75+0.2, 13, 0]) color("yellow") cube([10, 5, 6]);
@@ -23,12 +23,11 @@ height = 4;
 bottom();
 %translate([0, 0, 24]) top();
 
-translate([0, -10, 10]) rotate([180, 0, 0]) top();
+translate([0, -10, 6]) rotate([180, 0, 0]) top();
 
-translate([100, 0, 0]) controller_bottom();
-translate([100, -5, 0]) rotate([0, 0, 0]) mirror([0, 1]) controller_top();
-translate([100, 0, 24]) rotate([180, 0, 0]) mirror([0, 1]) controller_top();
-//translate([100, -50, 0]) controller_top();
+translate([80, 0, 0]) controller_bottom();
+translate([80, -5, 0]) rotate([0, 0, 0]) mirror([0, 1]) controller_top();
+%  translate([80, 0, 24]) rotate([180, 0, 0]) mirror([0, 1]) controller_top();
 
 module controller_top() {
     height = 7.5+1.2;
@@ -103,7 +102,9 @@ module controller_top() {
         }
         
         // button cutout
-        translate([37.5, -1, -1]) cube([22, 12, 7]);
+        //translate([37.5, -1, -1]) cube([22, 12, 7]);
+        translate([52, 5, -1]) cylinder($fn=32, h=10, d=5); // ? pos
+        translate([45, 5, -1]) cylinder($fn=32, h=10, d=3.5); // ? pos
         
         // SPI cutout
         translate([50, 23.5, -1]) cube([12, 7, 7]);
@@ -205,7 +206,7 @@ module top() {
                     
                     // pi cutout
                     translate([2, 2, -2.2]) {
-                        block(65, 30, height, crad=3.5, red=0.5);
+                        block(65, 30, height, crad=3, red=0.5);
                     } 
                 }
                 translate([]) cube([5.7, 7.5, 10]);
@@ -230,7 +231,7 @@ module top() {
         
         // pi cutout
         translate([2, 2, -5.5]) {
-            block(65, 30, height, crad=3.5, red=0.5);
+            block(65, 30, height, crad=3, red=0.5);
         } 
         
         // sd card connector cutout
@@ -318,7 +319,7 @@ module bottom() {
 
         // pi cutout
         translate([2, 2, height-1.3]) hull() {
-            block(65, 30, height, crad=3.5, red=0.5);
+            block(65, 30, height, crad=3, red=0.5);
         }    
 
         // force printer to do holes at once
