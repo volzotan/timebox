@@ -23,10 +23,10 @@ LOG_FILENAME_DEBUG  = "debug.log"
 LOG_FILENAME_INFO   = "info.log"
 LOG_LEVEL_CONSOLE   = logging.DEBUG 
 
-RAW_DIR             = None
+RAW_DIR             = None # platform dependent
 FILE_EXTENSION      = ".arw"
 
-SERIAL_PORT         = "/dev/tty.ACM0"
+SERIAL_PORT         = "/dev/ttyAMA0"
 SERIAL_BAUDRATE     = 9600
 SERIAL_TIMEOUT      = 1 # in sec
 
@@ -69,7 +69,7 @@ def initLog():
     log.setLevel(logging.DEBUG)
 
     # create formatter
-    formatter = logging.Formatter('%(asctime)s | %(name)s [%(levelname)-5s] %(message)s')
+    formatter = logging.Formatter('%(asctime)s | %(name)s [%(levelname)-7s] %(message)s')
 
     # console handler and set level to debug
     consoleHandler = logging.StreamHandler()
@@ -114,13 +114,16 @@ def determine_environment():
         PLATFORM = "UNKNOWN"
 
 
-def communicate(cmd):
+def sendCommand(cmd):
     response = ""
     ser = None
 
     try:
         ser = serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
         response = ser.read(100)
+
+        if response is None or len(response) == 0:
+            raise Exception("empty response")
     except Exception as e:
         log.error("comm failed: ".format(e))
         raise e
@@ -365,6 +368,7 @@ def print_config():
 
     log.debug(" ")
 
+
 def exit(error=False):
     log.info("uptime: {}".format(get_uptime()))
 
@@ -374,7 +378,7 @@ def exit(error=False):
         if not DEBUG and PLATFORM == "PI":
             time.sleep(1)
             #subprocess.call(["echo", "S 5", ">>", "/dev/tty.ACM0"]) 
-            communicate("S 5")
+            sendCommand("S 5")
             subprocess.call(["sudo", "shutdown", "now"]) 
         sys.exit(1)
     else:
@@ -383,7 +387,7 @@ def exit(error=False):
         if not REPEAT_MODE and not DEBUG and PLATFORM == "PI":
             time.sleep(1)
             #subprocess.call(["echo", "S 5", ">>", "/dev/tty.ACM0"]) 
-            communicate("S 5")
+            sendCommand("S 5")
             subprocess.call(["sudo", "shutdown", "now"]) 
         sys.exit(0)
 
@@ -410,6 +414,11 @@ def prepare():
 def run():
 
     log.debug("init")
+
+    try:
+        log.info(sendCommand("B"))
+    except Exception as e:
+        log.warn("requesting battery status failed: {}".format(e))
 
     (path, filename) = acquire_filename(RAW_DIR)
     full_name = None

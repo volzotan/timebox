@@ -11,7 +11,7 @@ ISR(WDT_vect) {
   Sleepy::watchdogEvent();
 }
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x) Serial.print("["); Serial.print(millis()/1000); Serial.print("] "); Serial.println (x)
@@ -63,6 +63,11 @@ void setup() {
     while (!Serial) {
       ;
     }
+  #else
+    if (Serial) {
+      // if USB cable connected at startup -> go to IDLE
+      state = STATE_IDLE;
+    }
   #endif
  
   DEBUG_PRINT("INIT");
@@ -102,9 +107,21 @@ void setup() {
   DEBUG_PRINT(getLiPoVoltage(BATT_DIRECT));
 
   selftest(); delay(100); 
+  selftest(); delay(100); 
+  selftest(); delay(100); 
+  selftest(); delay(100); 
+  selftest(); delay(100); 
+  selftest(); delay(100); 
+  selftest(); delay(100); 
+  selftest(); delay(100); 
+  selftest(); delay(100); 
 }
 
 void loop() {
+
+  switchZeroOn(true);
+  while(1);
+  
     
   serialEvent();
 
