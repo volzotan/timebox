@@ -15,6 +15,14 @@ gi.require_version('GExiv2', '0.10')
 from gi.repository import GExiv2
 
 # --- --- --- --- --- --- --- --- --- ---
+"""
+
+Camera set to   USB Connection  : PC Remote Control
+                USB-LUN-Setting : Multi 
+
+
+"""
+# --- --- --- --- --- --- --- --- --- ---
 
 DEBUG               = True
 
@@ -30,7 +38,7 @@ SERIAL_PORT         = "/dev/ttyAMA0"
 SERIAL_BAUDRATE     = 9600
 SERIAL_TIMEOUT      = 1 # in sec
 
-REPEAT_MODE         = True
+REPEAT_MODE         = False
 REPEAT_INTERVAL     = 20
 REPERAT_ITERATIONS  = 120
 
@@ -69,7 +77,7 @@ def initLog():
     log.setLevel(logging.DEBUG)
 
     # create formatter
-    formatter = logging.Formatter('%(asctime)s | %(name)s [%(levelname)-7s] %(message)s')
+    formatter = logging.Formatter('%(asctime)s | %(levelname)-7s | %(message)s')
 
     # console handler and set level to debug
     consoleHandler = logging.StreamHandler()
@@ -120,12 +128,12 @@ def sendCommand(cmd):
 
     try:
         ser = serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
-        response = ser.read(100)
+        response = ser.read(100) # TODO: add parsing
 
         if response is None or len(response) == 0:
             raise Exception("empty response")
     except Exception as e:
-        log.error("comm failed: ".format(e))
+        log.error("comm failed: {}".format(e))
         raise e
     finally:
         if ser is not None:
@@ -161,6 +169,8 @@ def acquire_filename(path):
 
 def take_image(full_name):
 
+    # be careful: if capt0000.arw is already existing, gphoto2 is offering an interactive overwrite dialog and
+    # the capture-image-and-download command will never return
     output = subprocess.check_output(["gphoto2" ,"--capture-image-and-download"], stderr=subprocess.STDOUT)
 
     if "ERROR" in output:
@@ -220,7 +230,8 @@ def calculate_brightness(full_name):
     metadata = GExiv2.Metadata()
     metadata.open_path(full_name)
 
-    shutter = float(metadata.get_exposure_time())
+    exposure_time = metadata.get_exposure_time()
+    shutter = float(exposure_time.den) / float(exposure_time.nom)
     # shutter = float(shutter[0]) / float(shutter[1])
     iso     = int(metadata.get_tag_string("Exif.Photo.ISOSpeedRatings"))
 
@@ -342,6 +353,8 @@ def print_config():
     log.debug(" ")
     log.debug("CONFIGURATION:")
 
+    log.debug(FORMAT.format("DEBUG", DEBUG))
+
     log.debug(FORMAT.format("RAW_DIR", RAW_DIR))
     log.debug(FORMAT.format("FILE_EXTENSION", FILE_EXTENSION))
 
@@ -374,21 +387,25 @@ def exit(error=False):
 
     if error:
         log.info("shutdown!")
-        log.debug("--- --- --- --- --- --- --- --- --- ---")
         if not DEBUG and PLATFORM == "PI":
             time.sleep(1)
             #subprocess.call(["echo", "S 5", ">>", "/dev/tty.ACM0"]) 
             sendCommand("S 5")
             subprocess.call(["sudo", "shutdown", "now"]) 
+        else:
+            log.info("[shutdown cancelled]")
+        log.debug("--- --- --- --- --- --- --- --- --- ---")
         sys.exit(1)
     else:
         log.info("success")
-        log.debug("--- --- --- --- --- --- --- --- --- ---")
         if not REPEAT_MODE and not DEBUG and PLATFORM == "PI":
             time.sleep(1)
             #subprocess.call(["echo", "S 5", ">>", "/dev/tty.ACM0"]) 
             sendCommand("S 5")
-            subprocess.call(["sudo", "shutdown", "now"]) 
+            subprocess.call(["sudo", "shutdown", "now"])
+        else:
+            log.info("[shutdown cancelled]")
+        log.debug("--- --- --- --- --- --- --- --- --- ---")
         sys.exit(0)
 
 # ---------- ---------- ---------- ---------- ---------- ---------- #
