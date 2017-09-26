@@ -1,23 +1,14 @@
 crad = 5;
 height = 4;
 
-% translate([65, 40-4, 35]) rotate([0, 180, 0]) {
-    rotate([90, 0, 0]) color("green") import(file = "RaspberryPiZero.STL");
-    translate([7, 0, 21.1]) color("black") cube([13, 8, 5]);
-}
-
-% translate([65, 2.5, 20]) {
-    rotate([0, 0, 90]) color("purple") import(file = "controller10.dxf");
-    
-    translate([-75+0.2, 13, 0]) color("yellow") cube([10, 5, 6]);
-    translate([-75+0.2, 13+5+9, 0]) color("yellow") cube([10, 5, 6]);
-    
-    translate([-5, 9.5, 0]) color("grey") cube([5, 8, 3]);
-    translate([0-22-8, 0, 0]) color("white") cube([22, 7.5, 3]);
-   
-    translate([0-14-7, 40-3, 1]) color("black") cube([14, 6, 5]);
-    translate([0-10-6.5, 22, 1]) color("black") cube([10, 5, 9+1]);
-    translate([-65+6.5, 40-3, 1]) color("black") cube([16, 5, 5]);
+translate([0, 4, 3]) { 
+    translate([65, 2.45, -10]) rotate([0, 0, 180]) {
+        rotate([90, 0, 0]) color("green") import(file = "RaspberryPiZero.STL");
+        translate([7, 0, 21.1]) color("black") cube([13, 8, 5]);
+    }
+    translate([65, 2.5, 20]) {
+        rotate([0, 0, 90]) color("purple") import(file = "controller11_2.dxf");
+    }
 }
 
 //bottom();
@@ -30,24 +21,21 @@ height = 4;
 //%  translate([80, 0, 24]) rotate([180, 0, 0]) mirror([0, 1]) controller_top();
 
 translate([70, 42, 0]) rotate([90, 0, -90]) lid();
-
-
 translate([100, 0, 0]) rotate([0, 0, 0]) lid();
-
-
-
-
-
+translate([150, 0, 0]) rotate([0, 0, 0]) lid2();
 
 
 module lid() {
-    diam = 42;
+    diam = 40;
     
     difference() {
-        union() {
-            translate([diam/2, diam/2]) cylinder($fn=32, h=2, d=diam);
+        intersection() {
+            union() {
+                translate([diam/2, diam/2]) cylinder($fn=64, h=2, d=diam);
+            }
+            
+            translate([0, 5, -1]) cube([diam+2, 30, 10]);
         }
-        
         // USB
         translate([20, 19, -1]) block(12, 6, 10, crad=1);
         
@@ -55,6 +43,22 @@ module lid() {
         translate([12, 11, -1]) block(16, 6, 10, crad=1);
     }
 }
+
+module lid2() {
+    diam = 40;
+    
+    difference() {
+        intersection() {
+            union() {
+                translate([diam/2, diam/2]) cylinder($fn=64, h=40, d=diam);
+            }
+            
+            translate([0, 5, -1]) cube([diam+2, 30, 10]);
+        }
+    }
+}
+
+
 
 
 
