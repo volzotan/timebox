@@ -3,19 +3,121 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 crad = 5;
 height = 4;
 
-% translate([2, 32+0.5, -20+2+.7+10-09.8]) pizero();
-translate([2, 35-2.5, 10]) rotate([0, 0, 180]) controller();
+% translate([0, 6, 0.1]) screw();
+% translate([2, 35-2.5, 3.8]) rotate([0, 0, 180]) controller();
+translate([0, 0, 0]) bottom_standalone();
+//translate([0, -40, 0]) rotate([0, 0, 0]) top_standalone();
+% translate([0, 35, 12.7+0.1]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_standalone();
+
+* translate([80, 0]) {
+    translate([0, 0, 0]) bottom_standalone();
+    translate([0, -40, 0]) rotate([0, 0, 0]) top_standalone();
+}
+
+
+//% translate([2, 32+0.5, -20+2+.7+10-09.8]) pizero();
+//% translate([2, 35-2.5, 10]) rotate([0, 0, 180]) controller();
 //% translate([2, 35-2.5, 35+1.2]) rotate([0, 0, -90]) color("purple") import(file = "controller11_2.dxf");
     
-bottom();
-translate([0, -40, 0]) rotate([0, 0, 0]) top();
-translate([0, 35, 20]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top();
+//translate([0, 0, 5.5]) bottom();
+//translate([0, -40, 0]) rotate([0, 0, 0]) top();
+//% translate([0, 35, 20]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top();
 //translate([0, -2, 7]) rotate([180, 0, 0]) top();
 //translate([0, 0, 8.2]) rotate([0, 0, 0]) top();
 
 //translate([72, -2, 0]) rotate([0, 0, 0]) mirror([0, 1]) controller_top();
 
 //% translate([6, 6, 41.2]) rotate([180, 0, 0]) screw();
+
+//translate([0, 70, 0]) bottom_controller();
+//translate([0, 70+60, 0]) rotate([0, 0, 0]) top();
+
+
+
+module top_standalone() {
+    
+    size = [69, 35];
+    
+    height = 8;
+    height2 = 7;
+    
+    difference() {
+        union() {
+            intersection() {
+                union() {
+                    difference() {               
+                        translate([-0.4, -0.4]) block(size[0]+0.8, size[1]+0.8, height, crad=4);        
+
+                        // pi cutout
+                        hull() {
+                            translate([0, 0, 1.5]) {
+                                block(size[0], size[1], 0.1, crad=4, red=1.2+.1+1);
+                            }
+                            translate([0, 0, 1.5+1]) {
+                                block(size[0], size[1], height, crad=4, red=1.2+.1);
+                            } 
+                        }
+                    }
+ 
+                    translate([size[0]-5.7, size[1]-8.5]) cube([5.7, 8.5, height2]);
+                    translate([size[0]-8, size[1]-6.5]) cube([7.5, 6.5, height2]);
+                    translate([size[0]-6, size[1]-6.5]) cylinder($fn=32, h=height2, d=4);
+                    
+                    translate([0, size[1]-8.5]) cube([5.7, 8.5, height2]);
+                    translate([0, size[1]-6.5]) cube([8, 5.7, height2]);
+                    translate([6, size[1]-6.5]) cylinder($fn=32, h=height2, d=4);                    
+                }
+                
+                translate([-0.4, -0.4]) block(size[0]+0.8, size[1]+0.8, height, crad=4);        
+            }  
+        }
+        
+        // pi cutout
+        * translate([0, 0, 6.5]) {
+            color("red") block(size[0], size[1], height, crad=3, red=1.2);
+        } 
+               
+        // connector cutout
+        translate([size[0]-16-8-1.25, size[1]-8.25, -1]) block(16, 10, 20, crad=1); // power
+        translate([size[0]-8-30.75, size[1]-4.5, 5.5]) {                            // audio jack
+            cube([7, 5, 6]);
+            translate([7/2, 5, 0]) rotate([90, 0, 0]) cylinder($fn=32, d=7, h=2.8);
+        }     
+        translate([8.0+1.5, size[1]-4.5+5, 2]) rotate([90, 0, 0]) block(11, 10, 3, crad=1); // cube([11, 5, height]);         // USB        
+        translate([-1, 9, 8]) rotate([90, 0, 90]) block(18, 5, 3, crad=1);          // switch
+        translate([20, 24.5, -1]) block(9.5, 7, 10, crad=1);                        // SPI
+        translate([40.7, 27, -1]) cylinder($fn=32, h=10, d=3);                      // LED hole
+        translate([39.4, 6, -1]) cylinder($fn=32, h=10, d=3);                       // switch hole
+        
+        // screws
+        translate([0, -.5, -1]) {
+            translate([5.5, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
+            translate([5.5+58, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
+            
+            translate([5.5, 5.5+24, -1]) rotate([0, 0, 30]) cylinder($fn=6, h=4, d=6.1);
+            translate([5.5+58, 5.5+24, -1]) rotate([0, 0, 30]) cylinder($fn=6, h=4, d=6.1);
+        }
+        
+        // force printer to do holes at once
+        translate([0, 0, 0]) {
+            translate([-1, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
+            translate([69-6, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
+        }        
+    } 
+    
+    // hole reinforcements 
+    translate([0, -.5, 1.5]) {
+        translate([5.5, 5.5+24]) cylinder($fn=32, h=2, d1=7, d2=5);
+        translate([5.5+58, 5.5+24]) cylinder($fn=32, h=2, d1=7, d2=5);
+    }
+    
+    // hole reinforcements for printing
+//        translate([5.5, -3.5, 3]) cylinder(h=0.3, d=5);
+//        translate([5.5+58, -3.5, 3]) cylinder(h=0.3, d=5);  
+//        translate([5.5, 5.5+24, 2]) cylinder(h=0.3, d=5);
+//        translate([5.5+58, 5.5+24, 2]) cylinder(h=0.3, d=5);
+    
+}
 
 module top() {
     height = 10;
@@ -24,55 +126,58 @@ module top() {
     height2 = 8;
     
     difference() {
-        intersection() {
-            union() {
-                difference() {               
-                    block(size[0], size[1], height, crad=4);
-                    
-                    // pi cutout
-                    hull() {
-                        translate([0, 0, 3]) {
-                            block(size[0], size[1], 0.1, crad=4, red=1.2+.1+1);
+        union() {
+            intersection() {
+                union() {
+                    difference() {               
+                        translate([-0.4, -0.4]) block(size[0]+0.8, size[1]+0.8, height, crad=4);        
+
+                        // pi cutout
+                        hull() {
+                            translate([0, 0, 3]) {
+                                block(size[0], size[1], 0.1, crad=4, red=1.2+.1+1);
+                            }
+                            translate([0, 0, 4]) {
+                                block(size[0], size[1], height, crad=4, red=1.2+.1);
+                            } 
                         }
-                        translate([0, 0, 4]) {
-                            block(size[0], size[1], height, crad=4, red=1.2+.1);
-                        } 
                     }
+    //                translate([]) cube([5.7, 7.5, height2]);
+    //                translate([]) cube([8, 5.7, height2]);
+    //                translate([6, 5.5]) cylinder($fn=32, h=height2, d=4);
+    //                
+    //                translate([size[0]-5.7, 0]) cube([5.7, 7.5, height2]);
+    //                translate([size[0]-8, 0]) cube([7.5, 5.7, height2]);
+    //                translate([size[0]-6, 5.5]) cylinder($fn=32, h=height2, d=4);
+    //                
+                    translate([size[0]-5.7, size[1]-8.5]) cube([5.7, 8.5, height2]);
+                    translate([size[0]-8, size[1]-6.5]) cube([7.5, 6.5, height2]);
+                    translate([size[0]-6, size[1]-6.5]) cylinder($fn=32, h=height2, d=4);
+                    
+                    translate([0, size[1]-8.5]) cube([5.7, 8.5, height2]);
+                    translate([0, size[1]-6.5]) cube([8, 5.7, height2]);
+                    translate([6, size[1]-6.5]) cylinder($fn=32, h=height2, d=4);
+                    
                 }
-//                translate([]) cube([5.7, 7.5, height2]);
-//                translate([]) cube([8, 5.7, height2]);
-//                translate([6, 5.5]) cylinder($fn=32, h=height2, d=4);
-//                
-//                translate([size[0]-5.7, 0]) cube([5.7, 7.5, height2]);
-//                translate([size[0]-8, 0]) cube([7.5, 5.7, height2]);
-//                translate([size[0]-6, 5.5]) cylinder($fn=32, h=height2, d=4);
-//                
-                translate([size[0]-5.7, size[1]-8.5]) cube([5.7, 8.5, height2]);
-                translate([size[0]-8, size[1]-6.5]) cube([7.5, 6.5, height2]);
-                translate([size[0]-6, size[1]-6.5]) cylinder($fn=32, h=height2, d=4);
                 
-                translate([0, size[1]-8.5]) cube([5.7, 8.5, height2]);
-                translate([0, size[1]-6.5]) cube([8, 5.7, height2]);
-                translate([6, size[1]-6.5]) cylinder($fn=32, h=height2, d=4);
+                translate([-0.4, -0.4]) block(size[0]+0.8, size[1]+0.8, height, crad=4);        
             }
-            
-            block(size[0], size[1], height, crad=4);
+                        
+            // extra screw
+//            difference() { 
+//                union() {
+//                    translate([0-0.4, -8, 0]) block(11, 20, height, crad=3);
+//                    translate([69-11+0.4, -8, 0]) block(11, 20, height, crad=3);
+//                }
+//                translate([0, 0, -1]) block(size[0], size[1], height+2, crad=4);
+//            }
         }
         
         // pi cutout
         * translate([0, 0, 6.5]) {
             color("red") block(size[0], size[1], height, crad=3, red=1.2);
         } 
-        
-        // sd card connector cutout
-//        translate([-0.1, (34-18)/2, -0.1]) {
-//            //translate([0, 0, 3+3.0-0.3]) cube([0.1, 18, 0.1]);
-//            cube([3.1, 18, 3.5]);
-//            
-//            points = [[0, 0], [18.2, 0], [18.2-2, 3], [2, 3]];
-//            translate([-0.1, 18.1, 0]) rotate([0, 0, -90]) linear_extrude([]) polygon(points);
-//        }
-       
+               
         // connector cutout
         translate([size[0]-19-8.0, size[1]-4.5, 3-1]) cube([19, 5, height]);         // power
         translate([size[0]-8-30.75, size[1]-4.5, 6]) {                               // audio jack
@@ -102,34 +207,119 @@ module top() {
             translate([5.5, 5.5+24, -1]) cylinder($fn=6, h=4, d=6.1);
             translate([5.5+58, 5.5+24, -1]) cylinder($fn=6, h=4, d=6.1);
         }
+        
+        // extra screws
+        translate([5.5-0.4, -3.5, -1]) cylinder($fn=32, h=20, d=2.5+.3);
+        translate([5.5+58+0.4, -3.5, -1]) cylinder($fn=32, h=20, d=2.5+.3);
+        translate([5.5-0.4, -3.5, -1]) cylinder($fn=6, h=4, d=6.1);
+        translate([5.5+58+0.4, -3.5, -1]) cylinder($fn=6, h=4, d=6.1);
       
         // force printer to do holes at once
         translate([0, 0, 0]) {
 //            translate([0, 5-.1/2, -1]) cube([7, 0.1, 1.2]);
-            translate([0, 34-5-.1/2, -1]) cube([7, 0.1, 1.2]);
+            translate([-1, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
 //            translate([69-7, 5-.1/2, -1]) cube([7, 0.1, 1.2]);
-            translate([69-7, 34-5-.1/2, -1]) cube([7, 0.1, 1.2]);
-        }
+            translate([69-6, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
+        }        
+                
+        // battery letter
+        translate([49.5, 5, -1]) rotate([0, 0, -90]) mirror([1, 0]) 
+            scale([0.7, 0.7]) color("black") linear_extrude(height=2) 
+            text("CAM", font="Fira Sans OT:style=Bold", spacing=1.2);
+        translate([46.4, 5.65, -1]) color("black") cube([1.5, 24, 2]);
     } 
     
     // hole reinforcements
-    * translate([0, 0, 20]) {
-//        translate([6-5/2, 6-3, 4.8])         cube([5, 5, .2]);
-//        translate([6+58-5/2, 6-3, 4.8])      cube([5, 5, .2]);
-        translate([6-5/2, 6+23-3, 4.8])      cube([5, 5, .2]);
-        translate([6+58-5/2, 6+23-3, 4.8])   cube([5, 5, .2]);
+//        translate([5.5, -3.5, 3]) cylinder(h=0.3, d=5);
+//        translate([5.5+58, -3.5, 3]) cylinder(h=0.3, d=5);  
+//        translate([5.5, 5.5+24, 2]) cylinder(h=0.3, d=5);
+//        translate([5.5+58, 5.5+24, 2]) cylinder(h=0.3, d=5);
+    
+}
+
+
+module bottom_standalone() {
+    
+    size = [69, 35];
+    
+    height = 4.6;
+    height2 = 1.2+2+0.4;
+        
+    difference() {
+        union() {
+            difference() {
+                translate([-0.4, -0.4]) block(69+0.8, 35+0.8, height, crad=4);
+                
+                // pi cutout
+                translate([0, 0, 1.2]) hull() {
+                    block(69, 35, height, crad=4, red=1.2+.1);
+                }    
+            }
+            
+            // holder
+            intersection() {
+                union() {
+                    translate([size[0]-5.7, 0]) cube([5.7, 8.5, height2]);
+                    translate([size[0]-8, 0]) cube([7.5, 6.5, height2]);
+                    translate([size[0]-6, 6.5]) cylinder($fn=32, h=height2, d=4);
+                            
+                    translate([0, 0]) cube([5.7, 8.5, height2]);
+                    translate([0, 0]) cube([8, 6.5, height2]);
+                    translate([6, 6.5]) cylinder($fn=32, h=height2, d=4); 
+                }
+                translate([-0.4, -0.4]) block(69+0.8, 35+0.8, height, crad=4);
+            }
+            
+            // hole reinforcements 
+            translate([0, 0, 1.2]) {
+                translate([5.5, 6]) cylinder($fn=32, h=2, d1=7, d2=5);
+                translate([5.5+58, 6]) cylinder($fn=32, h=2, d1=7, d2=5);
+            }
+        }
+        
+        // through hole pin cutout
+        translate([(70-51)/2-0.5, 26-.25, -1]) color("yellow") block(13, 6.5, 10, crad=1);
+        
+        // screws
+        translate([0.5, -.5, -1]) {
+            translate([6-1, 6.5]) cylinder($fn=32, h=10, d=2.5+.3);
+            translate([6-1+58, 6.5]) cylinder($fn=32, h=10, d=2.5+.3);
+           
+            translate([6-1, 6.5]) cylinder($fn=32, h=3, d=5);
+            translate([6-1+58, 6.5]) cylinder($fn=32, h=3, d=5);
+        }    
+       
+        // sd card connector cutout
+        translate([-1, 8.5, 1.2]) cube([10, 12, 10]);
+        
+        // force printer to do holes at once
+        translate([-1, 6-.1/2, -1]) cube([7, 0.1, 1.2]);
+        translate([69-6, 6-.1/2, -1]) cube([7, 0.1, 1.2]);
+        
+        translate([30, 37, -1]) cube([5, 0.1, 1.2]);
+    }
+    
+    // hole reinforcements for printer
+    *translate([0, 0, 1.2]) {
+        translate([5.5, 6]) cylinder($fn=32, d=5, h=0.3);
+        translate([5.5+58, 6]) cylinder($fn=32, d=5, h=0.3);
     }
 }
 
-module bottom() {
+module bottom_pi() {
     
     height = 8;
         
     difference() {
         union() {
             hull() {
-                block(69, 35, height, crad=4);
+                translate([-0.4, -0.4]) block(69+0.8, 35+0.8, height, crad=4);
             }
+            
+            // extra screw
+            translate([0-0.4, 23, 0]) block(11, 20, height, crad=3);
+            translate([69-11+0.4, 23, 0]) block(11, 20, height, crad=3);
+//            translate([69/2-11/2, 23, 0]) block(11, 20, height, crad=3);
         }
         
         // pi cutout
@@ -153,35 +343,44 @@ module bottom() {
             translate([6-1+58, 6.5+23]) cylinder($fn=32, h=3-.2, d=4.9);
         }
         
+        // extra screw
+        translate([5.5-0.4, 38.5, -1]) cylinder($fn=32, h=10, d=2.5+.3);
+        translate([5.5+58+0.4, 38.5, -1]) cylinder($fn=32, h=10, d=2.5+.3);
+        translate([5.5-0.4, 38.5, -1]) cylinder($fn=32, h=3-.2+3, d=4.9);
+        translate([5.5+58+0.4, 38.5, -1]) cylinder($fn=32, h=3-.2+3, d=4.9);
+            
+        
         // camera connector cutout
         translate([65, (34-19)/2, 3]) cube([10, 19, 10]);
         
         // sd card connector cutout
-        translate([-0.1, (34-18)/2, 0.5]) hull() {
+        translate([-1.1, (34-18)/2, 0.5]) hull() {
             translate([0, 0, 2.2]) cube([2.61, 18, 10]);
-            cube([0.1, 18, 0.1]);
+            translate([0, 0, 0.3]) cube([0.1, 18, 0.1]);
         }
         
         // USB cutout
         translate([37.5, 0, 3]) hull() {
             translate([0, 2]) cube([24, 0.1, 10]);
-            translate([-3/2, -1]) cube([24+3, 0.1, 10]);
+            translate([-3/2, -2]) cube([24+3, 0.1, 10]);
         }
 
         // force printer to do holes at once
-        translate([0, 5.5-.1/2, -1]) cube([7, 0.1, 1.2]);
-        translate([0, 34-5.5-.1/2, -1]) cube([7, 0.1, 1.2]);
-        translate([69-7, 5.5-.1/2, -1]) cube([7, 0.1, 1.2]);
-        translate([69-7, 34-5.5-.1/2, -1]) cube([7, 0.1, 1.2]);
+        translate([-1, 6-.1/2, -1]) cube([7, 0.1, 1.2]);
+        translate([-1, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
+        translate([69-6, 6-.1/2, -1]) cube([7, 0.1, 1.2]);
+        translate([69-6, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
         
         translate([30, 37, -1]) cube([5, 0.1, 1.2]);
     }
 
     // hole reinforcements
-    translate([6-.5-5/2, 6-3, 1.8])         cube([5, 5, .2]);
-    translate([6-.5+58-5/2, 6-3, 1.8])      cube([5, 5, .2]);
-    translate([6-.5-5/2, 6+23-3, 1.8])      cube([5, 5, .2]);
-    translate([6-.5+58-5/2, 6+23-3, 1.8])   cube([5, 5, .2]);
+//    translate([6-.5-5/2, 6-2.5, 1.8])         cube([5, 5, .2]);
+//    translate([6-.5+58-5/2, 6-2.5, 1.8])      cube([5, 5, .2]);
+//    translate([6-.5-5/2, 6+23-2.5, 1.8])      cube([5, 5, .2]);
+//    translate([6-.5+58-5/2, 6+23-2.5, 1.8])   cube([5, 5, .2]);
+//    translate([6-.5-5/2, 6+23-3+10, 1.8])      cube([5, 5, .2]);
+//    translate([6-.5+58-5/2, 6+23-3+10, 1.8])   cube([5, 5, .2]);
 }
 
 module controller() {

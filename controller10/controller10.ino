@@ -11,7 +11,7 @@ ISR(WDT_vect) {
   Sleepy::watchdogEvent();
 }
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x) Serial.print("["); Serial.print(millis()/1000); Serial.print("] "); Serial.println (x)
@@ -63,11 +63,6 @@ void setup() {
     while (!Serial) {
       ;
     }
-  #else
-    if (Serial) {
-      // if USB cable connected at startup -> go to IDLE
-      state = STATE_IDLE;
-    }
   #endif
  
   DEBUG_PRINT("INIT");
@@ -106,21 +101,23 @@ void setup() {
 
   DEBUG_PRINT(getLiPoVoltage(BATT_DIRECT));
 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
-  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+//  selftest(); delay(100); 
+
+  state = STATE_IDLE;
 }
 
 void loop() {
 
-  switchZeroOn(true);
-  while(1);
+//  switchZeroOn(true);
+//  while(1);
   
     
   serialEvent();
@@ -130,15 +127,18 @@ void loop() {
     case STATE_INIT:
 
       // programming mode or continue and disable USB?
-      for(int i=0; i<300; i++) {
+      for(int i=0; i<10; i++) {
         if (digitalRead(PIN_BUTTON) == 0) {
           state = STATE_IDLE;
           
           DEBUG_PRINT("--> idle");
-          
+
+          neopixel.setPixelColor(0, neopixel.Color(0,0,5));
+          neopixel.show();
+
           return;  
         } else {
-          delay(10);  
+          delay(100);  
         }
       }
       

@@ -33,6 +33,7 @@ void serialEvent() {
 
   while (Serial1.available()) {
     char inChar = (char) Serial1.read();
+    Serial.write(inChar);
     processCommand(inChar, ser1);
   }
 }
@@ -70,7 +71,7 @@ void processCommand(char inChar, CommunicationInterface ser) {
       // everything ok:
 
       ser.serialCommand = ser.inputBuffer[0];  
-      ser.port->println(ser.serialCommand);
+      // ser.port->println(ser.serialCommand);
       
       if (spacePos > 0) {        
         sscanf(ser.inputBuffer, "%*s %d", &ser.serialParam);
@@ -87,6 +88,11 @@ void processCommand(char inChar, CommunicationInterface ser) {
 }
 
 void executeCommand(CommunicationInterface ser) {
+  #ifdef DEBUG
+    ser0.port -> print("=> ");
+    ser0.port -> println(ser.serialCommand);
+  #endif
+  
   switch(ser.serialCommand) {
     
     case 'B': // Battery Health
