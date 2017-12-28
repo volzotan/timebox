@@ -9,17 +9,12 @@
 
 #define PIN_CAM1                           8 // PB4
 #define PIN_CAM2                           6 // PD7
-#define PIN_CAM3                          12 // PD6
-#define PIN_CAM4                           4 // PD4
 
 #define PIN_LED                            7 // PE6
  
 #define PIN_EXT1                        MISO // PB3
 #define PIN_EXT2                        MOSI // PB2
 #define PIN_EXT3                         SCK // PB1
-
-// #define PIN_DISPLAY_RST                    4 // PD4
-// #define PIN_DISPLAY_EN                    12 // PD6
 
 // ----------- OPTIONS -----------
 
@@ -46,14 +41,11 @@
 
 // ----------- MISC -----------
 
-#define VERSION                         10.0
-
-// display offset for 2nd row
-#define SECONDROW                         18 
+#define VERSION                         11.0
 
 #define VDBASEVOLTAGE                    5.1
-#define VDRESISTOR1                       10
-#define VDRESISTOR2                       10
+#define VDRESISTOR1                       20
+#define VDRESISTOR2                       20
 
 #define BATT_ALL                           0
 #define BATT_CELL_1                        1
@@ -62,8 +54,8 @@
 #define BATT_PERCENTAGE_CELL              -3
 #define BATT_PERCENTAGE_DIRECT            -4
 
-#define MODE_DIRECT                       10
-#define MODE_ZERO                         20
+#define MODE_DIRECT                      'd'
+#define MODE_ZERO                        'z'
 
 // ----------- ERROR CODES -----------
 

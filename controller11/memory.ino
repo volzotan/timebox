@@ -117,7 +117,7 @@ void initPrint(CommunicationInterface ser) {
   ser.port->print("    ");
   ser.port->print("programMode");
   ser.port->print(": ");
-  ser.port->println(programMode);
+  ser.port->println(char(programMode));
   
   ser.port->print("    ");
   ser.port->print("optInterval");

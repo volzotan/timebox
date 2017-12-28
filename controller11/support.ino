@@ -26,8 +26,6 @@ void initPins() {
 
   pinMode(PIN_CAM1,            OUTPUT);
   pinMode(PIN_CAM2,            OUTPUT);
-  pinMode(PIN_CAM3,            OUTPUT);
-  pinMode(PIN_CAM4,            OUTPUT);
   
   pinMode(PIN_LED,             OUTPUT);
 
@@ -37,10 +35,6 @@ void initPins() {
 
   digitalWrite(PIN_ZERO_EN,    LOW);
   digitalWrite(PIN_CAMERA_EN,  LOW);
-  
-//  pinMode(PIN_DISPLAY_EN,      OUTPUT);
-//  pinMode(PIN_DISPLAY_RST,     OUTPUT);
-//  digitalWrite(PIN_DISPLAY_EN, HIGH);
 }
 
 String calculateTime(int interval, int iterations) {
@@ -98,16 +92,6 @@ void switchZeroOn(boolean switchOn) {
   }
 }
 
-
-//void switchDisplayOn(boolean switchOn) {
-//  if (switchOn) {
-//    digitalWrite(PIN_DISPLAY_EN, HIGH);
-//  } else {
-//    digitalWrite(PIN_DISPLAY_EN, HIGH);  
-//  }
-//}
-
-
 void switchCameraOn(boolean switchOn) {
   if (switchOn) {
     digitalWrite(PIN_CAMERA_EN, HIGH);
@@ -115,37 +99,6 @@ void switchCameraOn(boolean switchOn) {
     digitalWrite(PIN_CAMERA_EN, HIGH);  
   }
 }
-
-// -------------------------------- DISPLAY -------------------------------- //
-
-//void initDisplay() {
-//  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-//  display.clearDisplay();
-//
-//  display.setTextColor(WHITE);
-//  display.setTextSize(2);
-//
-//  display.setCursor(0,0);
-//  display.print(F("TIMEBOXGO"));
-//
-//  display.setTextSize(2);
-//  display.setCursor(0,SECONDROW);
-//  display.print(F("v: "));
-//  display.setCursor(64,SECONDROW);
-//  display.print(VERSION);
-//
-//  display.display();
-//}
-//
-//void displayOn(boolean state) {
-//  if (state) {
-//    digitalWrite(PIN_DISPLAY_EN, LOW);
-//  } else {
-//    display.clearDisplay();
-//    display.display();
-//    digitalWrite(PIN_DISPLAY_EN, HIGH);
-//  }
-//}
 
 // -------------------------------- BATTERY -------------------------------- //
 
@@ -181,12 +134,12 @@ float voltageDivider(float input) {
 float getLiPoVoltage(int cell) {
   float acc = 0;
 
-  for (int i=0; i<50; i++) {
+  for (int i=0; i<1; i++) {
     acc += getLiPoVoltageRaw(cell);
     //delay(1);  
   }
 
-  return acc/50.0; 
+  return acc/1.0; 
 }
 
 float getLiPoVoltageRaw(int cell) {
