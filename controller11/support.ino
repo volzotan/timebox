@@ -63,6 +63,52 @@ int lastIndexOf(const char * s, char target)
    return ret;
 }
 
+void ledShow(int r, int g, int b) {
+  neopixel.setPixelColor(0, neopixel.Color(r,g,b));
+  neopixel.show(); 
+
+  ledIterations = -1;
+  ledTimer = -1;
+
+  if (r + g + b > 0) {
+    ledOn = true;
+  } else {
+    ledOn = false;
+  }
+}
+
+void ledBlink(int r, int g, int b, int iterations, int duration) {
+  ledShow(r, g, b);
+  ledOn = true;
+  
+  ledColor[0] = r; ledColor[1] = g; ledColor[2] = b;
+  ledIterations = iterations;
+  ledTimer = millis() + duration;
+}
+
+void ledLoop() {
+  if ((ledTimer > 0) && (millis() > ledTimer)) {
+    
+    if (ledIterations > 0) {
+      ledTimer = millis() + ledDuration; 
+    } else {
+      ledTimer = -1;
+      return;
+    }
+    
+    if (ledOn) {
+      neopixel.setPixelColor(0, neopixel.Color(0, 0, 0));
+      ledOn = false;
+      ledIterations -= 1;    
+    } else {
+      neopixel.setPixelColor(0, neopixel.Color(ledColor[0], ledColor[1], ledColor[2]));
+      ledOn = true;
+    }
+
+    neopixel.show(); 
+  }
+}
+
 void wait(float seconds) {
 
   #ifdef DEBUG

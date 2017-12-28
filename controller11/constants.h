@@ -2,15 +2,15 @@
 
 #define PIN_BATT_DIRECT                   10 // PB6
 
-#define PIN_ZERO_EN                       30
-#define PIN_CAMERA_EN                      5 // PC6
+#define PIN_ZERO_EN                       A4 // PF1
+#define PIN_CAMERA_EN                      4 // PD4
 
-#define PIN_BUTTON                        A4 // PF1 
+#define PIN_BUTTON                        A4 // PD5 // needs modified caterina bootloader
 
-#define PIN_CAM1                           8 // PB4
-#define PIN_CAM2                           6 // PD7
+#define PIN_CAM1                           6 // PD7
+#define PIN_CAM2                           8 // PB4
 
-#define PIN_LED                            7 // PE6
+#define PIN_LED                            5 // PC6
  
 #define PIN_EXT1                        MISO // PB3
 #define PIN_EXT2                        MOSI // PB2

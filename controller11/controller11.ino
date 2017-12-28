@@ -50,7 +50,12 @@ long zeroShutdownTimer    = -1;
 
 // ---------------------------
 
-Adafruit_NeoPixel neopixel = Adafruit_NeoPixel(1, PIN_LED, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel neopixel  = Adafruit_NeoPixel(1, PIN_LED, NEO_GRB + NEO_KHZ800);
+int ledColor[]              = {0, 0, 0};
+long ledDuration            = -1;
+long ledTimer               = -1;
+long ledIterations          = -1;
+boolean ledOn               = false;
 
 // ---------------------------
 
@@ -84,14 +89,17 @@ void setup() {
 
   // neopixel
   neopixel.begin();
-  neopixel.setPixelColor(0, neopixel.Color(5,5,0));
-  neopixel.show();
+  #ifdef DEBUG
+    ledBlink(128, 128, 0, 3, 1000);
+  #else
+    ledBlink(  0, 128, 0, 3, 3000);
+  #endif
 
   // battery life
   if (!checkBattHealth()) {
     // battery is empty, abort right now!
     
-    Serial.println("stopping!...");
+    DEBUG_PRINT("stopping!...");
     #ifndef DEBUG
       state = STATE_STOP;
     #else
@@ -118,10 +126,10 @@ void loop() {
 
 //  switchZeroOn(true);
 //  while(1);
-  
     
-  serialEvent();
-
+  serialEvent();  
+  ledLoop();
+ 
   switch (state) {
 
     case STATE_INIT:
@@ -133,6 +141,7 @@ void loop() {
           
           DEBUG_PRINT("--> idle");
 
+          // TODO
           neopixel.setPixelColor(0, neopixel.Color(0,0,5));
           neopixel.show();
 
