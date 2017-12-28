@@ -3,13 +3,14 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 crad = 5;
 height = 4;
 
-% translate([0, 6, 0.1]) screw();
-% translate([2, 35-2.5, 3.8]) rotate([0, 0, 180]) controller();
+% translate([0, 6, 0.1]) screw(length=12);
+% translate([2, 35-2.5, 4.8]) rotate([0, 0, 180]) controller();
+
 translate([0, 0, 0]) bottom_standalone();
 //translate([0, -40, 0]) rotate([0, 0, 0]) top_standalone();
-% translate([0, 35, 12.7+0.1]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_standalone();
+% translate([0, 35, 14.7+0.1]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_standalone();
 
-* translate([80, 0]) {
+translate([80, 0]) {
     translate([0, 0, 0]) bottom_standalone();
     translate([0, -40, 0]) rotate([0, 0, 0]) top_standalone();
 }
@@ -38,8 +39,8 @@ module top_standalone() {
     
     size = [69, 35];
     
-    height = 8;
-    height2 = 7;
+    height = 9;
+    height2 = 8;
     
     difference() {
         union() {
@@ -69,16 +70,17 @@ module top_standalone() {
                 }
                 
                 translate([-0.4, -0.4]) block(size[0]+0.8, size[1]+0.8, height, crad=4);        
+            }
+          
+            // hole reinforcements 
+            translate([0, -.5, 1.5]) {
+                translate([5.5, 5.5+24]) cylinder($fn=32, h=2, d1=7, d2=5);
+                translate([5.5+58, 5.5+24]) cylinder($fn=32, h=2, d1=7, d2=5);
             }  
         }
-        
-        // pi cutout
-        * translate([0, 0, 6.5]) {
-            color("red") block(size[0], size[1], height, crad=3, red=1.2);
-        } 
-               
+                       
         // connector cutout
-        translate([size[0]-16-8-1.25, size[1]-8.25, -1]) block(16, 10, 20, crad=1); // power
+        translate([size[0]-16.5-8-1.25, size[1]-8.25, -1]) block(16.5, 10, 20, crad=1); // power
         translate([size[0]-8-30.75, size[1]-4.5, 5.5]) {                            // audio jack
             cube([7, 5, 6]);
             translate([7/2, 5, 0]) rotate([90, 0, 0]) cylinder($fn=32, d=7, h=2.8);
@@ -94,8 +96,8 @@ module top_standalone() {
             translate([5.5, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
             translate([5.5+58, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
             
-            translate([5.5, 5.5+24, -1]) rotate([0, 0, 30]) cylinder($fn=6, h=4, d=6.1);
-            translate([5.5+58, 5.5+24, -1]) rotate([0, 0, 30]) cylinder($fn=6, h=4, d=6.1);
+            translate([5.5, 5.5+24]) rotate([0, 0, 30]) cylinder($fn=6, h=3.5, d=6.1);
+            translate([5.5+58, 5.5+24]) rotate([0, 0, 30]) cylinder($fn=6, h=3.5, d=6.1);
         }
         
         // force printer to do holes at once
@@ -105,21 +107,13 @@ module top_standalone() {
         }        
     } 
     
-    // hole reinforcements 
-    translate([0, -.5, 1.5]) {
-        translate([5.5, 5.5+24]) cylinder($fn=32, h=2, d1=7, d2=5);
-        translate([5.5+58, 5.5+24]) cylinder($fn=32, h=2, d1=7, d2=5);
-    }
-    
     // hole reinforcements for printing
-//        translate([5.5, -3.5, 3]) cylinder(h=0.3, d=5);
-//        translate([5.5+58, -3.5, 3]) cylinder(h=0.3, d=5);  
-//        translate([5.5, 5.5+24, 2]) cylinder(h=0.3, d=5);
-//        translate([5.5+58, 5.5+24, 2]) cylinder(h=0.3, d=5);
+    translate([5.5, 5+24, 2.5]) cylinder(h=0.2, d=5);
+    translate([5.5+58, 5+24, 2.5]) cylinder(h=0.2, d=5);
     
 }
 
-module top() {
+module top_pi() {
     height = 10;
     size = [69, 35];
     
@@ -242,8 +236,8 @@ module bottom_standalone() {
     
     size = [69, 35];
     
-    height = 4.6;
-    height2 = 1.2+2+0.4;
+    height = 5.6;
+    height2 = 1.2+3+0.4;
         
     difference() {
         union() {
@@ -278,15 +272,15 @@ module bottom_standalone() {
         }
         
         // through hole pin cutout
-        translate([(70-51)/2-0.5, 26-.25, -1]) color("yellow") block(13, 6.5, 10, crad=1);
+        translate([(70-51)/2-0.8, 26-.25, -1]) color("yellow") block(13.5, 6.5, 10, crad=1);
         
         // screws
         translate([0.5, -.5, -1]) {
             translate([6-1, 6.5]) cylinder($fn=32, h=10, d=2.5+.3);
             translate([6-1+58, 6.5]) cylinder($fn=32, h=10, d=2.5+.3);
            
-            translate([6-1, 6.5]) cylinder($fn=32, h=3, d=5);
-            translate([6-1+58, 6.5]) cylinder($fn=32, h=3, d=5);
+            translate([6-1, 6.5]) cylinder($fn=32, h=4, d=5);
+            translate([6-1+58, 6.5]) cylinder($fn=32, h=4, d=5);
         }    
        
         // sd card connector cutout
@@ -300,9 +294,9 @@ module bottom_standalone() {
     }
     
     // hole reinforcements for printer
-    *translate([0, 0, 1.2]) {
-        translate([5.5, 6]) cylinder($fn=32, d=5, h=0.3);
-        translate([5.5+58, 6]) cylinder($fn=32, d=5, h=0.3);
+    translate([0, 0, 3]) {
+        translate([5.5, 6]) cylinder($fn=32, d=5, h=0.2);
+        translate([5.5+58, 6]) cylinder($fn=32, d=5, h=0.2);
     }
 }
 
@@ -402,10 +396,10 @@ module pizero() {
     rotate([90, 0, 0]) color("green") import(file = "RaspberryPiZero.STL");
 }
 
-module screw() { // M2.5 screw
+module screw(length=10) { // M2.5 screw
     color("grey") { 
         translate([]) cylinder($fn=32, h=2.5, d=4.5);
-        translate([0, 0, 2.5]) cylinder($fn=32, h=10, d=2.5);
+        translate([0, 0, 2.5]) cylinder($fn=32, h=length, d=2.5);
     }
 }
 
