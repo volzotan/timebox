@@ -81,7 +81,7 @@ module plate() {
             translate([dist, size[1]-dist]) cylinder($fn=32, h=12, d=9);
             translate([size[0]-dist, size[1]-dist]) cylinder($fn=32, h=12, d=9);
         }
-        translate([size[0]/2, size[1]/2, -10]) cylinder($fn=32, h=22, d=7);
+       // translate([size[0]/2, size[1]/2, -10]) cylinder($fn=32, h=22, d=7);
         translate([size[0]/2, size[1]/2, -10]) cylinder($fn=6, h=10+6+1-2-0.5, d=13.15);  // +1 safety margin for long fastening screws
     }
 }

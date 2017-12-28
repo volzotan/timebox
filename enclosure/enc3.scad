@@ -16,7 +16,7 @@ translate([180, 0, 0]) {
     translate([size_bottom[0], 0, 0]) rotate([90, 0, 180]) bottom();    
     translate([0, -10, 0]) rotate([90, 0, 0]) frontplate();    
     
-    translate([2.4, 70, 90-8-41]) rotate([90, 0, 0]) squarenut();
+    translate([2.4+0.5, 70, 90-8-41+0.8]) rotate([90, 0, 0]) squarenut();
     
     translate([48, 10, 0]) import("clamp_enc3_plate.stl");
     translate([128, -00+55, 2.4]) rotate([0, 0, 180]) clamp();

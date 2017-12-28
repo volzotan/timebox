@@ -41,13 +41,15 @@ module camera(longlens=false) {
             
             // lens
 
-            if (longlens) {
-                translate([0, 0, 5]) {
-                    cylinder(h = 63, d = 73);
-                }
-            } else {
-                translate([0, 0, 5]) {
-                    cylinder(h = 23, d = 62);
+            color("grey") {
+                if (longlens) {
+                    translate([0, 0, 5]) {
+                        cylinder(h = 63, d = 73);
+                    }
+                } else {
+                    translate([0, 0, 5]) {
+                        cylinder(h = 23, d = 62);
+                    }
                 }
             }
         }
