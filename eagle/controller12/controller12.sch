@@ -9,34 +9,34 @@
 </settings>
 <grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
-<layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
-<layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
-<layer number="3" name="Route3" color="4" fill="3" visible="no" active="no"/>
-<layer number="4" name="Route4" color="1" fill="4" visible="no" active="no"/>
-<layer number="5" name="Route5" color="4" fill="4" visible="no" active="no"/>
-<layer number="6" name="Route6" color="1" fill="8" visible="no" active="no"/>
-<layer number="7" name="Route7" color="4" fill="8" visible="no" active="no"/>
-<layer number="8" name="Route8" color="1" fill="2" visible="no" active="no"/>
-<layer number="9" name="Route9" color="4" fill="2" visible="no" active="no"/>
-<layer number="10" name="Route10" color="1" fill="7" visible="no" active="no"/>
-<layer number="11" name="Route11" color="4" fill="7" visible="no" active="no"/>
-<layer number="12" name="Route12" color="1" fill="5" visible="no" active="no"/>
-<layer number="13" name="Route13" color="4" fill="5" visible="no" active="no"/>
-<layer number="14" name="Route14" color="1" fill="6" visible="no" active="no"/>
-<layer number="15" name="Route15" color="4" fill="6" visible="no" active="no"/>
-<layer number="16" name="Bottom" color="1" fill="1" visible="no" active="no"/>
-<layer number="17" name="Pads" color="2" fill="1" visible="no" active="no"/>
-<layer number="18" name="Vias" color="2" fill="1" visible="no" active="no"/>
-<layer number="19" name="Unrouted" color="6" fill="1" visible="no" active="no"/>
-<layer number="20" name="Dimension" color="15" fill="1" visible="no" active="no"/>
-<layer number="21" name="tPlace" color="7" fill="1" visible="no" active="no"/>
-<layer number="22" name="bPlace" color="7" fill="1" visible="no" active="no"/>
-<layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="no"/>
-<layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="no"/>
-<layer number="25" name="tNames" color="7" fill="1" visible="no" active="no"/>
-<layer number="26" name="bNames" color="7" fill="1" visible="no" active="no"/>
-<layer number="27" name="tValues" color="7" fill="1" visible="no" active="no"/>
-<layer number="28" name="bValues" color="7" fill="1" visible="no" active="no"/>
+<layer number="1" name="Top" color="4" fill="1" visible="yes" active="no"/>
+<layer number="2" name="Route2" color="1" fill="3" visible="yes" active="no"/>
+<layer number="3" name="Route3" color="4" fill="3" visible="yes" active="no"/>
+<layer number="4" name="Route4" color="1" fill="4" visible="yes" active="no"/>
+<layer number="5" name="Route5" color="4" fill="4" visible="yes" active="no"/>
+<layer number="6" name="Route6" color="1" fill="8" visible="yes" active="no"/>
+<layer number="7" name="Route7" color="4" fill="8" visible="yes" active="no"/>
+<layer number="8" name="Route8" color="1" fill="2" visible="yes" active="no"/>
+<layer number="9" name="Route9" color="4" fill="2" visible="yes" active="no"/>
+<layer number="10" name="Route10" color="1" fill="7" visible="yes" active="no"/>
+<layer number="11" name="Route11" color="4" fill="7" visible="yes" active="no"/>
+<layer number="12" name="Route12" color="1" fill="5" visible="yes" active="no"/>
+<layer number="13" name="Route13" color="4" fill="5" visible="yes" active="no"/>
+<layer number="14" name="Route14" color="1" fill="6" visible="yes" active="no"/>
+<layer number="15" name="Route15" color="4" fill="6" visible="yes" active="no"/>
+<layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="no"/>
+<layer number="17" name="Pads" color="2" fill="1" visible="yes" active="no"/>
+<layer number="18" name="Vias" color="2" fill="1" visible="yes" active="no"/>
+<layer number="19" name="Unrouted" color="6" fill="1" visible="yes" active="no"/>
+<layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="no"/>
+<layer number="21" name="tPlace" color="7" fill="1" visible="yes" active="no"/>
+<layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="no"/>
+<layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="no"/>
+<layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="no"/>
+<layer number="25" name="tNames" color="7" fill="1" visible="yes" active="no"/>
+<layer number="26" name="bNames" color="7" fill="1" visible="yes" active="no"/>
+<layer number="27" name="tValues" color="7" fill="1" visible="yes" active="no"/>
+<layer number="28" name="bValues" color="7" fill="1" visible="yes" active="no"/>
 <layer number="29" name="tStop" color="7" fill="3" visible="no" active="no"/>
 <layer number="30" name="bStop" color="7" fill="6" visible="no" active="no"/>
 <layer number="31" name="tCream" color="7" fill="4" visible="no" active="no"/>
@@ -45,8 +45,8 @@
 <layer number="34" name="bFinish" color="6" fill="6" visible="no" active="no"/>
 <layer number="35" name="tGlue" color="7" fill="4" visible="no" active="no"/>
 <layer number="36" name="bGlue" color="7" fill="5" visible="no" active="no"/>
-<layer number="37" name="tTest" color="7" fill="1" visible="no" active="no"/>
-<layer number="38" name="bTest" color="7" fill="1" visible="no" active="no"/>
+<layer number="37" name="tTest" color="7" fill="1" visible="yes" active="no"/>
+<layer number="38" name="bTest" color="7" fill="1" visible="yes" active="no"/>
 <layer number="39" name="tKeepout" color="4" fill="11" visible="no" active="no"/>
 <layer number="40" name="bKeepout" color="1" fill="11" visible="no" active="no"/>
 <layer number="41" name="tRestrict" color="4" fill="10" visible="no" active="no"/>
@@ -54,19 +54,19 @@
 <layer number="43" name="vRestrict" color="2" fill="10" visible="no" active="no"/>
 <layer number="44" name="Drills" color="7" fill="1" visible="no" active="no"/>
 <layer number="45" name="Holes" color="7" fill="1" visible="no" active="no"/>
-<layer number="46" name="Milling" color="3" fill="1" visible="no" active="no"/>
-<layer number="47" name="Measures" color="7" fill="1" visible="no" active="no"/>
-<layer number="48" name="Document" color="7" fill="1" visible="no" active="no"/>
-<layer number="49" name="Reference" color="7" fill="1" visible="no" active="no"/>
-<layer number="50" name="dxf" color="7" fill="1" visible="no" active="no"/>
-<layer number="51" name="tDocu" color="7" fill="1" visible="no" active="no"/>
-<layer number="52" name="bDocu" color="7" fill="1" visible="no" active="no"/>
-<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="no" active="no"/>
-<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="no" active="no"/>
-<layer number="56" name="wert" color="7" fill="1" visible="no" active="no"/>
-<layer number="57" name="tCAD" color="7" fill="1" visible="no" active="no"/>
-<layer number="59" name="tCarbon" color="7" fill="1" visible="no" active="no"/>
-<layer number="60" name="bCarbon" color="7" fill="1" visible="no" active="no"/>
+<layer number="46" name="Milling" color="3" fill="1" visible="yes" active="no"/>
+<layer number="47" name="Measures" color="7" fill="1" visible="yes" active="no"/>
+<layer number="48" name="Document" color="7" fill="1" visible="yes" active="no"/>
+<layer number="49" name="Reference" color="7" fill="1" visible="yes" active="no"/>
+<layer number="50" name="dxf" color="7" fill="1" visible="yes" active="no"/>
+<layer number="51" name="tDocu" color="7" fill="1" visible="yes" active="no"/>
+<layer number="52" name="bDocu" color="7" fill="1" visible="yes" active="no"/>
+<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="yes" active="no"/>
+<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="yes" active="no"/>
+<layer number="56" name="wert" color="7" fill="1" visible="yes" active="no"/>
+<layer number="57" name="tCAD" color="7" fill="1" visible="yes" active="no"/>
+<layer number="59" name="tCarbon" color="7" fill="1" visible="yes" active="no"/>
+<layer number="60" name="bCarbon" color="7" fill="1" visible="yes" active="no"/>
 <layer number="90" name="Modules" color="5" fill="1" visible="yes" active="yes"/>
 <layer number="91" name="Nets" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="92" name="Busses" color="1" fill="1" visible="yes" active="yes"/>
@@ -5441,7 +5441,7 @@ Not recommended if you're trying to fit a specific chip.</description>
 <text x="3.048" y="-0.889" size="0.4064" layer="27">&gt;VALUE</text>
 <text x="3.048" y="0.508" size="0.4064" layer="25">&gt;NAME</text>
 <smd name="BTM" x="0" y="0" dx="3.81" dy="1.9304" layer="1"/>
-<pad name="P$1" x="0" y="0" drill="0.8"/>
+<pad name="P$1" x="0" y="0" drill="1"/>
 </package>
 </packages>
 <symbols>
@@ -7160,8 +7160,6 @@ www.SparkFun.com SKU : Comp-SMDS</description>
 <smd name="3" x="2.5" y="-2.75" dx="1.2" dy="2.5" layer="1" rot="R180"/>
 <text x="-1.27" y="0.635" size="0.6096" layer="25">&gt;Name</text>
 <text x="-1.27" y="-1.27" size="0.6096" layer="27">&gt;Value</text>
-<hole x="-3.55" y="0" drill="0.9"/>
-<hole x="3.55" y="0" drill="0.9"/>
 </package>
 <package name="SWITCH-SPDT_LOCK.007S">
 <wire x1="2.175" y1="5.815" x2="-2.175" y2="5.815" width="0.2032" layer="21"/>
@@ -7433,7 +7431,7 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <part name="C18" library="SparkFun-Capacitors" deviceset="CAP" device="1210" value="10uF / 25V"/>
 <part name="C19" library="SparkFun-Capacitors" deviceset="CAP" device="1210" value="10uF / 25V"/>
 <part name="U3" library="SparkFun-AnalogIC" deviceset="GENERIC-SOIC8" device="MSGEQ7N-FILTER" value="MP2307"/>
-<part name="S1" library="SparkFun-Retired" deviceset="TAC_SWITCH" device="SMD" value="TAC_SWITCHSMD"/>
+<part name="S1" library="SparkFun-Retired" deviceset="TAC_SWITCH" device="PTH" value="TAC_SWITCHSMD"/>
 <part name="R5" library="SparkFun-Passives" deviceset="RESISTOR" device="1206"/>
 <part name="GND27" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="SUPPLY5" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
@@ -7491,7 +7489,7 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <part name="U$4" library="volzolib" deviceset="NANOFIT2" device=""/>
 <part name="U$5" library="volzolib" deviceset="NANOFIT2" device=""/>
 <part name="J2" library="SparkFun-Connectors" deviceset="AVR_SPI_PRG_6" device="2X3_LOCK"/>
-<part name="J4" library="SparkFun-Connectors" deviceset="M02" device="LOCK"/>
+<part name="J4" library="SparkFun-Connectors" deviceset="M02" device="PTH"/>
 <part name="GND7" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="S2" library="SparkFun-Electromechanical" deviceset="SWITCH-SPDT" device="SMD2"/>
 <part name="SUPPLY8" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
@@ -7547,7 +7545,7 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <instance part="J2" gate="G$1" x="106.68" y="63.5"/>
 <instance part="S2" gate="1" x="162.56" y="106.68"/>
 <instance part="SUPPLY8" gate="G$1" x="147.32" y="106.68" rot="R90"/>
-<instance part="J5" gate="G$1" x="81.28" y="91.44"/>
+<instance part="J5" gate="G$1" x="81.28" y="93.98" rot="R180"/>
 </instances>
 <busses>
 </busses>
@@ -7889,19 +7887,17 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <wire x1="139.7" y1="213.36" x2="162.56" y2="213.36" width="0.1524" layer="91"/>
 <label x="170.18" y="213.36" size="1.778" layer="95"/>
 </segment>
+<segment>
+<pinref part="J5" gate="G$1" pin="6"/>
+<wire x1="73.66" y1="96.52" x2="71.12" y2="96.52" width="0.1524" layer="91"/>
+<label x="71.12" y="96.52" size="1.778" layer="95" rot="R90"/>
+</segment>
 </net>
 <net name="CAM_EN" class="0">
 <segment>
 <pinref part="U$3" gate="G$1" pin="PD4(ICP1/ADC8)"/>
 <wire x1="139.7" y1="162.56" x2="162.56" y2="162.56" width="0.1524" layer="91"/>
 <label x="162.56" y="162.56" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="Z_GPIO_2" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PB5(OC1A/ADC12/!OC4B)"/>
-<wire x1="139.7" y1="187.96" x2="162.56" y2="187.96" width="0.1524" layer="91"/>
-<label x="180.34" y="187.96" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$38" class="0">
@@ -7947,9 +7943,9 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <label x="167.64" y="152.4" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="101.6" y1="91.44" x2="101.6" y2="99.06" width="0.1524" layer="91"/>
-<label x="101.6" y="99.06" size="1.778" layer="95"/>
-<wire x1="101.6" y1="91.44" x2="88.9" y2="91.44" width="0.1524" layer="91"/>
+<wire x1="88.9" y1="96.52" x2="99.06" y2="96.52" width="0.1524" layer="91"/>
+<label x="99.06" y="96.52" size="1.778" layer="95" rot="R90"/>
+<pinref part="J5" gate="G$1" pin="5"/>
 </segment>
 </net>
 <net name="SDA" class="0">
@@ -7959,9 +7955,9 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <label x="167.64" y="154.94" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="93.98" y1="93.98" x2="93.98" y2="99.06" width="0.1524" layer="91"/>
-<label x="93.98" y="99.06" size="1.778" layer="95"/>
-<wire x1="93.98" y1="93.98" x2="88.9" y2="93.98" width="0.1524" layer="91"/>
+<wire x1="88.9" y1="93.98" x2="104.14" y2="93.98" width="0.1524" layer="91"/>
+<label x="104.14" y="93.98" size="1.778" layer="95" rot="R90"/>
+<pinref part="J5" gate="G$1" pin="3"/>
 </segment>
 </net>
 <net name="N$15" class="0">
@@ -8020,7 +8016,7 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <label x="162.56" y="223.52" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="Z_GPIO_1" class="0">
+<net name="EXT_3" class="0">
 <segment>
 <pinref part="U$3" gate="G$1" pin="PD6(T1/ADC9/!OC4D)"/>
 <wire x1="139.7" y1="167.64" x2="162.56" y2="167.64" width="0.1524" layer="91"/>
@@ -8054,13 +8050,6 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <label x="175.26" y="109.22" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="Z_GPIO_3" class="0">
-<segment>
-<pinref part="U$3" gate="G$1" pin="PC7(ICP3/CLK0/OC4A)"/>
-<wire x1="139.7" y1="198.12" x2="162.56" y2="198.12" width="0.1524" layer="91"/>
-<label x="180.34" y="198.12" size="1.778" layer="95"/>
-</segment>
-</net>
 <net name="N$14" class="0">
 <segment>
 <pinref part="U$3" gate="G$1" pin="PB0(SS)"/>
@@ -8092,6 +8081,30 @@ DPDT SMT slide switch, AYZ0202, SWCH-08179</description>
 <wire x1="177.8" y1="162.56" x2="175.26" y2="162.56" width="0.1524" layer="91"/>
 <wire x1="175.26" y1="162.56" x2="175.26" y2="165.1" width="0.1524" layer="91"/>
 <junction x="175.26" y="165.1"/>
+</segment>
+</net>
+<net name="EXT_1" class="0">
+<segment>
+<pinref part="J5" gate="G$1" pin="1"/>
+<wire x1="88.9" y1="91.44" x2="106.68" y2="91.44" width="0.1524" layer="91"/>
+<label x="106.68" y="91.44" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="U$3" gate="G$1" pin="PC7(ICP3/CLK0/OC4A)"/>
+<wire x1="139.7" y1="198.12" x2="162.56" y2="198.12" width="0.1524" layer="91"/>
+<label x="180.34" y="198.12" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="EXT_2" class="0">
+<segment>
+<pinref part="J5" gate="G$1" pin="2"/>
+<wire x1="73.66" y1="91.44" x2="60.96" y2="91.44" width="0.1524" layer="91"/>
+<label x="60.96" y="91.44" size="1.778" layer="95" rot="R90"/>
+</segment>
+<segment>
+<pinref part="U$3" gate="G$1" pin="PB5(OC1A/ADC12/!OC4B)"/>
+<wire x1="139.7" y1="187.96" x2="162.56" y2="187.96" width="0.1524" layer="91"/>
+<label x="180.34" y="187.96" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>
