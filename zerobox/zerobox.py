@@ -17,6 +17,8 @@ from gi.repository import GExiv2
 # --- --- --- --- --- --- --- --- --- ---
 """
 
+Sony a6000:
+
 Camera set to   USB Connection  : PC Remote Control
                 USB-LUN-Setting : Multi 
 

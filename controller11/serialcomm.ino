@@ -1,11 +1,11 @@
 /* Commandlist
  *  
  *  B  ---  Battery
- *  -1.00 -1.00 8.00 80%
+ *  -1.00 -1.00 8.00 80
  *  cell1 cell2 direct percentage
  *  
- *  
- *  S  ---  Shutdown  // maybe add delay time?  S 10 for example?
+ *  O  ---  Turn Zero On
+ *  S  ---  Shutdown [delay in seconds]
  *  R  ---  Reboot    // maybe add delay time?  S 10 for example?
  *  L  ---  Remaining Lifetime/Uptime
  *  T  ---  Time
@@ -105,6 +105,11 @@ void executeCommand(CommunicationInterface ser) {
       ser.port->print(" ");
       ser.port->println(getLiPoVoltage(BATT_PERCENTAGE_DIRECT));
       break;
+
+    case 'O': // Turn Zero On 
+      // TODO
+      okSerial(ser);
+      break;
       
     case 'S': // Shutdown 
       if (ser.serialParam > 0) {
@@ -126,7 +131,11 @@ void executeCommand(CommunicationInterface ser) {
 
     case 'L': // Remaining Lifetime
       ser.port->print("K ");
-      ser.port->println(zeroShutdownTimer-millis());
+      if (zeroShutdownTimer > 0) {
+        ser.port->println(zeroShutdownTimer-millis());
+      } else {
+        ser.port->println(-1);
+      }
       break;
      
     case 'T': // Time 

@@ -74,6 +74,8 @@ void setup() {
 
   ser0.inputBuffer = malloc(sizeof(char) * 100);
   ser1.inputBuffer = malloc(sizeof(char) * 100);
+  resetSerial(ser0);
+  resetSerial(ser1);
 
   // init values
   initPins();
@@ -141,9 +143,7 @@ void loop() {
           
           DEBUG_PRINT("--> idle");
 
-          // TODO
-          neopixel.setPixelColor(0, neopixel.Color(0,0,5));
-          neopixel.show();
+          ledShow(0, 0, 100);
 
           return;  
         } else {
@@ -295,7 +295,7 @@ void selftest() {
   Serial.println("%");
   
   // NeoPixel
-  neopixel.setPixelColor(0, neopixel.Color(0,5,0));
+  neopixel.setPixelColor(0, neopixel.Color(0,100,0));
   neopixel.show();
 
   // button state
