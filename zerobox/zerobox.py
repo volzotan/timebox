@@ -47,7 +47,7 @@ DOUBLEEXPOSURE_ENABLED = True
 WAIT_EXPOSURE_COMP  = 0
 WAIT_AUTOFOCUS      = 1
 
-EXPOSURE_THRESHOLD  = 10
+EXPOSURE_THRESHOLD  = 20 # 10
 FREE_DISK_THRESHOLD = 100 * 1024 * 1024
 
 EXPOSURE_LOW        = -5
@@ -231,9 +231,17 @@ def calculate_brightness(full_name):
     metadata.open_path(full_name)
 
     exposure_time = metadata.get_exposure_time()
-    shutter = float(exposure_time.den) / float(exposure_time.nom)
-    # shutter = float(shutter[0]) / float(shutter[1])
-    iso     = int(metadata.get_tag_string("Exif.Photo.ISOSpeedRatings"))
+    shutter = None
+    # some versions of GExiv2 return Fractions of different types
+    try: 
+        shutter = float(exposure_time.den) / float(exposure_time.nom)
+    except AttributeError as e:
+        try: 
+            shutter = float(exposure_time)
+        except Exception as e:
+            raise e
+
+    iso = int(metadata.get_tag_string("Exif.Photo.ISOSpeedRatings"))
 
     try: 
         time = datetime.datetime.strptime(metadata.get_tag_string("Exif.Photo.DateTimeOriginal"), EXIF_DATE_FORMAT)
@@ -345,6 +353,7 @@ def autofocus():
     if not _exec(["gphoto2" ,"--set-config-value", "/main/capturesettings/focusmode=Manual"]): 
         return
     time.sleep(WAIT_AUTOFOCUS)
+
 
 def print_config():
 
