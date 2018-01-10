@@ -108,6 +108,7 @@ void executeCommand(CommunicationInterface ser) {
 
     case 'O': // Turn Zero On 
       // TODO
+      switchZeroOn(true);
       okSerial(ser);
       break;
       

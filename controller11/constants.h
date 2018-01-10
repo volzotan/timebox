@@ -5,7 +5,7 @@
 #define PIN_ZERO_EN                       A4 // PF1
 #define PIN_CAMERA_EN                      4 // PD4
 
-#define PIN_BUTTON                        A4 // PD5 // needs modified caterina bootloader
+#define PIN_BUTTON                        A3 // PD5 // needs modified caterina bootloader // TODO: wrong arduino pin
 
 #define PIN_CAM1                           6 // PD7
 #define PIN_CAM2                           8 // PB4
