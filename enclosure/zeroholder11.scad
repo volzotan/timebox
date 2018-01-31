@@ -20,8 +20,8 @@ translate([80, 0]) {
 
 translate([0, 0, 0]) bottom_pi_new();
 % translate([0, 0, 4]) translate([2, 32+0.5, -20.095]) pizero();
-% translate([0, 0, 4+2+10.6]) translate([2, 35-2.5]) rotate([0, 0, 180]) controller();
-% translate([0, 0, 17]) translate([0, 35, 9]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_pi_new();
+% translate([0, 0, 17.1]) translate([2, 35-2.5]) rotate([0, 0, 180]) controller();
+% translate([0, 0, 17.9]) translate([0, 35, 9]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_pi_new();
 
 % translate([0, 6, 0.1]) screw(length=25);
 
@@ -33,6 +33,34 @@ translate([80, 0]) {
 //% translate([2, 35-2.5, 35+1.2]) rotate([0, 0, -90]) color("purple") import(file = "controller11_2.dxf");
  
 //spacer();
+
+translate([-80, 0]) grip_holder();
+
+
+module grip_holder() {
+    
+    size = [69, 35];
+    
+    difference() {
+        intersection() {
+            points = [[0, 0], [size[1], 0], [size[1], 10], [size[1]-5, 20], [size[1]/2, 5], [5, 20], [0, 10]];
+            translate([]) rotate([90, 0, 90]) linear_extrude(height=69.8) polygon(points);
+            
+            translate([-0.4, -0.4]) block(69+0.8, 35+0.8, 50, crad=4);
+        }
+        
+        // tripod leg
+        translate([-1, size[1]/2, 16]) rotate([0, 90, 0]) cylinder($fn=32, h=80, d=25);
+        
+        // magnet cavity
+        translate([0, 0, -0.1]) color("darkgreen") {
+            translate([6, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
+            translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
+            translate([size[0]-6, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
+        }
+    }
+}
+
 
 module spacer() {
     difference() {
@@ -279,8 +307,8 @@ module bottom_pi_new() {
     
     size = [69, 35];
     
-    height = 12.3;
-    height2 = 1.2+2.8;
+    height = 12.8;
+    height2 = 1.7+2.8;
         
     difference() {
         union() {
@@ -288,7 +316,7 @@ module bottom_pi_new() {
                 translate([-0.4, -0.4]) block(69+0.8, 35+0.8, height, crad=4);
                 
                 // pi cutout
-                translate([0, 0, 1.2]) hull() {
+                translate([0, 0, 1.7]) hull() {
                     block(69, 35, height, crad=4, red=1.2+.1);
                 }    
             }
@@ -316,7 +344,7 @@ module bottom_pi_new() {
             }
             
             // hole reinforcements 
-            translate([0, 0, 1.2]) {
+            translate([0, 0, 1.7]) {
                 translate([5.5, 6]) cylinder($fn=32, h=1, d=7);
                 translate([5.5, 6, 1]) cylinder($fn=32, h=1, d1=7, d2=5);
                 translate([5.5+58, 6]) cylinder($fn=32, h=1, d=7);
@@ -330,7 +358,7 @@ module bottom_pi_new() {
         }
         
         // through hole pin cutout
-        translate([(70-51)/2-0.8, 26-.25, 1.2]) color("yellow") block(51.5, 6.5, 10, crad=1);
+        translate([(70-51)/2-0.8, 26-.25, 1.7]) color("yellow") block(51.5, 6.5, 10, crad=1);
         
         // screws
         translate([0.5, -.5, -1]) {
@@ -348,19 +376,26 @@ module bottom_pi_new() {
         }    
        
         // sd card cutout
-        translate([-2, 9.5, 9+2]) rotate([0, 90, 0]) hull() {
+        translate([-2, 9.5, 9.5+2]) rotate([0, 90, 0]) hull() {
             block(9, 19, .1, crad=1);
             translate([2, 2, 4]) block(9-4, 19-4, .1, crad=1);
         }
         
         // USB cutout
-        translate([37.5, 0, 3.5]) hull() {
+        translate([37.5, 0, 4]) hull() {
             translate([0, 2]) cube([24, 0.1, 6]);
             translate([-3/2, -2]) cube([24+3, 0.1, 6]);
         }
         
+        // magnet cavity
+        translate([0, 0, -0.1]) color("darkgreen") {
+            translate([6, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
+            translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
+            translate([size[0]-6, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
+        }
+        
         // pi-camera connector
-        translate([65+10, (34-19)/2, 4.5]) rotate([0, -90, 0]) block(4, 19, 10, crad=1);
+        translate([65+10, (34-19)/2, 5]) rotate([0, -90, 0]) block(4, 19, 10, crad=1);
         
         // force printer to do holes at once
         translate([5+0.45, -1, -1]) cube([0.1, 7, 1.2]);
@@ -370,7 +405,14 @@ module bottom_pi_new() {
         
     }
     
-    // hole reinforcements for printer
+    // magnet reinforcement
+        *color() {
+            translate([6, size[1]/2, 0.3]) cylinder($fn=32, d=9+2.5, h=1.2+0.6);
+            translate([size[0]/2, size[1]/2, 0.3]) cylinder($fn=32, d=9+2.5, h=1.2+0.6);
+            translate([size[0]-6, size[1]/2, 0.3]) cylinder($fn=32, d=9+2.5, h=1.2+0.6);
+        }
+    
+    // screw hole reinforcements for printer
     translate([0, 0, 3.8-1]) {
         translate([5.5, 6]) cylinder($fn=32, d=5, h=0.2);
         translate([5.5+58, 6]) cylinder($fn=32, d=5, h=0.2);
