@@ -1,50 +1,41 @@
 include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 
-crad = 5;
-height = 4;
 
-// standalone
-/*
-% translate([0, 6, 0.1]) screw(length=12);
-% translate([2, 35-2.5, 4.8]) rotate([0, 0, 180]) controller();
-translate([0, 0, 0]) bottom_standalone();
-% translate([0, 35, 14.7+0.1]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_standalone();
+% translate([0, 6, 0.1]) screw25(length=25);
 
-translate([80, 0]) {
-    translate([0, 0, 0]) bottom_standalone();
-    translate([0, -36.5, 0]) rotate([0, 0, 0]) top_standalone();
+// battery
+translate([10+82, 18, 10]) {
+    translate([0, 14]) rotate([0, 90, 0]) cylinder($fn=32, d=18, h=65);
+    translate([0, -5.5]) rotate([0, 90, 0]) cylinder($fn=32, d=18, h=65);
 }
-*/
 
-// standalone + pi
-
-//translate([0, 0, 0]) bottom_pi_new();
-//% translate([0, 0, 4]) translate([2, 32+0.5, -20.095]) pizero();
-//% translate([0, 0, 17.9]) translate([0, 35, 9]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_pi_new();
-
-% translate([0, 6, 0.1]) screw(length=25);
+// camera
+translate([filter_x+78, -size[1]/2-3, 7.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
 
 translate([80, 0]) {
     translate([0, 0, 0]) bottom();
-    translate([0, -40, 0]) rotate([0, 0, 0]) top();
+    translate([0, -48, 0]) rotate([0, 0, 0]) top();
     
-    % translate([09.5, 1, 4]) translate([2, 32+0.5, -20.095]) pizero();
+//    % translate([09.5, 1, 4]) translate([2, 32+0.5, -20.095]) pizero();
 }
 
-//% translate([2, 35-2.5, 35+1.2]) rotate([0, 0, -90]) color("purple") import(file = "controller11_2.dxf");
- 
-//spacer();
-
-translate([5, 14, 20]) rotate([0, 90, 0]) cylinder($fn=32, d=18, h=65);
-translate([filter_x+78, -21.5, 7.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
-
-
+*% translate([0, 0]) {
+    translate([0, 0, 0]) rotate([90, -90, 0]) bottom();
+    translate([-size[1], -42.5, 0]) rotate([90, -90, 180]) top();
+    
+//    % translate([09.5, 1, 4]) translate([2, 32+0.5, -20.095]) pizero();
+    
+    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
+    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
+    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
+}
 
 
 // CHECK
 // https://www.thingiverse.com/thing:2300226
 
-size = [85, 37];
+size = [85+10, 37+9];
+crad = 6;
     
 pixoffset = 15;
 piyoffset = (size[1]-23)/2;
@@ -62,7 +53,7 @@ module spacer() {
 
 module top() {
     
-    height  = 15;
+    height  = 20;
     height2 = 10;
     height3 = 4;
     
@@ -70,13 +61,20 @@ module top() {
         union() {
             
             difference() {
-                translate([0, 0]) block(size[0], size[1], height, crad=4);
+                translate([0, 0]) block(size[0], size[1], height, crad=crad);
+                
+                x=1.6+0.1;
+                a=x+1;
+                b=x;
+                c=x+2;
                 
                 // pi cutout
                 translate([8, 0, 1.7]) hull() {
-                    block(size[0]-8, size[1], 0.1, crad=4, red=1.6+.1+1);
-                    translate([0, 0, 1]) block(size[0]-8, size[1], height, crad=4, red=1.6+.1);
+                    block(size[0]-8, size[1], 0.1, crad=crad, red=a);
+                    translate([0, 0, 1]) block(size[0]-8, size[1], 14, crad=crad, red=b);
+                    translate([0, 0, 16]) block(size[0]-8, size[1], 1, crad=crad, red=c);
                 }    
+                translate([8, 0, 1.7]) block(size[0]-8, size[1], height, crad=crad, red=c);
             }
             
             // filter support
@@ -98,12 +96,12 @@ module top() {
                     translate([58+pixoffset-o-r, 0]) cube([pixoffset+o+r, piyoffset+o, height2]);
                     translate([58+pixoffset-o, 0+piyoffset+o]) cylinder($fn=32, h=height2, r=r);
                     
-                    translate([58+pixoffset-o, 23+piyoffset-o-r]) cube([size[0], 8.5, height2]);
-                    translate([58+pixoffset-o-r, 23+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
+                    translate([58+pixoffset-o, 23+piyoffset-o-r]) cube([size[0], size[1], height2]);
+                    translate([58+pixoffset-o-r, 23+piyoffset-o]) cube([pixoffset+o+r, size[1], height2]);
                     translate([58+pixoffset-o, 23+piyoffset-o]) cylinder($fn=32, h=height2, r=r);
                     
                     translate([0, 23+piyoffset-o-r]) cube([pixoffset+o, size[1], height2]);
-                    translate([0, 23+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
+                    translate([0, 23+piyoffset-o]) cube([pixoffset+o+r, size[1], height2]);
                     translate([pixoffset+o, 23+piyoffset-o]) cylinder($fn=32, h=height2, r=r); 
  
                     // screw head support
@@ -113,7 +111,7 @@ module top() {
                     translate([pixoffset+o, 23+piyoffset-o]) cylinder($fn=32, h=height3, r=r2);             
                 }
                 
-                translate([0, 0]) block(size[0], size[1], height, crad=4);        
+                translate([0, 0]) block(size[0], size[1], height, crad=crad);        
             }
             
             // camera reinforcement
@@ -145,8 +143,23 @@ module top() {
             translate([58, 23]) cylinder($fn=32, h=3.8, d=5);
         } 
         
-        // camera screws
-        translate([filter_x-14.5, 8, -1]) {
+        // screws M3
+        translate([0, 0, -1]) {
+            translate([5, 6]) cylinder($fn=32, d=3.3, h=30);
+            translate([5, 6]) cylinder($fn=32, d=6.1, h=5);
+            
+            translate([size[0]-5, 6]) cylinder($fn=32, d=3.3, h=30);
+            translate([size[0]-5, 6]) cylinder($fn=32, d=6.1, h=5);
+                   
+            translate([5, size[1]-6]) cylinder($fn=32, d=3.3, h=30);
+            translate([5, size[1]-6]) cylinder($fn=32, d=6.1, h=5);
+            
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.3, h=30);
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=6.1, h=5);
+        }
+        
+        // screws camera
+        translate([filter_x-14.5, size[1]/2-10.3, -1]) {
             translate([0, 21]) cylinder($fn=32, h=10, d=2.0+.3);
             translate([0, 0]) cylinder($fn=32, h=10, d=2.0+.3);
             
@@ -182,20 +195,19 @@ module top() {
 
 module bottom() {
     
-    height = 5;
-    height2 = 5;
-    height3 = 4;
+    height = 22;
+    height2 = height;
     
     difference() {
         union() {
             
             difference() {
-                translate([0, 0]) block(size[0], size[1], height, crad=4);
+                translate([0, 0]) block(size[0], size[1], height, crad=crad);
                 
                 // pi cutout
                 translate([8, 0, 1.7]) hull() {
-                    block(size[0]-8, size[1], 0.1, crad=4, red=1.6+.1+1);
-                    translate([0, 0, 1]) block(size[0]-8, size[1], height, crad=4, red=1.6+.1);
+                    block(size[0]-8, size[1], 0.1, crad=crad, red=1.6+.1+1);
+                    translate([0, 0, 1]) block(size[0]-8, size[1], height, crad=crad, red=1.6+.1);
                 }    
             }
             
@@ -206,47 +218,51 @@ module bottom() {
                     o=1;
                     r2=3;
                     
-                    translate([0, 0]) cube([pixoffset+o, piyoffset+o+r, height2]);
-                    translate([0, 0]) cube([pixoffset+o+r, piyoffset+o, height2]);
-                    translate([0+pixoffset+o, 0+piyoffset+o]) cylinder($fn=32, h=height2, r=r);
+                    pixoffset = size[1]-16.5;
                     
                     translate([58+pixoffset-o, 0]) cube([size[0], piyoffset+o+r, height2]);
                     translate([58+pixoffset-o-r, 0]) cube([pixoffset+o+r, piyoffset+o, height2]);
                     translate([58+pixoffset-o, 0+piyoffset+o]) cylinder($fn=32, h=height2, r=r);
                     
-                    translate([58+pixoffset-o, 23+piyoffset-o-r]) cube([size[0], 8.5, height2]);
-                    translate([58+pixoffset-o-r, 23+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
-                    translate([58+pixoffset-o, 23+piyoffset-o]) cylinder($fn=32, h=height2, r=r);
-                    
-                    translate([0, 23+piyoffset-o-r]) cube([pixoffset+o, size[1], height2]);
-                    translate([0, 23+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
-                    translate([pixoffset+o, 23+piyoffset-o]) cylinder($fn=32, h=height2, r=r); 
- 
-                    // screw head support
-                    translate([0+pixoffset+o, 0+piyoffset+o]) cylinder($fn=32, h=height3, r=r2);   
-                    translate([58+pixoffset-o, 0+piyoffset+o]) cylinder($fn=32, h=height3, r=r2);  
-                    translate([58+pixoffset-o, 23+piyoffset-o]) cylinder($fn=32, h=height3, r=r2);  
-                    translate([pixoffset+o, 23+piyoffset-o]) cylinder($fn=32, h=height3, r=r2);             
+                    translate([58+pixoffset-o, 23+piyoffset-o-r]) cube([size[0], size[1], height2]);
+                    translate([58+pixoffset-o-r, 23+piyoffset-o]) cube([pixoffset+o+r, size[1], height2]);
+                    translate([58+pixoffset-o, 23+piyoffset-o]) cylinder($fn=32, h=height2, r=r);             
                 }
                 
-                translate([0, 0]) block(size[0], size[1], height, crad=4);        
+                translate([0, 0]) block(size[0], size[1], height, crad=crad);        
             }
         }
         
         // screws
-        translate([pixoffset, piyoffset, -1]) {
-            translate([0, 0]) cylinder($fn=32, h=10, d=2.5+.3);
-            translate([58, 0]) cylinder($fn=32, h=10, d=2.5+.3);
-           
-            translate([0, 0]) cylinder($fn=32, h=3.8, d=5);
-            translate([58, 0]) cylinder($fn=32, h=3.8, d=5);
+//        translate([pixoffset, piyoffset, -1]) {
+//            translate([0, 0]) cylinder($fn=32, h=10, d=2.5+.3);
+//            translate([58, 0]) cylinder($fn=32, h=10, d=2.5+.3);
+//           
+//            translate([0, 0]) cylinder($fn=32, h=3.8, d=5);
+//            translate([58, 0]) cylinder($fn=32, h=3.8, d=5);
+//            
+//            translate([0, 23]) cylinder($fn=32, h=10, d=2.5+.3);
+//            translate([58, 23]) cylinder($fn=32, h=10, d=2.5+.3);
+//           
+//            translate([0, 23]) cylinder($fn=32, h=3.8, d=5);
+//            translate([58, 23]) cylinder($fn=32, h=3.8, d=5);
+//        } 
+        
+                
+        // screws M3
+        translate([0, 0, -1]) {
+            translate([5, 6]) cylinder($fn=32, d=3.3, h=30);
+            translate([5, 6]) cylinder($fn=6, d=6.7, h=4);
             
-            translate([0, 23]) cylinder($fn=32, h=10, d=2.5+.3);
-            translate([58, 23]) cylinder($fn=32, h=10, d=2.5+.3);
-           
-            translate([0, 23]) cylinder($fn=32, h=3.8, d=5);
-            translate([58, 23]) cylinder($fn=32, h=3.8, d=5);
-        } 
+            translate([size[0]-5, 6]) cylinder($fn=32, d=3.3, h=30);
+            translate([size[0]-5, 6]) cylinder($fn=6, d=6.7, h=4);
+                   
+            translate([5, size[1]-6]) cylinder($fn=32, d=3.3, h=30);
+            translate([5, size[1]-6]) cylinder($fn=6, d=6.7, h=4);
+            
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.3, h=30);
+            translate([size[0]-5, size[1]-6]) cylinder($fn=6, d=6.7, h=4);
+        }
         
         // force printer to do holes at once
         translate([0, 0, 0]) color("red") {
@@ -259,12 +275,12 @@ module bottom() {
     } 
     
     // hole reinforcements for printing
-    translate([pixoffset, piyoffset, 2.8]) {
-        translate([0, 0]) cylinder($fn=32, h=0.2, d=6);
-        translate([58, 0]) cylinder($fn=32, h=0.2, d=6);
-        translate([0, 23]) cylinder($fn=32, h=0.2, d=6);
-        translate([58, 23]) cylinder($fn=32, h=0.2, d=6);
-    } 
+//    translate([pixoffset, piyoffset, 2.8]) {
+//        translate([0, 0]) cylinder($fn=32, h=0.2, d=6);
+//        translate([58, 0]) cylinder($fn=32, h=0.2, d=6);
+//        translate([0, 23]) cylinder($fn=32, h=0.2, d=6);
+//        translate([58, 23]) cylinder($fn=32, h=0.2, d=6);
+//    } 
 }
 
 
@@ -273,10 +289,17 @@ module pizero() {
     rotate([90, 0, 0]) color("green") import(file = "RaspberryPiZero.STL");
 }
 
-module screw(length=10) { // M2.5 screw
+module screw25(length=10) { // M2.5 screw
     color("grey") { 
         translate([]) cylinder($fn=32, h=2.5, d=4.5);
         translate([0, 0, 2.5]) cylinder($fn=32, h=length, d=2.5);
+    }
+}
+
+module screw3(length=10) { // M2.5 screw
+    color("grey") { 
+        translate([]) cylinder($fn=32, h=2.86, d=5.32);
+        translate([0, 0, 2.86]) cylinder($fn=32, h=length, d=3);
     }
 }
 
