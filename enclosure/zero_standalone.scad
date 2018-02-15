@@ -15,13 +15,15 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 % translate([10+80.5, 2.5, 2]) color("lightblue") battery();
 
 // camera
-//% translate([filter_x+78, -size[1]/2-3, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
+% translate([filter_x+78, -size[1]/2-2, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
+
+translate([80+22.4, -42, 100]) color("darkgreen") camholder();
 
 translate([80, 0]) {
 
 //   intersection() {
         translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
-//        translate([1, 0-1, 0]) cube([50, 50, 50]);
+//        translate([-1, -1, 0]) cube([50, 50, 50]);
 //    }
     
     translate([0, -48, 40]) color("grey") seal();
@@ -36,18 +38,18 @@ translate([80, 0]) {
 //    % translate([09.5, -42.5-30, 40+14+100]) translate([2, 32+0.5, -20.095]) rotate([180, 0]) pizero();
 }
 
-% translate([0, 0]) {
-    translate([0, 0, 0]) rotate([90, -90, 0]) bottom();
-    translate([0, -25, 0]) rotate([90, -90, 0]) seal();
-    
-    translate([-size[1], -52-2.5, 0]) rotate([90, -90, 180]) top();
-    
-//    % translate([09.5, 1, 4]) translate([2, 32+0.5, -20.095]) pizero();
-    
-    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
-    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
-    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
-}
+//% translate([0, 0]) {
+//    translate([0, 0, 0]) rotate([90, -90, 0]) bottom();
+//    translate([0, -25, 0]) rotate([90, -90, 0]) seal();
+//    
+//    translate([-size[1], -52-2.5, 0]) rotate([90, -90, 180]) top();
+//    
+////    % translate([09.5, 1, 4]) translate([2, 32+0.5, -20.095]) pizero();
+//    
+//    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
+//    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
+//    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
+//}
 
 
 // CHECK
@@ -55,6 +57,7 @@ translate([80, 0]) {
 
 size = [95+2, 37+9];
 crad = 6;
+crad2 = 3;
     
 pixoffset = 15+2;
 piyoffset = (size[1]-23)/2;
@@ -75,6 +78,21 @@ module spacer() {
     }
 }
 
+module camholder() {
+    difference() {
+        union() {
+            block(09, 34, 1);
+            translate([0, 09]) block(30, 16, 1);
+        }
+        
+        translate([0, 0, -1]) {
+            height = 10;
+            translate([4.5, 34-04]) cylinder($fn=32, d=2.5+.3, h=20);
+            translate([4.5, 04]) cylinder($fn=32, d=2.5+.3, h=20);
+        }
+    }
+}
+
 module top() {
     
     height  = 27;
@@ -91,7 +109,7 @@ module top() {
         union() {
             
             difference() {
-                translate([0, 0]) block2(size[0], size[1], height, crad=crad-2);
+                translate([0, 0]) block2(size[0], size[1], height, crad=crad2);
                 
                 x=1.6+0.1;
                 a=x+1;
@@ -104,7 +122,7 @@ module top() {
                     translate([0, 0, 1]) block(size[0]-8, size[1], height-6, crad=crad, red=b);
                     translate([0, 0, height-4]) block(size[0]-8, size[1], 1, crad=crad, red=c);
                 }    
-                translate([8-2, 0, 1.7]) block(size[0]-6, size[1], height, crad=crad, red=c);
+                translate([8-2-0.8, 0, 1.7]) block(size[0]-(8-2-(0.8*2)), size[1], height, crad=crad, red=c);
             }
             
             // filter support
@@ -147,7 +165,7 @@ module top() {
                     }  
                 }
                 
-                translate([0, 0]) block2(size[0], size[1], height, crad=crad-2);        
+                translate([0, 0]) block2(size[0], size[1], height, crad=crad2);        
             }
             
             // camera reinforcement
@@ -245,17 +263,17 @@ module top() {
     } 
     
     // hole reinforcements for printing
-    translate([pixoffset, piyoffset, 3]) { // raspberry pi
+    * translate([pixoffset, piyoffset, 3]) { // raspberry pi
         translate([0, 0]) cylinder($fn=32, d=6, h=0.3);
         translate([58, 0]) cylinder($fn=32, d=6, h=0.3);
         translate([0, 23]) cylinder($fn=32, d=6, h=0.3);
         translate([58, 23]) cylinder($fn=32, d=6, h=0.3);
     } 
-    translate([0, 0, 3]) { // camera
+    * translate([0, 0, 3]) { // camera
             translate([27, size[1]-10]) cylinder($fn=32, d=5, h=0.3);
             translate([27, 10]) cylinder($fn=32, d=5, h=0.3);
     }
-    translate([0, 0, 3.5]) { // enclosure
+    * translate([0, 0, 3.5]) { // enclosure
         translate([5, 6]) cylinder($fn=32, d=6.1, h=0.3);   
         translate([size[0]-5, 6]) cylinder($fn=32, d=6.1, h=0.3);
         translate([5, size[1]-6]) cylinder($fn=32, d=6.1, h=0.3);
@@ -277,7 +295,7 @@ module seal() {
     difference() {
         union() {
             difference() {
-                translate([0, 0]) block2(size[0], size[1], height, crad=crad-2);
+                translate([0, 0]) block2(size[0], size[1], height, crad=crad2);
                 
                 // cutout
                 translate([8, 0, -1]) block(size[0]-8, size[1], height+2, crad=crad, red=1.6+.1+2);
@@ -303,7 +321,7 @@ module seal() {
                     translate([58+pixoffset-o, 23+piyoffset-o]) cylinder($fn=32, h=height, r=r);             
                 }
                 
-                translate([0, 0]) block2(size[0], size[1], height, crad=crad-2);        
+                translate([0, 0]) block2(size[0], size[1], height, crad=crad2);        
             }
         }
         
@@ -325,7 +343,8 @@ module bottom() {
     
     // nodge
     translate([0, 0, height]) color("orange") difference() {
-        block(size[0], size[1], 0.3*2, crad=crad, red=1.2); 
+        nodge_height = 0.3*2;
+        block(size[0], size[1], nodge_height, crad=crad, red=1.2); 
         translate([0, 0, -1]) block(size[0], size[1], height, crad=crad, red=1.2+0.8); 
     }
     
@@ -333,7 +352,7 @@ module bottom() {
         union() {
             
             difference() {
-                translate([0, 0]) block2(size[0], size[1], height, crad=crad-2);
+                translate([0, 0]) block2(size[0], size[1], height, crad=crad2);
                 
                 // pi cutout
 //                translate([8, 0, 1.7]) hull() {
@@ -344,7 +363,7 @@ module bottom() {
                 x=2+0.1;
                 a=x+1;
                 b=x;
-                c=x+2;
+                c=x+1;
                 
                 // pi cutout
                 translate([8, 0, 1.7]) hull() {
