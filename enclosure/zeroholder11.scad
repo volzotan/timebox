@@ -16,27 +16,27 @@ translate([80, 0]) {
 // standalone + pi
 
 % translate([0, 0, 0]) bottom_pi_new();
-% translate([0, 0, 4]) translate([2, 32+0.5, -20.095]) pizero();
-% translate([0, 0, 17.1]) translate([2, 35-2.5]) rotate([0, 0, 180]) controller();
-% translate([0, 0, 17.9]) translate([0, 35, 9]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_pi_new();
+% translate([0, 0, 4]) translate([2.5, 33, -20.095]) pizero();
+% translate([0, 0, 17.1]) translate([2.5, 36-3]) rotate([0, 0, 180]) controller();
+% translate([0, 0, 18.4]) translate([0, 36, 9]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_pi_new();
 
 % translate([0, 6, 0.1]) screw(length=25);
 
 translate([80, 0]) {
     translate([0, 0, 0]) bottom_pi_new();
-    translate([0, -36.5, 0]) rotate([0, 0, 0]) top_pi_new();
+//    translate([0, -36.5, 0]) rotate([0, 0, 0]) top_pi_new();
     
-//    % translate([0, 0, 4]) translate([2, 32+0.5, -20.095]) pizero();
-//    % translate([65, -36.5-30, 17.1]) translate([2, 35-2.5]) rotate([0, 0, 0]) controller();
+//    % translate([0, 0, 4]) translate([2.5, 32+1, -20.095]) pizero();
+    % translate([0, -36.5-30, 17.1]) translate([2.5, 35-2]) rotate([0, 0, 0]) mirror([1, 0]) controller();
 }
 
 //spacer();
 //translate([-80, 0]) grip_holder();
 
-size = [69, 35];
+size = [70, 36];
 
-pixoffset = 4.5;
-piyoffset = 5;
+pixoffset = 5;
+piyoffset = 5.5;
 
 
 module grip_holder() {
@@ -153,9 +153,9 @@ module top_standalone() {
 
 module top_pi_new() {
     
-    height = 14;
-    height2 = 8;
-    height3 = 4;
+    height = 14.5;
+    height2 = 8.5;
+    height3 = 4.5;
     
     difference() {
         union() {
@@ -195,41 +195,48 @@ module top_pi_new() {
         }
                        
         // connector cutout
-        translate([size[0]-16.5-8-1.25, size[1]-8.25, -1]) block(16.5, 10, 10, crad=1); // power
+        translate([size[0]-16.5-8-1.25-.1, size[1]-8.25, -1]) block(16.5, 10, 10, crad=1); // power
         translate([size[0]-8-30.75, size[1]-4.5, 5.5]) {                                // audio jack
             cube([7, 5, 3.5]);
             translate([7/2, 5, 0]) rotate([90, 0, 0]) cylinder($fn=32, d=7, h=2.8);
         }     
         translate([8.0+1.5, size[1]-4.5+5, 3.5]) rotate([90, 0, 0]) block(11, 6, 3, crad=1); // USB        
-        translate([-1, 14.5, 8]) rotate([90, 0, 90]) block(12, 7, 3, crad=1);           // power switch
-        translate([20, 24.5, -1]) block(9.5, 7, 10, crad=1);                            // SPI
-        translate([40.7, 27, -1]) cylinder($fn=32, h=10, d=3);                          // LED hole
-        translate([39.4, 6, -1]) cylinder($fn=32, h=10, d=3);                           // button hole
+        translate([-1, 15, 8]) rotate([90, 0, 90]) block(12, 8, 3, crad=1);             // power switch
+        translate([20.5, 25, -1]) block(9.5, 7, 10, crad=1);                            // SPI
+        translate([41.2, 28.5, -1]) cylinder($fn=32, h=10, d=3);                        // LED hole
+        translate([39.9, 6.5, -1]) cylinder($fn=32, h=10, d=3);                         // button hole
         
         // screws
-        translate([0, -.5, -1]) {
-            translate([5.5, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
-            translate([5.5+58, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
+        translate([0, 0, -1]) {
+            translate([6, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
+            translate([6+58, 5.5+24]) cylinder($fn=32, h=20, d=2.5+.3);
             
-            translate([5.5, 5.5+24]) rotate([0, 0, 30]) cylinder($fn=6, h=3.5, d=6.1);
-            translate([5.5+58, 5.5+24]) rotate([0, 0, 30]) cylinder($fn=6, h=3.5, d=6.1);
+            translate([6, 5.5+24]) rotate([0, 0, 30]) cylinder($fn=6, h=3.7, d=6.1);
+            translate([6+58, 5.5+24]) rotate([0, 0, 30]) cylinder($fn=6, h=3.7, d=6.1);
         }
         
         // force printer to do holes at once
         color("darkred") {
-            translate([-1, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
-            translate([69-6, 35-6-.1/2, -1]) cube([7, 0.1, 1.2]);
+            translate([-1, 5.5+24-.1/2, -1]) cube([7, 0.1, 1.2]);
+            translate([69-6, 5.5+24-.1/2, -1]) cube([7, 0.1, 1.2]);
             
-            translate([39.35, -1, -1]) cube([0.1, 7, 1.2]);
-            translate([24.8, 30, -1]) cube([0.1, 7, 1.2]);
+            translate([41.2-1.5+.1, -1, -1]) cube([0.1, 7, 1.2]);
+            translate([20.5+9.5/2, 30, -1]) cube([0.1, 7, 1.2]);
             
-            translate([41, 26.75, -1]) cube([4, 0.1, 1.2]);
-        }        
+            translate([41, 27.75, -1]) cube([4, 0.1, 1.2]);
+        }   
+   
+        // input|output signs
+        translate([56.8-9.25, 22-1.25, -1]) cube([0.1, 4, 1.2]);
+        translate([56.8-9.2, 23+2.3, -1]) rotate([0, 0, 90]) cylinder($fn=3, d=5, h=1.2);
+        
+        translate([56.8-0.05, 22+2, -1]) cube([0.1, 4, 1.2]);
+        translate([56.8, 23.5, -1]) rotate([0, 0, -90]) cylinder($fn=3, d=5, h=1.2);
     } 
     
     // hole reinforcements for printing
-    translate([5.5, 5+24, 2.5]) cylinder(h=0.2, d=5);
-    translate([5.5+58, 5+24, 2.5]) cylinder(h=0.2, d=5);
+    translate([6, 5.5+24, 2.7]) cylinder(h=0.2, d=5);
+    translate([6+58, 5.5+24, 2.7]) cylinder(h=0.2, d=5);
 }
 
 module bottom_standalone() {
@@ -317,7 +324,7 @@ module bottom_pi_new() {
                 
                 // pi cutout
                 translate([0, 0, 1.7]) hull() {
-                    block(size[0], size[1], 0.1, crad=4, red=1.6+.1+1);
+                    block(size[0], size[1], 0.1, crad=4, red=1.2+.1+1);
                     translate([0, 0, 1]) block(size[0], size[1], height, crad=4, red=1.6+.1);
                 }    
             }
@@ -329,27 +336,30 @@ module bottom_pi_new() {
                     o=1;
                     r2=3;
                     
+                    x=60;
+                    y=25;
+                    
                     translate([0, 0]) cube([pixoffset+o, piyoffset+o+r, height2]);
                     translate([0, 0]) cube([pixoffset+o+r, piyoffset+o, height2]);
                     translate([0+pixoffset+o, 0+piyoffset+o]) cylinder($fn=32, h=height2, r=r);
                     
-                    translate([60+pixoffset-o, 0]) cube([size[0], piyoffset+o+r, height2]);
-                    translate([60+pixoffset-o-r, 0]) cube([pixoffset+o+r, piyoffset+o, height2]);
-                    translate([60+pixoffset-o, 0+piyoffset+o]) cylinder($fn=32, h=height2, r=r);
+                    translate([x+pixoffset-o, 0]) cube([size[0], piyoffset+o+r, height2]);
+                    translate([x+pixoffset-o-r, 0]) cube([pixoffset+o+r, piyoffset+o, height2]);
+                    translate([x+pixoffset-o, 0+piyoffset+o]) cylinder($fn=32, h=height2, r=r);
                     
-                    translate([60+pixoffset-o, 25+piyoffset-o-r]) cube([size[0], 8.5, height2]);
-                    translate([60+pixoffset-o-r, 25+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
-                    translate([60+pixoffset-o, 25+piyoffset-o]) cylinder($fn=32, h=height2, r=r);
+                    translate([x+pixoffset-o, y+piyoffset-o-r]) cube([size[0], 8.5, height2]);
+                    translate([x+pixoffset-o-r, y+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
+                    translate([x+pixoffset-o, y+piyoffset-o]) cylinder($fn=32, h=height2, r=r);
                     
-                    translate([0, 25+piyoffset-o-r]) cube([pixoffset+o, size[1], height2]);
-                    translate([0, 25+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
-                    translate([pixoffset+o, 25+piyoffset-o]) cylinder($fn=32, h=height2, r=r); 
+                    translate([0, y+piyoffset-o-r]) cube([pixoffset+o, size[1], height2]);
+                    translate([0, y+piyoffset-o]) cube([pixoffset+o+r, 10, height2]);
+                    translate([pixoffset+o, y+piyoffset-o]) cylinder($fn=32, h=height2, r=r); 
  
                     // screw head support
                     translate([0+pixoffset+o, 0+piyoffset+o]) cylinder($fn=32, h=height3, r=r2);   
-                    translate([60+pixoffset-o, 0+piyoffset+o]) cylinder($fn=32, h=height3, r=r2);  
-                    translate([60+pixoffset-o, 25+piyoffset-o]) cylinder($fn=32, h=height3, r=r2);  
-                    translate([pixoffset+o, 25+piyoffset-o]) cylinder($fn=32, h=height3, r=r2);             
+                    translate([x+pixoffset-o, 0+piyoffset+o]) cylinder($fn=32, h=height3, r=r2);  
+                    translate([x+pixoffset-o, y+piyoffset-o]) cylinder($fn=32, h=height3, r=r2);  
+                    translate([pixoffset+o, y+piyoffset-o]) cylinder($fn=32, h=height3, r=r2);             
                 }
                 
                 translate([0, 0]) block(size[0], size[1], height, crad=4);        
@@ -357,10 +367,10 @@ module bottom_pi_new() {
         }
         
         // through hole pin cutout
-        translate([(70-51)/2-0.8, 26-.25, 1.7]) color("yellow") block(51.5, 6.5, 10, crad=1);
+        translate([(size[0]-51)/2-0.25, 26.25, 1.7]) color("yellow") block(51.5, 6.5, 10, crad=1);
         
         // screws
-        translate([0.5, -.5, -1]) {
+        translate([1, 0, -1]) {
             translate([6-1, 6.5]) cylinder($fn=32, h=10, d=2.5+.3);
             translate([6-1+58, 6.5]) cylinder($fn=32, h=10, d=2.5+.3);
            
@@ -375,7 +385,7 @@ module bottom_pi_new() {
         }    
        
         // sd card cutout
-        translate([-2, 9.5, 9.5+2]) rotate([0, 90, 0]) hull() {
+        translate([-2, 10, 9.5+2]) rotate([0, 90, 0]) hull() {
             block(9, 19, .1, crad=1);
             translate([2, 2, 4]) block(9-4, 19-4, .1, crad=1);
         }
@@ -394,34 +404,33 @@ module bottom_pi_new() {
         }
         
         // pi-camera connector
-        translate([65+10, (34-19)/2, 5]) rotate([0, -90, 0]) block(4, 19, 10, crad=1);
+        translate([size[0]+5, (size[1]-19)/2, 5]) rotate([0, -90, 0]) block(4, 19, 10, crad=1);
         
         // force printer to do holes at once
         color("darkred") {
-            translate([5+0.45, -1, -1]) cube([0.1, 7, 1.2]);
-            translate([69-6+0.45, -1, -1]) cube([0.1, 7, 1.2]);
-            translate([5+0.45, 30, -1]) cube([0.1, 7, 1.2]);
-            translate([69-6+0.45, 30, -1]) cube([0.1, 7, 1.2]);
+            translate([5.5+0.45, -1, -1]) cube([0.1, 7, 1.2]);
+            translate([69-5.5+0.45, -1, -1]) cube([0.1, 7, 1.2]);
+            translate([5.5+0.45, 30, -1]) cube([0.1, 7, 1.2]);
+            translate([69-5.5+0.45, 30, -1]) cube([0.1, 7, 1.2]);
            
-            translate([size[0]/2, 20, -1]) cube([0.1, 30, 1.2]);
-            translate([-1, size[1]/2, -1]) cube([10, 0.1, 1.2]);
+            translate([-1, size[1]/2, -1]) cube([size[0]/2, 0.1, 1.2]);
             translate([size[0]-10, size[1]/2, -1]) cube([10, 0.1, 1.2]);
         }
     }
     
     // magnet reinforcement
-        *color() {
-            translate([6, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-            translate([size[0]/2, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-            translate([size[0]-6, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-        }
+    color() {
+        translate([6, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([size[0]/2, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([size[0]-6, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+    }
     
     // screw hole reinforcements for printer
-    translate([0, 0, 3.8-1]) {
-        translate([5.5, 6]) cylinder($fn=32, d=5, h=0.2);
-        translate([5.5+58, 6]) cylinder($fn=32, d=5, h=0.2);
-        translate([5.5, 35-6]) cylinder($fn=32, d=5, h=0.2);
-        translate([5.5+58, 35-6]) cylinder($fn=32, d=5, h=0.2);
+    translate([0, 0, 3.8-1]) color("white") {
+        translate([6, 6.5]) cylinder($fn=32, d=5, h=0.2);
+        translate([6+58, 6.5]) cylinder($fn=32, d=5, h=0.2);
+        translate([6, 35-5.5]) cylinder($fn=32, d=5, h=0.2);
+        translate([6+58, 35-5.5]) cylinder($fn=32, d=5, h=0.2);
     }
 }
 
