@@ -6,10 +6,10 @@ num_screws = 8;
 deg = 360/num_screws;
 off = deg/2;
 
-q = 64;
+q = 32;
 
 include <../camera.scad>;
-//% translate([78, 35, -32]) rotate([0, 0, 180]) camera(longlens=true);
+% translate([78, 35, -32]) rotate([0, 0, 180]) camera(longlens=true);
 % translate([0, 0, 0]) rotate([0, 0, 180]) scale([10, 10, 10]) color("green") import("Peli1120.stl");
 % translate([-30, 10, -50]) color("grey") arca_clamp();
 
@@ -18,9 +18,48 @@ translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
 translate([0, 50, -50]) rotate([180, 0, 0]) bottom();
 translate([0, 10, -90]) socket();
 
+translate([-89, -7, 47]) rotate([-90, 0, 90]) controller_dock();
+translate([-89+0.5, -7, 47-36]) rotate([90, 0, 90]) import("../zeroholder11.stl");
+
 translate([0, -90, 0]) rotate([0, 0, 0]) bottom();
 
 translate([0, 0, 100]) M5Screw();
+
+// --------------------------------------------------------------------------
+
+translate([180, 0]) front();
+translate([180, 110]) back();
+translate([180, -100]) bottom();
+translate([180, -150]) socket();
+translate([240, 0]) controller_dock();
+
+module controller_dock() {
+    size = [70, 36];
+   
+    difference() {
+        intersection() {
+            union() {
+                block(size[0], size[1], 10, crad=4);
+            }
+            
+            points = [[0, 0], [size[0], 0], [size[0], 0.6], [size[0]-1.4, 0.6+1], [7, 5.75], [0, 2]];
+            translate([0, size[1]]) rotate([90, 0, 0]) linear_extrude(height=size[1]+2) polygon(points);
+        }
+        
+        // screw
+        translate([20, size[1]/2, -1]) rotate([0, 4, 0]) {
+            cylinder($fn=32, d=3.3, h=100);
+            cylinder($fn=6, d=6.7, h=4.5);
+        }
+        
+        // magnet cavity
+        translate([0, 0, -0.1]) color("darkgreen") {
+            translate([10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
+            translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
+            translate([size[0]-10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
+        }
+    }
+}
 
 module socket() {
         intersection() {
@@ -154,22 +193,22 @@ module front() {
         // main hole
         translate([0, 0, -1]) cylinder($fn=q, d=filter_diameter, h=100);
     
-        // filter second stage
-        translate([0, 0, height-3]) color("red") cylinder($fn=64, d=filter_diameter+3, h=100);
+        // filter cavity
+        translate([0, 0, height-3.5]) color("red") cylinder($fn=64, d=filter_diameter+4, h=10);
+        translate([0, 0, height-5]) color("red") cylinder($fn=64, d=filter_diameter+2, h=10);
     
         // o-ring cavity
-
-            difference() {
-                hull() {
-                    translate([0, 0, -.1]) cylinder($fn=q, d=88, h=0.75);
-                    translate([0, 0, 0.75+0.5]) cylinder($fn=q, d1=88-1, h=0.1);
-                }
-                union() {
-                    translate([0, 0, -1]) cylinder($fn=q, d=88-2*2.0, h=2);
-                    translate([0, 0, 0.75]) cylinder($fn=q, d1=88-2*2.0, d2=88-2*2.0+1, h=0.5);
-                    translate([0, 0, 1.5]) cylinder($fn=q, d=88-2*2.0+1, h=1);
-                }
+        * difference() {
+            hull() {
+                translate([0, 0, -.1]) cylinder($fn=q, d=88, h=0.75);
+                translate([0, 0, 0.75+0.5]) cylinder($fn=q, d1=88-1, h=0.1);
             }
+            union() {
+                translate([0, 0, -1]) cylinder($fn=q, d=88-2*2.0, h=2);
+                translate([0, 0, 0.75]) cylinder($fn=q, d1=88-2*2.0, d2=88-2*2.0+1, h=0.5);
+                translate([0, 0, 1.5]) cylinder($fn=q, d=88-2*2.0+1, h=1);
+            }
+        }
         
         
         // screw holes

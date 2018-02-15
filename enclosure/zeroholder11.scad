@@ -398,9 +398,9 @@ module bottom_pi_new() {
         
         // magnet cavity
         translate([0, 0, -0.1]) color("darkgreen") {
-            translate([6, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
+            translate([10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
             translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
-            translate([size[0]-6, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
+            translate([size[0]-10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
         }
         
         // pi-camera connector
@@ -420,9 +420,9 @@ module bottom_pi_new() {
     
     // magnet reinforcement
     color() {
-        translate([6, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([10, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
         translate([size[0]/2, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-        translate([size[0]-6, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([size[0]-10, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
     }
     
     // screw hole reinforcements for printer
