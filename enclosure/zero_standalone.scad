@@ -17,7 +17,7 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 // camera
 % translate([filter_x+86, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
 
-% translate([80+25, -41.5, 06.7]) camholder();
+//% translate([80+25, -41.5, 06.7]) camholder();
 
 // seal
 //translate([80, 0, 26]) color([0.5, 0.5, 0.5]) seal();
@@ -31,12 +31,12 @@ translate([80, 0]) {
 //    }
     
 //   intersection() {
-        translate([0, -48, 0]) rotate([0, 0, 0]) top();
+//        translate([0, -48, 0]) rotate([0, 0, 0]) top();
 ////        translate([-1, -48-1, 0]) cube([50, 50, 50]);
 //        translate([-1, -48-1+25, 0]) cube([200, 25, 50]);
 //    }
     
-    % translate([0, -48, 28.1]) color("grey") seal();
+//    % translate([0, -48, 28.1]) color("grey") seal();
     
 //    % translate([30, -20]) screw25(length=10);
 //    % translate([09.5, -42.5-30, 40+14+100]) translate([2, 32+0.5, -20.095]) rotate([180, 0]) pizero();
@@ -354,8 +354,9 @@ module bottom() {
     // nodge
     translate([0, 0, height]) color("orange") difference() {
         nodge_height = 0.3*2;
-        block(size[0], size[1], nodge_height, crad=crad, red=1.0); 
-        translate([0, 0, -1]) block(size[0], size[1], height, crad=crad, red=1.0+0.8); 
+        width = 0.4+0.1;
+        block(size[0], size[1], nodge_height, crad=crad, red=1.2); 
+        translate([0, 0, -1]) block(size[0], size[1], height, crad=crad, red=1.2+width); 
     }
     
     difference() {
@@ -388,6 +389,18 @@ module bottom() {
             translate([25+17*2, size[1]-1.7]) rotate([0, 0, 180]) linear_extrude(height=height) polygon(points_r);
             translate([25+17*3, size[1]-1.7]) rotate([0, 0, 180]) linear_extrude(height=height) polygon(points_r);
             
+            translate([22.5, 1.7+1, 1.7+15]) {
+                translate([17*0, 0]) rotate([-90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+                translate([17*1, 0]) rotate([-90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+                translate([17*2, 0]) rotate([-90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+                translate([17*3, 0]) rotate([-90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+            }
+            translate([22.5, size[1]-1.7-1, 1.7+15]) {
+                translate([17*0, 0]) rotate([+90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+                translate([17*1, 0]) rotate([+90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+                translate([17*2, 0]) rotate([+90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+                translate([17*3, 0]) rotate([+90, 0, 0]) cylinder($fn=32, d1=3, d2=2, h=0.5);
+            }
             // pcb feet
             intersection() {
                 union() {
