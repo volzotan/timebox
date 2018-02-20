@@ -15,23 +15,23 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 //% translate([10+80.5, 3, 2]) color("lightblue") battery();
 
 // camera
-% translate([filter_x+86, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
+//% translate([filter_x+86, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
 
-//% translate([80+25, -41.5, 06.7]) camholder();
+% translate([25, -41.5, 06.7]) camholder();
 
 // seal
 //translate([80, 0, 26]) color([0.5, 0.5, 0.5]) seal();
 //translate([20, 5]) camholder();
 
-translate([80, 0]) {
+//translate([80, 0]) {
 
 //   intersection() {
-        translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
+//        translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
 //        translate([-1, -1, 0]) cube([50, 50, 50]);
 //    }
     
 //   intersection() {
-//        translate([0, -48, 0]) rotate([0, 0, 0]) top();
+        translate([0, -48, 0]) rotate([0, 0, 0]) top();
 ////        translate([-1, -48-1, 0]) cube([50, 50, 50]);
 //        translate([-1, -48-1+25, 0]) cube([200, 25, 50]);
 //    }
@@ -39,20 +39,21 @@ translate([80, 0]) {
 //    % translate([0, -48, 28.1]) color("grey") seal();
     
 //    % translate([30, -20]) screw25(length=10);
-//    % translate([09.5, -42.5-30, 40+14+100]) translate([2, 32+0.5, -20.095]) rotate([180, 0]) pizero();
-}
-
-//% translate([0, 0]) {
-//    translate([0, 0, 0]) rotate([90, -90, 0]) bottom();
-//    translate([0, -25, 0]) rotate([90, -90, 0]) seal();
-//    
-//    translate([-size[1], -52-2.1, 0]) rotate([90, -90, 180]) top();
-//    
-//    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
-//    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
-//    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
+//    % translate([11.5, -42.5-29.5, 40+14+100]) translate([2, 32+0.5, -20.095]) rotate([180, 0]) pizero();
 //}
 
+% translate([0, 0]) {
+    translate([0, 0, 0]) rotate([90, -90, 0]) bottom();
+    translate([0, -25.5-0.1, 0]) rotate([90, -90, 0]) seal();
+    
+    translate([-size[1], -52-1.5-.2, 0]) rotate([90, -90, 180]) top();
+    
+    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
+    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
+    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
+}
+
+//translate([size[1]/2, 50]) explosion();
 
 // CHECK
 // https://www.thingiverse.com/thing:2300226
@@ -65,6 +66,21 @@ pixoffset = 15+2;
 piyoffset = (size[1]-23)/2;
 
 filter_x = 52.5;
+
+hole_reinforcements = false;
+
+module explosion() {
+
+    translate([]) rotate([0, -90, 90]) bottom();
+    
+    translate([0, -50, 0]) rotate([0, -90, 90]) seal();
+    
+    translate([-38.5, -40, 13.5]) rotate([0, -90, 90]) pizero();
+    
+    translate([-size[1]/2, -110, 50]) rotate([0, 180, 180]) color("grey") import("external_models/RasPi_Camera_v1.stl");
+    
+    translate([-size[1], -120]) rotate([0, -90, -90]) top();
+}
 
 module battery() {
     difference() {
@@ -84,9 +100,9 @@ module camholder() {
     difference() {
         union() {
             color("darkgreen") {
-                block(09, 34, 1.2);
-                translate([3, 0]) block(37, 8.5, 1.2, crad=1);
-                translate([3, 25.5]) block(37, 8.5, 1.2, crad=1);
+                translate([5, -4]) block(10, 42, 1.2);
+                translate([6+3, -4]) block(37, 8.5+4, 1.2, crad=1);
+                translate([6+3, 25.5]) block(37, 8.5+4, 1.2, crad=1);
             }
             
             color("orange") {
@@ -104,8 +120,8 @@ module camholder() {
         
         translate([0, 0, -1]) {
             height = 10;
-            translate([4.5, 34-04]) cylinder($fn=32, d=2.5+.3, h=20);
-            translate([4.5, 04]) cylinder($fn=32, d=2.5+.3, h=20);
+            translate([10, 34-0.5]) cylinder($fn=32, d=2.5+.3, h=20);
+            translate([10, 0.5]) cylinder($fn=32, d=2.5+.3, h=20);
         }
     }
 }
@@ -185,8 +201,13 @@ module top() {
                 translate([0, 0]) block2(size[0], size[1], height, crad=crad2);        
             }
             
-            // camera reinforcement
-            translate([filter_x-18.6-9, (size[1]-28-6)/2]) block(8+1, 28+6, 6.5);
+            // camholder reinforcement
+//            translate([filter_x-18.6-9, (size[1]-28-6)/2]) block(8+1, 28+6, 6.5);
+            translate([filter_x-18.6-4, 0]) block(25, 11, 6.5, crad=3);
+            translate([filter_x-18.6-4, size[1]-11]) block(25, 11, 6.5, crad=3);
+            
+            // socket nut reinforcement
+            translate([9.7, size[1]/2+10/2]) rotate([0, 0, -90]) linear_extrude(height=height) polygon([[0, 0], [10, 0], [10-1, 1], [1, 1]]);
         }
         
         // filter cutout        
@@ -249,12 +270,12 @@ module top() {
 //        }
         
         // screws M2.5 | camera
-        translate([filter_x-23, 0, -1]) {
+        translate([filter_x-17.5, 0, -1]) {
             height = 1+2.5+0.5;
-            translate([0, size[1]-10.5]) cylinder($fn=32, d=2.5+.3, h=20);
-            translate([0, size[1]-10.5]) cylinder($fn=32, d=5, h=height);
-            translate([0, 10.5]) cylinder($fn=32, d=2.5+.3, h=20);
-            translate([0, 10.5]) cylinder($fn=32, d=5, h=height);
+            translate([0, size[1]-7]) cylinder($fn=32, d=2.5+.3, h=20);
+            translate([0, size[1]-7]) cylinder($fn=32, d=5, h=height);
+            translate([0, 7]) cylinder($fn=32, d=2.5+.3, h=20);
+            translate([0, 7]) cylinder($fn=32, d=5, h=height);
         }
         
         // force printer to do holes at once
@@ -265,35 +286,37 @@ module top() {
             translate([size[0]-7, size[1]-(6+.1/2)]) cube([7, 0.1, 1.2]);
             
             translate([pixoffset, -1]) cube([0.1, 10, 1.2]);
-            translate([filter_x-23, -1]) cube([0.1, 10, 1.2]);
+            translate([filter_x-17.5, -1]) cube([0.1, 10, 1.2]);
             translate([filter_x, -1]) cube([0.1, 10, 1.2]);
             translate([pixoffset+58, -1]) cube([0.1, 10, 1.2]);
             
             translate([0, size[1]-08]) {
             translate([pixoffset, -1]) cube([0.1, 10, 1.2]);
-            translate([filter_x-23, -1]) cube([0.1, 10, 1.2]);
+            translate([filter_x-17.5, -1]) cube([0.1, 10, 1.2]);
             translate([pixoffset+58, -1]) cube([0.1, 10, 1.2]);
             }
         }        
     } 
     
     // hole reinforcements for printing
-//    translate([pixoffset, piyoffset, 3]) { // raspberry pi
-//        translate([0, 0]) cylinder($fn=32, d=6, h=0.3);
-//        translate([58, 0]) cylinder($fn=32, d=6, h=0.3);
-//        translate([0, 23]) cylinder($fn=32, d=6, h=0.3);
-//        translate([58, 23]) cylinder($fn=32, d=6, h=0.3);
-//    } 
-//    translate([filter_x-23, 0, 3]) { // camera
-//            translate([0, size[1]-10]) cylinder($fn=32, d=5, h=0.3);
-//            translate([0, 10]) cylinder($fn=32, d=5, h=0.3);
-//    }
-//    translate([0, 0, 3.5]) { // enclosure
-//        translate([5, 6]) cylinder($fn=32, d=6.1, h=0.3);   
-//        translate([size[0]-5, 6]) cylinder($fn=32, d=6.1, h=0.3);
-//        translate([5, size[1]-6]) cylinder($fn=32, d=6.1, h=0.3);
-//        translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=6.1, h=0.3);
-//    }
+    if (hole_reinforcements) {
+        translate([pixoffset, piyoffset, 3]) { // raspberry pi
+            translate([0, 0]) cylinder($fn=32, d=6, h=0.3);
+            translate([58, 0]) cylinder($fn=32, d=6, h=0.3);
+            translate([0, 23]) cylinder($fn=32, d=6, h=0.3);
+            translate([58, 23]) cylinder($fn=32, d=6, h=0.3);
+        } 
+        translate([filter_x-23, 0, 3]) { // camera
+                translate([0, size[1]-10]) cylinder($fn=32, d=5, h=0.3);
+                translate([0, 10]) cylinder($fn=32, d=5, h=0.3);
+        }
+        translate([0, 0, 3.5]) { // enclosure
+            translate([5, 6]) cylinder($fn=32, d=6.1, h=0.3);   
+            translate([size[0]-5, 6]) cylinder($fn=32, d=6.1, h=0.3);
+            translate([5, size[1]-6]) cylinder($fn=32, d=6.1, h=0.3);
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=6.1, h=0.3);
+        }
+    }
     
     // imperial nut
     % translate([2, size[1]/2, 15]) rotate([0, 90, 0]) color("grey") difference() {
@@ -305,7 +328,7 @@ module top() {
 
 module seal() {
     
-    height = 2;
+    height = 1;
     
     difference() {
         union() {
@@ -348,16 +371,16 @@ module seal() {
 
 module bottom() {
     
-    height = 24.5;
+    height = 25.5;
     height2 = height;
     
     // nodge
-    translate([0, 0, height]) color("orange") difference() {
-        nodge_height = 0.3*2;
-        width = 0.4+0.1;
-        block(size[0], size[1], nodge_height, crad=crad, red=1.2); 
-        translate([0, 0, -1]) block(size[0], size[1], height, crad=crad, red=1.2+width); 
-    }
+//    translate([0, 0, height]) color("orange") difference() {
+//        nodge_height = 0.3*2;
+//        width = 0.4+0.1;
+//        block(size[0], size[1], nodge_height, crad=crad, red=1.2); 
+//        translate([0, 0, -1]) block(size[0], size[1], height, crad=crad, red=1.2+width); 
+//    }
     
     difference() {
         union() {
@@ -435,16 +458,22 @@ module bottom() {
                 
         // screws M3
         translate([0, 0, -1]) {
-            translate([5, 6]) cylinder($fn=32, d=3.3, h=30);
+            
+            // screw holes in the top section can be normally sized (3.0+.3)
+            // but holes in the bottom section should be slightly wider to 
+            // allow the screw to slip right through for easy opening and closing.
+            // The bottom holes should be post-processed with a 3.5mm drill.
+            
+            translate([5, 6]) cylinder($fn=32, d=3.5, h=30);
             translate([5, 6]) cylinder($fn=6, d=6.7, h=4);
             
-            translate([size[0]-5, 6]) cylinder($fn=32, d=3.3, h=30);
+            translate([size[0]-5, 6]) cylinder($fn=32, d=3.5, h=30);
             translate([size[0]-5, 6]) cylinder($fn=6, d=6.7, h=4);
                    
-            translate([5, size[1]-6]) cylinder($fn=32, d=3.3, h=30);
+            translate([5, size[1]-6]) cylinder($fn=32, d=3.5, h=30);
             translate([5, size[1]-6]) cylinder($fn=6, d=6.7, h=4);
             
-            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.3, h=30);
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.5, h=30);
             translate([size[0]-5, size[1]-6]) cylinder($fn=6, d=6.7, h=4);
         }
         
@@ -458,7 +487,7 @@ module bottom() {
     } 
     
     // hole reinforcements for printing
-    translate([0, 0, 3]) {
+    if (hole_reinforcements) translate([0, 0, 3]) {
         translate([5, 6]) cylinder($fn=32, d=6, h=0.3);
         translate([size[0]-5, 6]) cylinder($fn=32, d=6, h=0.3);
         translate([5, size[1]-6]) cylinder($fn=32, d=6, h=0.3);
