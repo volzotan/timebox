@@ -5441,7 +5441,8 @@ Not recommended if you're trying to fit a specific chip.</description>
 <text x="3.048" y="-0.889" size="0.4064" layer="27">&gt;VALUE</text>
 <text x="3.048" y="0.508" size="0.4064" layer="25">&gt;NAME</text>
 <smd name="BTM" x="0" y="0" dx="3.81" dy="1.9304" layer="1"/>
-<pad name="P$1" x="0" y="0" drill="1"/>
+<pad name="P$1" x="1.016" y="0" drill="1"/>
+<pad name="P$2" x="-1.016" y="0" drill="1"/>
 </package>
 </packages>
 <symbols>
@@ -7569,7 +7570,6 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 <part name="S2" library="SparkFun-Electromechanical" deviceset="SWITCH-SPDT" device="SMD2"/>
 <part name="SUPPLY8" library="SparkFun-Aesthetics" deviceset="VCC" device=""/>
 <part name="J5" library="SparkFun-Connectors" deviceset="M03X2" device="FEMALE" value="FEMALE 2x3"/>
-<part name="GND21" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="D1" library="diode" library_urn="urn:adsk.eagle:library:210" deviceset="MBRS130LT3" device="" package3d_urn="urn:adsk.eagle:package:43404/2"/>
 <part name="GND23" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GNDA" device=""/>
 </parts>
@@ -7623,8 +7623,7 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 <instance part="J2" gate="G$1" x="106.68" y="63.5"/>
 <instance part="S2" gate="1" x="162.56" y="106.68"/>
 <instance part="SUPPLY8" gate="G$1" x="147.32" y="106.68" rot="R90"/>
-<instance part="J5" gate="G$1" x="81.28" y="93.98" rot="R180"/>
-<instance part="GND21" gate="1" x="71.12" y="101.6" rot="R180"/>
+<instance part="J5" gate="G$1" x="106.68" y="81.28" rot="R180"/>
 </instances>
 <busses>
 </busses>
@@ -7792,12 +7791,6 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 <segment>
 <pinref part="JP1" gate="G$1" pin="1"/>
 <pinref part="GND29" gate="1" pin="GND"/>
-</segment>
-<segment>
-<pinref part="J5" gate="G$1" pin="6"/>
-<pinref part="GND21" gate="1" pin="GND"/>
-<wire x1="73.66" y1="96.52" x2="71.12" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="71.12" y1="96.52" x2="71.12" y2="99.06" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="RX" class="0">
@@ -7976,8 +7969,8 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 </segment>
 <segment>
 <pinref part="J5" gate="G$1" pin="4"/>
-<wire x1="73.66" y1="93.98" x2="66.04" y2="93.98" width="0.1524" layer="91"/>
-<label x="66.04" y="93.98" size="1.778" layer="95" rot="R90"/>
+<wire x1="99.06" y1="81.28" x2="91.44" y2="81.28" width="0.1524" layer="91"/>
+<label x="91.44" y="81.28" size="1.778" layer="95" rot="R90"/>
 </segment>
 </net>
 <net name="CAM_EN" class="0">
@@ -8030,8 +8023,8 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 <label x="167.64" y="152.4" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="88.9" y1="96.52" x2="99.06" y2="96.52" width="0.1524" layer="91"/>
-<label x="99.06" y="96.52" size="1.778" layer="95" rot="R90"/>
+<wire x1="114.3" y1="83.82" x2="124.46" y2="83.82" width="0.1524" layer="91"/>
+<label x="124.46" y="83.82" size="1.778" layer="95" rot="R90"/>
 <pinref part="J5" gate="G$1" pin="5"/>
 </segment>
 </net>
@@ -8042,8 +8035,8 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 <label x="167.64" y="154.94" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="88.9" y1="93.98" x2="104.14" y2="93.98" width="0.1524" layer="91"/>
-<label x="104.14" y="93.98" size="1.778" layer="95" rot="R90"/>
+<wire x1="114.3" y1="81.28" x2="129.54" y2="81.28" width="0.1524" layer="91"/>
+<label x="129.54" y="81.28" size="1.778" layer="95" rot="R90"/>
 <pinref part="J5" gate="G$1" pin="3"/>
 </segment>
 </net>
@@ -8166,8 +8159,8 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 <net name="EXT_1" class="0">
 <segment>
 <pinref part="J5" gate="G$1" pin="1"/>
-<wire x1="88.9" y1="91.44" x2="106.68" y2="91.44" width="0.1524" layer="91"/>
-<label x="106.68" y="91.44" size="1.778" layer="95"/>
+<wire x1="114.3" y1="78.74" x2="132.08" y2="78.74" width="0.1524" layer="91"/>
+<label x="132.08" y="78.74" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="U$3" gate="G$1" pin="PC7(ICP3/CLK0/OC4A)"/>
@@ -8178,8 +8171,8 @@ Source: http://www.onsemi.com/pub/Collateral/MBRS130LT3-D.PDF</description>
 <net name="EXT_2" class="0">
 <segment>
 <pinref part="J5" gate="G$1" pin="2"/>
-<wire x1="73.66" y1="91.44" x2="60.96" y2="91.44" width="0.1524" layer="91"/>
-<label x="60.96" y="91.44" size="1.778" layer="95" rot="R90"/>
+<wire x1="99.06" y1="78.74" x2="86.36" y2="78.74" width="0.1524" layer="91"/>
+<label x="86.36" y="78.74" size="1.778" layer="95" rot="R90"/>
 </segment>
 <segment>
 <pinref part="U$3" gate="G$1" pin="PB5(OC1A/ADC12/!OC4B)"/>
