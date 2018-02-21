@@ -15,22 +15,47 @@ translate([80, 0]) {
 
 // standalone + pi
 
+// --------------------------------------- ASSEMBLY 
+
 % translate([0, 0, 0]) bottom_pi_new();
-% translate([0, 0, 4]) translate([2.5, 33, -20.095]) pizero();
+% translate([0, 0, 4.5]) translate([2.5, 33, -20.095]) pizero();
 % translate([0, 0, 17.1]) translate([2.5, 36-3]) rotate([0, 0, 180]) controller();
 % translate([0, 0, 18.4]) translate([0, 36, 9]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_pi_new();
 
 % translate([0, 6, 0.1]) screw(length=25);
 
+// --------------------------------------- PRINT | PI
+
 translate([80, 0]) {
     translate([0, 0, 0]) bottom_pi_new();
-//    translate([0, -36.5, 0]) rotate([0, 0, 0]) top_pi_new();
+    translate([0, -36.5, 0]) rotate([0, 0, 0]) top_pi_new();
     
-//    % translate([0, 0, 4]) translate([2.5, 32+1, -20.095]) pizero();
-    % translate([0, -36.5-30, 17.1]) translate([2.5, 35-2]) rotate([0, 0, 0]) mirror([1, 0]) controller();
+    translate([-4, 0, 0]) spacer();
+    translate([-4, -7, 0]) spacer();
+    
+    
+//% translate([0, 0, 4]) translate([2.5, 33, -20.095]) pizero();
 }
 
-//spacer();
+// --------------------------------------- PRINT | STANDALONE
+
+//translate([80, -75]) {
+//    translate([0, 0, 0]) bottom_standalone();
+//    translate([0, -36.5, 0]) rotate([0, 0, 0]) top_standalone();
+//}
+
+// --------------------------------------- TEST 
+
+//intersection() {
+//    union() {
+//        translate([0, 0, 0]) bottom_pi_new();
+//        translate([0, 0, 4.5]) translate([2.5, 33, -20.095]) pizero();
+//        translate([0, 0, 17.1]) translate([2.5, 36-3]) rotate([0, 0, 180]) controller();
+//        translate([0, 0, 18.4]) translate([0, 36, 9]) rotate([180, 0, 0]) color([0.6, 1, 0.6], 0.1) top_pi_new();
+//    }
+//    translate([30, -10, -10]) cube([200, 200, 200]);
+//}
+
 //translate([-80, 0]) grip_holder();
 
 size = [70, 36];
@@ -38,6 +63,7 @@ size = [70, 36];
 pixoffset = 5;
 piyoffset = 5.5;
 
+hole_reinforcements = true;
 
 module grip_holder() {
     
@@ -56,9 +82,9 @@ module grip_holder() {
         
         // magnet cavity
         translate([0, 0, -0.1]) color("darkgreen") {
-            translate([6, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
-            translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
-            translate([size[0]-6, size[1]/2]) cylinder($fn=32, d=9, h=1.4);
+            translate([6, size[1]/2]) cylinder($fn=32, d=8.6, h=1.4);
+            translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=8.6, h=1.4);
+            translate([size[0]-6, size[1]/2]) cylinder($fn=32, d=8.6, h=1.4);
         }
     }
 }
@@ -66,8 +92,8 @@ module grip_holder() {
 
 module spacer() {
     difference() {
-    cylinder($fn=32, d=6, h=10.8);
-        translate([0, 0, -1]) cylinder($fn=32, d=3, h=20);
+    cylinder($fn=32, d=3.5+(1.2*2)+0.1, h=10.8);
+        translate([0, 0, -1]) cylinder($fn=32, d=3.5, h=20);
     }
 }
 
@@ -195,16 +221,16 @@ module top_pi_new() {
         }
                        
         // connector cutout
-        translate([size[0]-16.5-8-1.25-.1, size[1]-8.25, -1]) block(16.5, 10, 10, crad=1); // power
-        translate([size[0]-8-30.75, size[1]-4.5, 5.5]) {                                // audio jack
+        translate([size[0]-16.5-8-1.25-.1-1, size[1]-8.75, -1]) block(17.5, 10, 10, crad=1);    // power
+        translate([size[0]-8-31.25, size[1]-4.5, 5.5]) {                                        // audio jack
             cube([7, 5, 3.5]);
             translate([7/2, 5, 0]) rotate([90, 0, 0]) cylinder($fn=32, d=7, h=2.8);
         }     
-        translate([8.0+1.5, size[1]-4.5+5, 3.5]) rotate([90, 0, 0]) block(11, 6, 3, crad=1); // USB        
-        translate([-1, 15, 8]) rotate([90, 0, 90]) block(12, 8, 3, crad=1);             // power switch
-        translate([20.5, 25, -1]) block(9.5, 7, 10, crad=1);                            // SPI
-        translate([41.2, 28.5, -1]) cylinder($fn=32, h=10, d=3);                        // LED hole
-        translate([39.9, 6.5, -1]) cylinder($fn=32, h=10, d=3);                         // button hole
+        translate([8.0+1.5, size[1]-4.5+5, 3.5]) rotate([90, 0, 0]) block(11, 6, 3, crad=1);    // USB        
+        translate([-1, 15, 8]) rotate([90, 0, 90]) block(12, 8, 3, crad=1);                     // power switch
+        translate([20.5, 25, -1]) block(9.5, 7, 10, crad=1);                                    // SPI
+        translate([40.7, 28, -1]) cylinder($fn=32, h=10, d=3);                                  // LED hole
+        translate([39.9, 6.5, -1]) cylinder($fn=32, h=10, d=3);                                 // button hole
         
         // screws
         translate([0, 0, -1]) {
@@ -228,15 +254,19 @@ module top_pi_new() {
    
         // input|output signs
         translate([56.8-9.25, 22-1.25, -1]) cube([0.1, 4, 1.2]);
-        translate([56.8-9.2, 23+2.3, -1]) rotate([0, 0, 90]) cylinder($fn=3, d=5, h=1.2);
+        translate([56.8-9.2, 22.5+2.3, -1]) rotate([0, 0, 90]) cylinder($fn=3, d=5, h=1.2);
         
         translate([56.8-0.05, 22+2, -1]) cube([0.1, 4, 1.2]);
         translate([56.8, 23.5, -1]) rotate([0, 0, -90]) cylinder($fn=3, d=5, h=1.2);
     } 
     
     // hole reinforcements for printing
-    translate([6, 5.5+24, 2.7]) cylinder(h=0.2, d=5);
-    translate([6+58, 5.5+24, 2.7]) cylinder(h=0.2, d=5);
+    if (hole_reinforcements) {
+        color("orange") {
+            translate([6, 5.5+24, 2.7]) cylinder(h=0.2, d=5);
+            translate([6+58, 5.5+24, 2.7]) cylinder(h=0.2, d=5);
+        }
+    }
 }
 
 module bottom_standalone() {
@@ -303,9 +333,11 @@ module bottom_standalone() {
     }
     
     // hole reinforcements for printer
-    translate([0, 0, 3.8-1]) {
-        translate([5.5, 6]) cylinder($fn=32, d=5, h=0.2);
-        translate([5.5+58, 6]) cylinder($fn=32, d=5, h=0.2);
+    if (hole_reinforcements) {
+        translate([0, 0, 3.8-1]) {
+            translate([5.5, 6]) cylinder($fn=32, d=5, h=0.2);
+            translate([5.5+58, 6]) cylinder($fn=32, d=5, h=0.2);
+        }
     }
 }
 
@@ -391,16 +423,16 @@ module bottom_pi_new() {
         }
         
         // USB cutout
-        translate([37.5, 0, 4]) hull() {
+        translate([37.5, 0, 4.5]) hull() {
             translate([0, 2]) cube([24, 0.1, 6]);
             translate([-3/2, -2]) cube([24+3, 0.1, 6]);
         }
         
         // magnet cavity
         translate([0, 0, -0.1]) color("darkgreen") {
-            translate([10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
-            translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
-            translate([size[0]-10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.4);
+            translate([10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.5);
+            translate([size[0]/2, size[1]/2]) cylinder($fn=32, d=8.5, h=1.5);
+            translate([size[0]-10, size[1]/2]) cylinder($fn=32, d=8.5, h=1.5);
         }
         
         // pi-camera connector
@@ -420,17 +452,19 @@ module bottom_pi_new() {
     
     // magnet reinforcement
     color() {
-        translate([10, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-        translate([size[0]/2, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-        translate([size[0]-10, size[1]/2, 1.3]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([10, size[1]/2, 1.5]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([size[0]/2, size[1]/2, 1.5]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([size[0]-10, size[1]/2, 1.5]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
     }
     
     // screw hole reinforcements for printer
-    translate([0, 0, 3.8-1]) color("white") {
-        translate([6, 6.5]) cylinder($fn=32, d=5, h=0.2);
-        translate([6+58, 6.5]) cylinder($fn=32, d=5, h=0.2);
-        translate([6, 35-5.5]) cylinder($fn=32, d=5, h=0.2);
-        translate([6+58, 35-5.5]) cylinder($fn=32, d=5, h=0.2);
+    if (hole_reinforcements) {
+        translate([0, 0, 3.8-1]) color("orange") {
+            translate([6, 6.5]) cylinder($fn=32, d=5, h=0.2);
+            translate([6+58, 6.5]) cylinder($fn=32, d=5, h=0.2);
+            translate([6, 35-5.5]) cylinder($fn=32, d=5, h=0.2);
+            translate([6+58, 35-5.5]) cylinder($fn=32, d=5, h=0.2);
+        }
     }
 }
 
