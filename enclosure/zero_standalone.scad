@@ -9,7 +9,7 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 
 
 
-% translate([0, 6, 0.1]) screw25(length=25);
+//% translate([0, 6, 0.1]) screw25(length=25);
 
 // battery
 //% translate([10+80.5, 3, 2]) color("lightblue") battery();
@@ -17,11 +17,11 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 // camera
 //% translate([filter_x+86, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
 
-% translate([25, -41.5, 06.7]) camholder();
+//% translate([25, -41.5, 06.7]) camholder();
 
 // seal
 //translate([80, 0, 26]) color([0.5, 0.5, 0.5]) seal();
-//translate([20, 5]) camholder();
+//translate([0, 52]) camholder();
 
 //translate([80, 0]) {
 
@@ -30,10 +30,12 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 //        translate([-1, -1, 0]) cube([50, 50, 50]);
 //    }
     
+//   translate([2.1, -30, 15]) nutholder(); 
+    
 //   intersection() {
-        translate([0, -48, 0]) rotate([0, 0, 0]) top();
-////        translate([-1, -48-1, 0]) cube([50, 50, 50]);
-//        translate([-1, -48-1+25, 0]) cube([200, 25, 50]);
+//        translate([0, -48, 0]) rotate([0, 0, 0]) top();
+//        translate([5, -48-1, 0]) cube([50, 50, 50]);
+//        translate([-1, -48-1+25-25, 0]) cube([200, 50, 50]);
 //    }
     
 //    % translate([0, -48, 28.1]) color("grey") seal();
@@ -42,21 +44,37 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 //    % translate([11.5, -42.5-29.5, 40+14+100]) translate([2, 32+0.5, -20.095]) rotate([180, 0]) pizero();
 //}
 
-% translate([0, 0]) {
-    translate([0, 0, 0]) rotate([90, -90, 0]) bottom();
-    translate([0, -25.5-0.1, 0]) rotate([90, -90, 0]) seal();
+// ------------------------------ SEAL
+
+translate([0, 0, 0]) rotate([0, 0, 0]) seal1();
+translate([0, -60, 0]) rotate([0, 0, 0]) seal2();
+
+% translate([0, -60, 3]) rotate([0, 0, 0]) color("red") seal();
+
+// ------------------------------ PRINT
+
+//translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
+//translate([0, -48, 0]) rotate([0, 0, 0]) top();
+//translate([0, 52]) camholder();
+//translate([-6, 0, 12]) rotate([180, 0]) nutholder(); 
+
+
+// ------------------------------ FULL ASSEMBLY
+
+//% translate([0, 0]) {
+//    translate([0, 0, 0]) rotate([90, -90, 0]) bottom();
+//    translate([0, -25.5-0.1, 0]) rotate([90, -90, 0]) seal();
+//    
+//    translate([-size[1], -52-1.5-.2, 0]) rotate([90, -90, 180]) top();
+//    
+//    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
+//    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
+//    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
+//} 
     
-    translate([-size[1], -52-1.5-.2, 0]) rotate([90, -90, 180]) top();
-    
-    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
-    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
-    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
-}
+// ------------------------------ EXPLOSION
 
 //translate([size[1]/2, 50]) explosion();
-
-// CHECK
-// https://www.thingiverse.com/thing:2300226
 
 size = [97, 47];
 crad = 6;
@@ -67,7 +85,7 @@ piyoffset = (size[1]-23)/2;
 
 filter_x = 52.5;
 
-hole_reinforcements = false;
+hole_reinforcements = true;
 
 module explosion() {
 
@@ -93,6 +111,14 @@ module spacer() {
     difference() {
     cylinder($fn=32, d=6, h=10.8);
         translate([0, 0, -1]) cylinder($fn=32, d=3, h=20);
+    }
+}
+
+module nutholder() {
+    s = [4.8, 11, 12]; 
+    difference() {
+        cube(s);
+        translate([-1, s[1]/2, 0]) rotate([0, 90, 0]) cylinder($fn=6, h=10, d=13.00+.3);
     }
 }
 
@@ -306,9 +332,9 @@ module top() {
             translate([0, 23]) cylinder($fn=32, d=6, h=0.3);
             translate([58, 23]) cylinder($fn=32, d=6, h=0.3);
         } 
-        translate([filter_x-23, 0, 3]) { // camera
-                translate([0, size[1]-10]) cylinder($fn=32, d=5, h=0.3);
-                translate([0, 10]) cylinder($fn=32, d=5, h=0.3);
+        translate([filter_x-17.5, 0, 3]) { // camera
+                translate([0, size[1]-7]) cylinder($fn=32, d=5, h=0.3);
+                translate([0, 7]) cylinder($fn=32, d=5, h=0.3);
         }
         translate([0, 0, 3.5]) { // enclosure
             translate([5, 6]) cylinder($fn=32, d=6.1, h=0.3);   
@@ -338,11 +364,91 @@ module seal() {
                 // cutout
                 translate([8, 0, -1]) block(size[0]-8, size[1], height+2, crad=crad, red=1.6+.1+2);
                 translate([8-2, 0, -1]) block(size[0]-6, size[1], height+2, crad=crad, red=1.6+.1+2);
-          
             }
             
             // pcb feet
             intersection() {
+                union() {
+                    r=1;
+                    o=1;
+                    r2=3;
+                    
+                    pixoffset = size[1]-14;
+ 
+                    foo = size[0]-10;
+                    translate([foo, 23+piyoffset-o-r]) block(size[0], size[1], height, crad=2);
+                    translate([foo, 0]) block(size[0], piyoffset+o+r, height, crad=2);
+                }
+                translate([0, 0]) block2(size[0], size[1], height, crad=crad2);        
+            }
+        }
+        
+        // screws M3
+        translate([0, 0, -1]) {
+            translate([5, 6]) cylinder($fn=32, d=3.3+.3, h=30);       
+            translate([size[0]-5, 6]) cylinder($fn=32, d=3.3+.3, h=30);            
+            translate([5, size[1]-6]) cylinder($fn=32, d=3.3+.3, h=30);
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.3+.3, h=30);
+        }
+    }
+}
+
+module seal1() {
+    
+    height = 1;
+    
+    difference() {
+        union() {
+            translate([0, 0]) block2(size[0], size[1], height, crad=crad2);
+            translate([0, 0]) block2(size[0], size[1], height+1, crad=crad2, red=2);
+            
+            // pcb feet
+            intersection() {
+                union() {
+                    r=1;
+                    o=1;
+                    r2=3;
+                    
+                    pixoffset = size[1]-14;
+ 
+                    foo = size[0]-10;
+                    translate([foo, 23+piyoffset-o-r]) block(size[0], size[1], height, crad=2);
+                    translate([foo, 0]) block(size[0], piyoffset+o+r, height, crad=2);
+                }
+                translate([0, 0]) block2(size[0], size[1], height, crad=crad2);        
+            }
+        }
+        
+        // screws M3
+        translate([0, 0, -1]) {
+            translate([5, 6]) cylinder($fn=32, d=3.3+.3, h=30);       
+            translate([size[0]-5, 6]) cylinder($fn=32, d=3.3+.3, h=30);            
+            translate([5, size[1]-6]) cylinder($fn=32, d=3.3+.3, h=30);
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.3+.3, h=30);
+        }
+    }
+}
+
+module seal2() {
+    
+    height = 1+1.2;
+    
+    difference() {
+        union() {
+            difference() {
+                translate([-3, -3]) block2(size[0]+6, size[1]+6, height, crad=crad2);
+                
+                // cutout
+                translate([8, 0, -1]) block(size[0]-8, size[1], height+2, crad=crad, red=1.6+.1+2);
+                translate([8-2, 0, -1]) block(size[0]-6, size[1], height+2, crad=crad, red=1.6+.1+2);
+                
+                // cavity
+                translate([-0.5, -0.5, 1]) block2(size[0]+1, size[1]+1, height, crad=crad2);
+            }
+            
+            // pcb feet
+            intersection() {
+                height=1;
                 union() {
                     r=1;
                     o=1;
@@ -464,16 +570,16 @@ module bottom() {
             // allow the screw to slip right through for easy opening and closing.
             // The bottom holes should be post-processed with a 3.5mm drill.
             
-            translate([5, 6]) cylinder($fn=32, d=3.5, h=30);
+            translate([5, 6]) cylinder($fn=32, d=3.6, h=30);
             translate([5, 6]) cylinder($fn=6, d=6.7, h=4);
             
-            translate([size[0]-5, 6]) cylinder($fn=32, d=3.5, h=30);
+            translate([size[0]-5, 6]) cylinder($fn=32, d=3.6, h=30);
             translate([size[0]-5, 6]) cylinder($fn=6, d=6.7, h=4);
                    
-            translate([5, size[1]-6]) cylinder($fn=32, d=3.5, h=30);
+            translate([5, size[1]-6]) cylinder($fn=32, d=3.6, h=30);
             translate([5, size[1]-6]) cylinder($fn=6, d=6.7, h=4);
             
-            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.5, h=30);
+            translate([size[0]-5, size[1]-6]) cylinder($fn=32, d=3.6, h=30);
             translate([size[0]-5, size[1]-6]) cylinder($fn=6, d=6.7, h=4);
         }
         
@@ -531,11 +637,15 @@ module block(width, depth, height, crad=3, red=0) {
     }
 }
 
-module block2(width, depth, height, crad=3) {
-    points = [  [0, crad], [crad, 0],
-                [width-crad, 0], [width, crad],
-                [width, depth-crad], [width-crad, depth],
-                [crad, depth], [0, depth-crad]];
+module block2(width, depth, height, crad=3, red=0) {
+    
+    // pythagorean theorem
+    redp = sqrt((red*red)/2);
+    
+    points = [  [0+red, crad+redp], [crad+redp, 0+red],
+                [width-crad-redp, 0+red], [width-red, crad+redp],
+                [width-red, depth-crad-redp], [width-crad-redp, depth-red],
+                [crad+redp, depth-red], [0+red, depth-crad-redp]];
     
     linear_extrude(height=height) polygon(points);
 }
