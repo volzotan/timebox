@@ -6,7 +6,7 @@ num_screws = 8;
 deg = 360/num_screws;
 off = deg/2;
 
-q = 32;
+q = 128; //32;
 
 include <../camera.scad>;
 % translate([78, 35, -32]) rotate([0, 0, 180]) camera(longlens=true);
@@ -177,25 +177,43 @@ module back() {
 
 module front() {
     
-    height = 40;
+    height = 42;
+    
+    // 76mm / 86mm drill
+    
+    // filter sizes:
+    // 67 72 77 82 86 95 112
+    //             --
+    
+    // drill: 86 | filter: 86
+//    outer_diam = 96;
+//    screw_dist = 53;
+//    hole_diam = 86;
+//    filter_diam = 86;
+    
+    // drill: 76 | filter: 77
+    outer_diam = 88;
+    screw_dist = 50;
+    hole_diam = 76;
+    filter_diam = 77;
     
     difference() {
         union() {
-                                        cylinder($fn=q, d=90+14, h=6);
-            translate([0, 0, 6])        cylinder($fn=q, d1=90+14, d2=90+14-2, h=2);
-            translate([0, 0, 8])        cylinder($fn=q, d1=90+8, d2=90, h=8);
-                                        cylinder($fn=q, d=90, h=height-2);
-            translate([0, 0, height-2]) cylinder($fn=q, d1=90, d2=90-2, h=2);
+                                        cylinder($fn=q, d=outer_diam+14, h=6);
+            translate([0, 0, 6])        cylinder($fn=q, d1=outer_diam+14, d2=outer_diam+14-2, h=2);
+            translate([0, 0, 8])        cylinder($fn=q, d1=outer_diam+8, d2=outer_diam, h=8);
+                                        cylinder($fn=q, d=outer_diam, h=height-2);
+            translate([0, 0, height-2]) cylinder($fn=q, d1=outer_diam, d2=outer_diam-2, h=2);
             
-            for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([50, 0, 0]) cylinder($fn=32, d=14, h=8);
+            for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 0]) cylinder($fn=32, d=14, h=8);
         }
         
         // main hole
-        translate([0, 0, -1]) cylinder($fn=q, d=filter_diameter, h=100);
+        translate([0, 0, -1]) cylinder($fn=q, d=hole_diam, h=100);
     
         // filter cavity
-        translate([0, 0, height-3.5]) color("red") cylinder($fn=64, d=filter_diameter+4, h=10);
-        translate([0, 0, height-5]) color("red") cylinder($fn=64, d=filter_diameter+2, h=10);
+        translate([0, 0, height-3.5]) color("red") cylinder($fn=64, d=filter_diam+1, h=10);
+        translate([0, 0, height-5]) color("red") cylinder($fn=64, d=filter_diam+2, h=10);
     
         // o-ring cavity
         * difference() {
@@ -212,12 +230,12 @@ module front() {
         
         
         // screw holes
-        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([50, 0, -1]) cylinder($fn=32, d=5.3, h=50);
-        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([50, 0, 6]) cylinder($fn=32, d=9, h=50);
+        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=5.3, h=50);
+        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 6]) cylinder($fn=32, d=9, h=50);
     }
     
     // screws 
-    for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([50, 0, 06]) M5Screw(length=18);
+    % for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 06]) M5Screw(length=18);
        
 }
 
