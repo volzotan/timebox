@@ -15,7 +15,7 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 //% translate([10+80.5, 3, 2]) color("lightblue") battery();
 
 // camera
-//% translate([filter_x+86, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
+% translate([filter_x, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
 
 //% translate([25, -41.5, 06.7]) camholder();
 
@@ -47,9 +47,9 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 // ------------------------------ SEAL
 
 translate([0, 0, 0]) rotate([0, 0, 0]) seal1();
-translate([0, -60, 0]) rotate([0, 0, 0]) seal2();
-
-% translate([0, -60, 3]) rotate([0, 0, 0]) color("red") seal();
+translate([0, -53, 0]) rotate([0, 0, 0]) seal2();
+//
+//% translate([0, -60, 3]) rotate([0, 0, 0]) color("red") seal();
 
 // ------------------------------ PRINT
 
@@ -57,7 +57,8 @@ translate([0, -60, 0]) rotate([0, 0, 0]) seal2();
 //translate([0, -48, 0]) rotate([0, 0, 0]) top();
 //translate([0, 52]) camholder();
 //translate([-6, 0, 12]) rotate([180, 0]) nutholder(); 
-
+//
+//translate([size[0]/2, size[1]/2-60]) cylinder($fn=32, d=2, h=12);
 
 // ------------------------------ FULL ASSEMBLY
 
@@ -436,14 +437,14 @@ module seal2() {
     difference() {
         union() {
             difference() {
-                translate([-3, -3]) block2(size[0]+6, size[1]+6, height, crad=crad2);
+                translate([-4, -4]) block2(size[0]+8, size[1]+8, height, crad=crad2);
                 
                 // cutout
                 translate([8, 0, -1]) block(size[0]-8, size[1], height+2, crad=crad, red=1.6+.1+2);
                 translate([8-2, 0, -1]) block(size[0]-6, size[1], height+2, crad=crad, red=1.6+.1+2);
                 
                 // cavity
-                translate([-0.5, -0.5, 1]) block2(size[0]+1, size[1]+1, height, crad=crad2);
+                translate([-0.25, -0.25, 1]) block2(size[0]+0.5, size[1]+0.5, height, crad=crad2);
             }
             
             // pcb feet
