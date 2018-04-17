@@ -8,30 +8,41 @@ off = deg/2;
 
 q = 128; //32;
 
+print_support = true;
+
 include <../camera.scad>;
-% translate([78, 35, -32]) rotate([0, 0, 180]) camera(longlens=true);
-% translate([0, 0, 0]) rotate([0, 0, 180]) scale([10, 10, 10]) color("green") import("Peli1120.stl");
-% translate([-30, 10, -50]) color("grey") arca_clamp();
-
-translate([0, 65.9+0]) rotate([-90, 0, 0]) front();
-translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
-translate([0, 50, -50]) rotate([180, 0, 0]) bottom();
-translate([0, 10, -90]) socket();
-
-translate([-89, -7, 47]) rotate([-90, 0, 90]) controller_dock();
-translate([-89+0.5, -7, 47-36]) rotate([90, 0, 90]) import("../zeroholder11.stl");
-
-translate([0, -90, 0]) rotate([0, 0, 0]) bottom();
-
-translate([0, 0, 100]) M5Screw();
+//% translate([78, 35, -32]) rotate([0, 0, 180]) camera(longlens=true);
+//% translate([0, 0, 0]) rotate([0, 0, 180]) scale([10, 10, 10]) color("green") import("Peli1120.stl");
+//% translate([-26, 10, -50]) color("grey") arca_clamp();
+//
+//translate([0, 65.9+0]) rotate([-90, 0, 0]) front();
+//translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
+//translate([0, 50, -50]) rotate([180, 0, 0]) bottom();
+//translate([0, 10, -90]) socket();
+//
+//translate([-89, -7, 47]) rotate([-90, 0, 90]) controller_dock();
+//translate([-89+0.5, -7, 47-36]) rotate([90, 0, 90]) import("../zeroholder11.stl");
+//
+//translate([0, -90, 0]) rotate([0, 0, 0]) bottom();
+//
+//translate([0, 0, 100]) M5Screw();
 
 // --------------------------------------------------------------------------
 
-translate([180, 0]) front();
-translate([180, 110]) back();
+//translate([180, 0]) front();
+//translate([180, 110]) back();
+//translate([180, 110]) back2D();
 translate([180, -100]) bottom();
-translate([180, -150]) socket();
-translate([240, 0]) controller_dock();
+//translate([180, -150]) socket();
+//translate([240, 0]) controller_dock();
+
+
+module back2D() {
+    projection() back();  
+    
+//    width = 106.4;
+//    translate([-width/2, -width/2]) color("red") cube([width, width, 0.5]);
+}
 
 module controller_dock() {
     size = [70, 36];
@@ -62,10 +73,14 @@ module controller_dock() {
 }
 
 module socket() {
-        intersection() {
+    
+    size = [60, 38];
+    screw_dist = 8;
+    
+    intersection() {
         difference() {
             union() {
-                translate([-30, 0]) block(60, 40, 10);
+                translate([-size[0]/2, 0]) block(size[0], size[1], 10);
             } 
             
             // arca screw
@@ -73,57 +88,84 @@ module socket() {
             translate([0, 20, 2]) cylinder($fn=6, d=15, h=10); // ?
 
             // screws
-            translate([-20, 10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 40-10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([20, 10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([20, 40-10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 10, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
-            translate([-20, 40-10, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
-            translate([20, 10, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
-            translate([20, 40-10, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
+            translate([-20, screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([-20, size[1]-screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([ 20, screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([ 20, size[1]-screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([-20, screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
+            translate([-20, size[1]-screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
+            translate([ 20, screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
+            translate([ 20, size[1]-screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=32, d=9, h=7);
         }
         
         // top surface
         a = 10.0;
         b = a-1.4;
-        points = [[0, 0], [40, 0], [40, a], [0, b]];
+        points = [[0, 0], [size[1], 0], [size[1], a], [0, b]];
         translate([-30, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=60) polygon(points);
+    }
+    
+    if (print_support) color("orange") {
+        translate([-20, screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
+        translate([-20, size[1]-screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
+        translate([20, screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
+        translate([20, size[1]-screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
     }
 }
 
 module bottom() {
+    
+    size = [60, 38];
+    screw_dist = 8;
+    
     intersection() {
         difference() {
             union() {
-                translate([-30, 0]) block(60, 40, 10);
+                translate([-size[0]/2, 0]) block(size[0], size[1], 10);
                 
-                translate([-30, 0]) block(20, 40, 14);
-                translate([10, 0]) block(20, 40, 14);
+                translate([-size[0]/2, 0]) block(20, size[1], 14);
+                translate([10, 0]) block(20, size[1], 14);
             } 
             
             // arca screw
-            translate([0, 20, -1]) cylinder($fn=32, d=10, h=50); // ?
-            translate([0, 20, 10-5]) cylinder($fn=32, d=15, h=10); // ?
+            translate([0, size[1]/2, -1]) cylinder($fn=32, d=6.3+0.5, h=50); 
+            
+            // 1/4 screw head cavity
+//            translate([0, size[1]/2, 3]) cylinder($fn=32, d=10, h=10); 
+            // 1/4 screw nut cavity
+            translate([0, size[1]/2, 3]) cylinder($fn=6, d=13.2, h=10); 
             
             // knob cavity
-            translate([-47, 20, 0]) rotate([0, 90, 0]) cylinder($fn=64, d=20, h=20);
+            translate([-47+11, size[1]/2, -5]) rotate([0, 90, 0]) cylinder($fn=64, d1=45, d2=15, h=10);
             
             // screws
-            translate([-20, 10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 40-10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([20, 10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([20, 40-10, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 10, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
-            translate([-20, 40-10, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
-            translate([20, 10, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
-            translate([20, 40-10, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
+            translate([-20, screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([-20, size[1]-screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([20, screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([20, size[1]-screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
+            translate([-20, screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
+            translate([-20, size[1]-screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
+            translate([20, screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
+            translate([20, size[1]-screw_dist, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
         }
         
         // top surface
         a = 14.0;
         b = a-1.4;
-        points = [[0, 0], [40, 0], [40, a], [0, b]];
+        points = [[0, 0], [size[1], 0], [size[1], a], [0, b]];
         translate([-30, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=60) polygon(points);
+    }
+    
+    difference() {  
+        translate([size[0]/2-10, 0, -3]) block(10, size[1], 3);
+        translate([0, -1, -3-1]) cube([size[0]/2-5, size[1]+2, 10]);
+    }
+    
+    if (print_support) color("orange") {
+        translate([-20, screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
+        translate([-20, size[1]-screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
+        translate([20, screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
+        translate([20, size[1]-screw_dist, 6]) cylinder($fn=32, d=6, h=0.2);
     }
 }
 
@@ -145,10 +187,14 @@ module back() {
     
     difference() {
         union() {
-            cylinder($fn=64, d=90+14, h=4);
+            cylinder($fn=64, d=90+14, h=3);
+            translate([0, 0, 3]) cylinder($fn=64, d1=90+14, d2=90+14-2, h=1);
             
             // screw support
-            for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([50, 0, 0]) cylinder($fn=32, d=14, h=7);
+            for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([50, 0, 0]) {
+                cylinder($fn=32, d=14, h=6);
+                translate([0, 0, 6]) cylinder($fn=32, d1=14, d2=14-2, h=1);
+            }
                 
             // base angle
             points = [  [-50, 15], [-50, 30], [0, 5], [50, 30], [50, 15], 
@@ -159,7 +205,8 @@ module back() {
         }
         
         // main hole
-        translate([0, 0, -1]) cylinder($fn=64, d=filter_diameter, h=100);
+        translate([0, 0, -1]) cylinder($fn=64, d=filter_diameter, h=10);
+        translate([0, 0, 3]) cylinder($fn=64, d1=filter_diameter, d2=filter_diameter+2, h=1+.1);
     
         // screw holes
         for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([50, 0, -1]) cylinder($fn=32, d=5.3, h=50);
@@ -240,8 +287,14 @@ module front() {
 }
 
 module arca_clamp() {
-    block(60, 40, 10, crad=1);
-    translate([-20, 20, 5]) rotate([0, 90, 0]) cylinder(d=15, h=10);
+    difference() {
+        block(51.5, 38, 15, crad=1);
+        translate([11, -1, 10]) cube([51.5-11-8, 40, 10]);
+        translate([26, 38/2, -1]) cylinder($fn=32, d=10, h=20);
+        translate([26, 0, -1]) cylinder($fn=32, d=1, h=20);
+    }
+    translate([-7, 20, 6]) rotate([0, 90, 0]) cylinder($fn=32, d2=9, d1=20, h=7);
+    translate([-20, 20, 6]) rotate([0, 90, 0]) cylinder(d=20, h=13);
 }
 
 module M5Screw(length=10) {
