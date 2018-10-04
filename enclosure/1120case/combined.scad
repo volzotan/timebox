@@ -14,16 +14,16 @@ include <../camera.scad>;
 //% translate([78, 35, -32]) rotate([0, 0, 180]) camera(longlens=true);
 //% translate([0, 0, 0]) rotate([0, 0, 180]) scale([10, 10, 10]) color("green") import("Peli1120.stl");
 //% translate([-26, 10, -50]) color("grey") arca_clamp();
-//
-translate([0, 65.9+0]) rotate([-90, 0, 0]) front();
-translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
-//translate([0, 50, -50]) rotate([180, 0, 0]) bottom();
+
+//translate([0, 65.9+0]) rotate([-90, 0, 0]) front();
+//translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
+//translate([0, 50-2, -50]) rotate([180, 0, 0]) bottom();
 //translate([0, 10, -90]) socket();
 //
 //translate([-89, -7, 47]) rotate([-90, 0, 90]) controller_dock();
 //translate([-89+0.5, -7, 47-36]) rotate([90, 0, 90]) import("../zeroholder11.stl");
 //
-//translate([0, -90, 0]) rotate([0, 0, 0]) bottom();
+translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
 //
 //translate([0, 0, 100]) M5Screw();
 
@@ -31,7 +31,7 @@ translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
 
 //translate([300, -60]) drill_helper();
 //translate([180, 0]) front();
-translate([180, 110]) back();
+//translate([180, 110]) back();
 //translate([180, 110]) back2D();
 //translate([180, -100, 40]) rotate([-90, 0, 0]) bottom();
 //translate([180, -145]) socket();
@@ -120,7 +120,7 @@ module socket() {
     intersection() {
         difference() {
             union() {
-                translate([-size[0]/2, 0]) block(size[0], size[1], 10);
+                translate([-size[0]/2, 0]) block2(size[0], size[1], 10);
             } 
             
             // arca screw
@@ -146,8 +146,8 @@ module socket() {
         
         // top surface
         a = 10.0;
-        b = a-1.4;
-        points = [[0, 0], [40, 0], [40, a], [0, b]];
+        b = a-1.5;
+        points = [[0, 0], [41, 0], [41, a], [0, b]];
         translate([-30, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=60) polygon(points);
     }
     
@@ -161,60 +161,60 @@ module socket() {
 
 module bottom() {
     
-    size = [60, 40];
+    size = [60, 41];
     
     intersection() {
         difference() {
             union() {
-                translate([-size[0]/2, 0]) block(size[0], size[1], 08);
+                translate([-size[0]/2, 0]) block2(size[0], size[1], 09);
                 
-                translate([-size[0]/2, 0]) block(24, size[1], 14);
-                translate([size[0]/2-24, 0]) block(24, size[1], 14);
+                translate([-size[0]/2, 0]) block2(24, size[1], 14);
+                translate([size[0]/2-24, 0]) block2(24, size[1], 14);
             } 
             
             // arca screw
-            translate([0, 19+2, -1]) cylinder($fn=32, d=6.3+0.5, h=50); 
+            translate([0, 19+3, -1]) cylinder($fn=32, d=6.3+0.5, h=50); 
             
             // if a Mengs DC-38 arca swiss clamp is used, there are four options:
-            // * mounting a 3/8 screw with the head in the plastic part screw
+            // * mounting a 3/8 screw with the head in the plastic part and screw
             //   it directly into the clamp (only accessible from below)
             // * mounting a 1/4 screw with the head in the plastic part and screw a
             //   3/8 to 1/4 adapter into the clamp (only accessible from below)
             // * putting a cone head screw with the head into the clamp and fasten
             //   it with a 1/4 nut in the plastic part 
-            // * putting a ISO 10642 / DIN 7991 M6 metric cone head screw into the 
-            //   clamp and use a M6 nut in the plastic part
+            // * putting a ISO 10642 / DIN 7991 M6 16mm metric cone head screw into  
+            //   the clamp and use a M6 nut in the plastic part
             
             // 1/4 screw head cavity
 //            translate([0, size[1]/2, 3]) cylinder($fn=32, d=10, h=10); 
             // 1/4 nut cavity
 //            translate([0, size[1]/2, 3]) rotate([0, 0, 30]) cylinder($fn=6, d=13.2, h=10); 
             // M6 nut cavity
-            translate([0, 19+2, .4*5+.1]) rotate([0, 0, 30]) cylinder($fn=6, d=11.6, h=10); 
+            translate([0, 19+3, .4*4+.1]) rotate([0, 0, 30]) cylinder($fn=6, d=11.6, h=10); 
             
             // knob cavity
-            translate([-47+11, 19+2, -5]) rotate([0, 90, 0]) cylinder($fn=64, d1=45, d2=15, h=10);
+            translate([-47+10.5, 19+3, -5]) rotate([0, 90, 0]) cylinder($fn=64, d1=45, d2=15, h=10);
             
             // screws
             translate([-20, 8, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([-20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 8, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
-            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
-            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
-            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=7);
+            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
+            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
+            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
+            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
         }
         
         // top surface
-        a = 12.0;
-        b = a-1.4;
-        points = [[0, 0], [40, 0], [40, a], [0, b]];
+        a = 13.0;
+        b = a-1.5;
+        points = [[0, 0], [41, 0], [41, a], [0, b]];
         translate([-30, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=60) polygon(points);
     }
     
     difference() {  
-        translate([size[0]/2-10, 0, -3]) block(10, size[1], 3);
+        translate([size[0]/2-10, 0, -3]) block2(10, size[1], 3);
         translate([0, -1, -3-1]) cube([size[0]/2-5, size[1]+2, 10]);
     }
     
@@ -337,7 +337,7 @@ module back() {
 
 module front() {
     
-    height = 13; //42;
+    height = 42; //13; //42;
     
     // 76mm / 86mm drill
     
@@ -455,4 +455,17 @@ module block(width, depth, height, crad=3, red=0) {
         translate([crad, depth-crad]) cylinder($fn=32, h=height, r=crad-red);
         translate([width-crad, depth-crad]) cylinder($fn=32, h=height, r=crad-red);
     }
+}
+
+module block2(width, depth, height, crad=3, red=0) {
+    
+    // pythagorean theorem
+    redp = sqrt(red*red + red*red) - red;
+    
+    points = [  [0+red, crad+redp], [crad+redp, 0+red],
+                [width-crad-redp, 0+red], [width-red, crad+redp],
+                [width-red, depth-crad-redp], [width-crad-redp, depth-red],
+                [crad+redp, depth-red], [0+red, depth-crad-redp]];
+    
+    linear_extrude(height=height) polygon(points);
 }
