@@ -6,7 +6,7 @@ num_screws = 8;
 deg = 360/num_screws;
 off = deg/2;
 
-q = 128; //32;
+q = 64; //256;
 
 print_support = true;
 
@@ -16,14 +16,14 @@ include <../camera.scad>;
 //% translate([-26, 10, -50]) color("grey") arca_clamp();
 
 //translate([0, 65.9+0]) rotate([-90, 0, 0]) front();
-//translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
+translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
 //translate([0, 50-2, -50]) rotate([180, 0, 0]) bottom();
 //translate([0, 10, -90]) socket();
 //
 //translate([-89, -7, 47]) rotate([-90, 0, 90]) controller_dock();
 //translate([-89+0.5, -7, 47-36]) rotate([90, 0, 90]) import("../zeroholder11.stl");
 //
-translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
+//translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
 //
 //translate([0, 0, 100]) M5Screw();
 
@@ -301,14 +301,20 @@ module back() {
             
             // translate([0, -50, 0]) linear_extrude(height=5) polygon(points);
             
+            // side reinforcements
             translate([-screw_dist-3.2, -39/2]) hull() {
                 cube([10, 39, 3]);
                 translate([1, 0, 3]) cube([10, 39, 1]);
             }
-            
             translate([+screw_dist+3.2-10, -39/2]) hull() {
                 cube([10, 39, 3]);
                 translate([-1, 0, 3]) cube([10, 39, 1]);
+            }
+            
+            // extension hole reinforcement
+            translate([-screw_dist-3.2, -39/2]) hull() {
+                cube([13, 39, 4]);
+                translate([1, 0, 4]) cube([11, 39, 1]);
             }
         }
         
@@ -320,11 +326,19 @@ module back() {
         for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=5.3, h=50);
         for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 2]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=50);
     
+        // nudge for case curvature
         translate([50, 53.375+.1, -.1]) rotate([90, 0, -90]) linear_extrude(height=100) polygon([[0, 0], [2, 0], [1, 1], [0, 3]]);
+        
+        // extension hole
+        translate([-47,  7, -1]) cylinder($fn=32, d=3.3, h=10);
+        translate([-47, -7, -1]) cylinder($fn=32, d=3.3, h=10);
+        translate([-47,  7, -1]) cylinder($fn=6, d=6, h=1+3);
+        translate([-47, -7, -1]) cylinder($fn=6, d=6, h=1+3);
     }
     
-    
-//       color("red") translate([50, 53.375+.1, -.1]) rotate([90, 0, -90]) linear_extrude(height=100) polygon([[0, 0], [2, 0], [0, 2]]);
+    // hole reinforcements
+    translate([-47,  7, 3]) color("orange") cylinder($fn=6, d=6, h=0.2);
+    translate([-47, -7, 3]) color("orange") cylinder($fn=6, d=6, h=0.2);
     
     * difference() {
         union() {
@@ -394,8 +408,8 @@ module front() {
         translate([0, 0, -1]) cylinder($fn=q, d=hole_diam, h=100);
     
         // filter cavity
-        translate([0, 0, height-(4.5+0.5)]) color("red") cylinder($fn=64, d=79.2+0.5, h=10);
-        translate([0, 0, height-(6.8+0.5)]) color("red") cylinder($fn=64, d=76.8+0.5, h=10);
+        translate([0, 0, height-(4.5+1.0)]) color("red") cylinder($fn=q, d=79.2+0.5, h=10);
+        translate([0, 0, height-(6.8+1.0)]) color("red") cylinder($fn=q, d=76.8+0.5, h=10);
     
         // o-ring cavity
         * difference() {
@@ -417,10 +431,10 @@ module front() {
     
     // filter ring support
     filter_ring_thread_hole = 76.8+0.5;
-    translate([0, 0, height-(6.8+0.5)-4]) difference() {
-        cylinder(d=80, h=5);
-        translate([0, 0, -.1]) cylinder($fn=128, d1=filter_ring_thread_hole, d2=filter_ring_thread_hole-2, h=4+.2);
-        translate([0, 0, -.1]) cylinder($fn=128, d=filter_ring_thread_hole-2, h=10);
+    translate([0, 0, height-(6.8+0.5)-5.5]) difference() {
+        cylinder($fn=q, d=80, h=5);
+        translate([0, 0, -.1]) cylinder($fn=q, d1=filter_ring_thread_hole, d2=filter_ring_thread_hole-2, h=4+.2);
+        translate([0, 0, -.1]) cylinder($fn=q, d=filter_ring_thread_hole-2, h=10);
     }
     
     // screws 
