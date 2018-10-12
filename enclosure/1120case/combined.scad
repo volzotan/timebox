@@ -30,9 +30,10 @@ include <../camera.scad>;
 // --------------------------------------------------------------------------
 
 //translate([300, -60]) drill_helper();
-//translate([180, 0]) front();
-translate([180, 110]) back();
-translate([0, 110]) back_cnc();
+translate([180, 0]) front();
+translate([0, 0]) front_cnc();
+//translate([180, 110]) back();
+//translate([0, 110]) back_cnc();
 //translate([180, 110]) back2D();
 //translate([180, -100, 40]) rotate([-90, 0, 0]) bottom();
 //translate([180, -145]) socket();
@@ -359,8 +360,8 @@ module back() {
         }
         
         // main hole
-        translate([0, 0, -1]) cylinder($fn=64, d=filter_diameter, h=10);
-        translate([0, 0, 3]) cylinder($fn=64, d1=filter_diameter, d2=filter_diameter+2, h=1+.1);
+        translate([0, 0, -1]) cylinder($fn=q, d=filter_diameter, h=10);
+        translate([0, 0, 3]) cylinder($fn=q, d1=filter_diameter, d2=filter_diameter+2, h=1+.1);
     
         // screw holes
         for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=5.3, h=50);
@@ -433,8 +434,8 @@ module back_cnc() {
         }
         
         // main hole
-        translate([0, 0, -1]) cylinder($fn=64, d=filter_diameter, h=10);
-        translate([0, 0, 3]) cylinder($fn=64, d1=filter_diameter, d2=filter_diameter+2, h=1+.1);
+        translate([0, 0, -1]) cylinder($fn=q, d=filter_diameter, h=10);
+        translate([0, 0, 3]) cylinder($fn=q, d1=filter_diameter, d2=filter_diameter+2, h=1+.1);
     
         // screw holes
         for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=4.2, h=50);
@@ -538,6 +539,96 @@ module front() {
     
     // screws 
     % for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 06]) M5Screw(length=18);
+}
+
+
+module front_cnc() {
+    
+    height = 10; 
+    
+    // drill: 76 | filter: 77
+    outer_diam = 88;
+    screw_dist = 50.2;
+    hole_diam = 76;
+    filter_diam = 77;
+    
+    // filter dimensions 77mm:
+    // 79.2 thick ring diameter
+    // 76.8 thread diameter
+    // 4.5  thick ring height
+    // 6.8  total height
+    
+    difference() {
+        union() {
+                                        cylinder($fn=q, d=88+14, h=8-1);
+            translate([0, 0, 8-1])      cylinder($fn=q, d1=88+14, d2=outer_diam+14-2, h=1);
+          
+//            translate([0, 0, 8])        cylinder($fn=q, d1=outer_diam+8, d2=outer_diam, h=3);
+            
+//                                        cylinder($fn=q, d=outer_diam, h=height-2);
+//            translate([0, 0, height-2]) cylinder($fn=q, d1=outer_diam, d2=outer_diam-2, h=2);
+            
+            for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 0]) {
+                cylinder($fn=32, d=14, h=8-1);
+                translate([0, 0, 8-1]) cylinder($fn=32, d2=14-2, d1=14, h=1);
+            }
+            
+            // side reinforcement
+            hull() {
+                rotate([0, 0, off+deg*0]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=8-1);
+                    translate([0, 0, 8-1]) cylinder($fn=32, d2=14-2, d1=14, h=1);
+                }
+                rotate([0, 0, off+deg*3]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=8-1);
+                    translate([0, 0, 8-1]) cylinder($fn=32, d2=14-2, d1=14, h=1);
+                }
+                rotate([0, 0, off+deg*4]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=8-1);
+                    translate([0, 0, 8-1]) cylinder($fn=32, d2=14-2, d1=14, h=1);
+                }
+                rotate([0, 0, off+deg*7]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=8-1);
+                    translate([0, 0, 8-1]) cylinder($fn=32, d2=14-2, d1=14, h=1);
+                }
+            }
+        }
+        
+        // main hole
+        translate([0, 0, -1]) cylinder($fn=q, d=hole_diam, h=100);
+    
+        // filter cavity
+//        translate([0, 0, height-(4.5+1.0)]) color("red") cylinder($fn=q, d=79.2+0.5, h=10);
+//        translate([0, 0, height-(6.8+1.0)]) color("red") cylinder($fn=q, d=76.8+0.5, h=10);
+    
+        // o-ring cavity
+        * difference() {
+            hull() {
+                translate([0, 0, -.1]) cylinder($fn=q, d=88, h=0.75);
+                translate([0, 0, 0.75+0.5]) cylinder($fn=q, d1=88-1, h=0.1);
+            }
+            union() {
+                translate([0, 0, -1]) cylinder($fn=q, d=88-2*2.0, h=2);
+                translate([0, 0, 0.75]) cylinder($fn=q, d1=88-2*2.0, d2=88-2*2.0+1, h=0.5);
+                translate([0, 0, 1.5]) cylinder($fn=q, d=88-2*2.0+1, h=1);
+            }
+        }
+        
+        // screw holes
+        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=5.3, h=50);
+        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 6]) cylinder($fn=32, d=9, h=50);
+    }
+    
+    // filter ring support
+//    filter_ring_thread_hole = 76.8+0.5;
+//    translate([0, 0, height-(6.8+0.5)-5.5]) difference() {
+//        cylinder($fn=q, d=80, h=5);
+//        translate([0, 0, -.1]) cylinder($fn=q, d1=filter_ring_thread_hole, d2=filter_ring_thread_hole-2, h=4+.2);
+//        translate([0, 0, -.1]) cylinder($fn=q, d=filter_ring_thread_hole-2, h=10);
+//    }
+    
+    // screws 
+    // % for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 06]) M5Screw(length=18);
 }
 
 module arca_clamp() {
