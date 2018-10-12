@@ -6,7 +6,7 @@ num_screws = 8;
 deg = 360/num_screws;
 off = deg/2;
 
-q = 64; //256;
+q = 256; //64;
 
 print_support = true;
 
@@ -16,10 +16,10 @@ include <../camera.scad>;
 //% translate([-26, 10, -50]) color("grey") arca_clamp();
 
 //translate([0, 65.9+0]) rotate([-90, 0, 0]) front();
-translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
+//translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
 //translate([0, 50-2, -50]) rotate([180, 0, 0]) bottom();
 //translate([0, 10, -90]) socket();
-//
+
 //translate([-89, -7, 47]) rotate([-90, 0, 90]) controller_dock();
 //translate([-89+0.5, -7, 47-36]) rotate([90, 0, 90]) import("../zeroholder11.stl");
 //
@@ -31,7 +31,8 @@ translate([0, 65.9-5, 0]) rotate([90, 0, 0]) back();
 
 //translate([300, -60]) drill_helper();
 //translate([180, 0]) front();
-//translate([180, 110]) back();
+translate([180, 110]) back();
+translate([0, 110]) back_cnc();
 //translate([180, 110]) back2D();
 //translate([180, -100, 40]) rotate([-90, 0, 0]) bottom();
 //translate([180, -145]) socket();
@@ -114,6 +115,11 @@ module socket() {
     size = [60, 38];
     screw_dist = 8;
     
+    height = 10;
+    
+    oring_diam = 5+2*1.6;
+    oring_depth = 1.5;
+    
 //    translate([0, 0, 10]) color("red") cube([1, 9, 1]);
 //    translate([0, -1, 10-6]) color("red") cube([1, 1, 6]);
     
@@ -125,7 +131,7 @@ module socket() {
             
             // arca screw
             translate([0, size[1]/2, -1]) cylinder($fn=32, d=6.3+0.5, h=50); 
-            translate([0, size[1]/2, 1.6]) cylinder($fn=6, d=13.2, h=10); 
+            translate([0, size[1]/2, 1.6]) cylinder($fn=6, d=13.2-0.1, h=10); 
 
             // screws
             translate([-20, screw_dist, -1]) cylinder($fn=32, d=5.3, h=30);
@@ -141,6 +147,21 @@ module socket() {
             translate([0, -2.5, 3]) rotate([-45-15, 0]) hull() {
                 cylinder($fn=32, d=3, h=30);
                 translate([-4/2, -5]) cube([4, 1, 30]);
+            }
+            
+            // o-ring
+            difference() {
+                union() {
+                    translate([-20,  8, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+                    translate([ 20,  8, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+                    translate([-20, 30, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+                    translate([ 20, 30, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+                }
+                
+                a = height-oring_depth;
+                b = a-1.5;
+                points = [[0, 0], [41, 0], [41, a], [0, b]];
+                translate([-30, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=60) polygon(points);
             }
         }
         
@@ -162,6 +183,10 @@ module socket() {
 module bottom() {
     
     size = [60, 41];
+    height = 13;
+    
+//    oring_diam = 5+2.5;
+//    oring_depth = 1.5;
     
     intersection() {
         difference() {
@@ -200,14 +225,29 @@ module bottom() {
             translate([-20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 8, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
-            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
-            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
-            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=8);
+            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
+            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
+            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
+            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
+            
+            // o-ring
+//            difference() {
+//                union() {
+//                    translate([-20,  8, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+//                    translate([ 20,  8, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+//                    translate([-20, 30, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+//                    translate([ 20, 30, height-3]) cylinder($fn=32, d=oring_diam, h=20);
+//                }
+//                
+//                a = height-oring_depth;
+//                b = a-1.5;
+//                points = [[0, 0], [41, 0], [41, a], [0, b]];
+//                translate([-30, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=60) polygon(points);
+//            }
         }
         
         // top surface
-        a = 13.0;
+        a = height;
         b = a-1.5;
         points = [[0, 0], [41, 0], [41, a], [0, b]];
         translate([-30, 0, 0]) rotate([90, 0, 90]) linear_extrude(height=60) polygon(points);
@@ -346,6 +386,65 @@ module back() {
         }
         translate([0, 0, 40]) rotate([90, 0, 0]) cylinder($fn=32, d=10, h=100);
         translate([0, -60, 40]) rotate([90, 0, 0]) cylinder($fn=32, d=14, h=10);
+    }
+}
+
+module back_cnc() {
+    
+    screw_dist = 50.2;
+    
+    difference() {
+        union() {
+            cylinder($fn=q, d=88+14, h=3);
+            translate([0, 0, 3]) cylinder($fn=q, d1=88+14, d2=88+14-2, h=1);
+            
+            // screw support
+            for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 0]) {
+                cylinder($fn=32, d=14, h=3);
+                translate([0, 0, 3]) cylinder($fn=32, d1=14, d2=14-2, h=1);
+            }
+                
+            // base angle
+            points = [  [-50, 15], [-50, 30], [0, 5], [50, 30], [50, 15], 
+                        [20, -12], [-20, -12]
+            ];
+            
+            // translate([0, -50, 0]) linear_extrude(height=5) polygon(points);
+            
+            // side reinforcements
+            hull() {
+                rotate([0, 0, off+deg*0]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=3);
+                    translate([0, 0, 3]) cylinder($fn=32, d1=14, d2=14-2, h=1);
+                }
+                rotate([0, 0, off+deg*3]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=3);
+                    translate([0, 0, 3]) cylinder($fn=32, d1=14, d2=14-2, h=1);
+                }
+                rotate([0, 0, off+deg*4]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=3);
+                    translate([0, 0, 3]) cylinder($fn=32, d1=14, d2=14-2, h=1);
+                }
+                rotate([0, 0, off+deg*7]) translate([screw_dist, 0, 0]) {
+                    cylinder($fn=32, d=14, h=3);
+                    translate([0, 0, 3]) cylinder($fn=32, d1=14, d2=14-2, h=1);
+                }
+            }
+        }
+        
+        // main hole
+        translate([0, 0, -1]) cylinder($fn=64, d=filter_diameter, h=10);
+        translate([0, 0, 3]) cylinder($fn=64, d1=filter_diameter, d2=filter_diameter+2, h=1+.1);
+    
+        // screw holes
+        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=4.2, h=50);
+    
+        // nudge for case curvature
+        translate([50, 53.375+.1, -.1]) rotate([90, 0, -90]) linear_extrude(height=100) polygon([[0, 0], [2, 0], [1, 1], [0, 3]]);
+        
+        // extension hole
+        translate([-47,  7, -1]) cylinder($fn=32, d=2.5, h=10);
+        translate([-47, -7, -1]) cylinder($fn=32, d=2.5, h=10);
     }
 }
 
