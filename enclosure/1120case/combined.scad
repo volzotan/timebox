@@ -30,12 +30,12 @@ include <../camera.scad>;
 // --------------------------------------------------------------------------
 
 //translate([300, -60]) drill_helper();
-translate([180, 0]) front();
-translate([0, 0]) front_cnc();
+//translate([180, 0]) front();
+//translate([0, 0]) front_cnc();
 //translate([180, 110]) back();
 //translate([0, 110]) back_cnc();
 //translate([180, 110]) back2D();
-//translate([180, -100, 40]) rotate([-90, 0, 0]) bottom();
+//translate([180, -100, 40]) bottom();
 //translate([180, -145]) socket();
 //translate([240, 0]) controller_dock();
 
@@ -43,6 +43,11 @@ translate([0, 0]) front_cnc();
 
 //translate([0, 0, 0]) bottom();
 //translate([0, 38, 20.61]) rotate([180, 0, 0]) socket();
+
+// ----------------------  PRINT  ------------------------------------------
+
+//translate([180, -145]) socket();                          // print with 0.15
+translate([180, -100, 40]) rotate([-90, 0, 0]) bottom();  // print with 0.2
 
 module hook() {
 //    points = [
@@ -118,7 +123,7 @@ module socket() {
     
     height = 10;
     
-    oring_diam = 5+2*1.6;
+    oring_diam = 5+2*1.7;
     oring_depth = 1.5;
     
 //    translate([0, 0, 10]) color("red") cube([1, 9, 1]);
@@ -226,10 +231,10 @@ module bottom() {
             translate([-20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 8, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
-            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
-            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
-            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.6, h=height-5);
+            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
+            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
+            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
+            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
             
             // o-ring
 //            difference() {
