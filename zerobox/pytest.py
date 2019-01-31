@@ -5,7 +5,9 @@ import time
 
 import gphoto2 as gp
  
+
 EXIT_CODE_NO_CAMERAS_FOUND          = -1
+
 
 def _get_config_value(config, name):
 
@@ -109,6 +111,27 @@ def list_config(camera):
         # error, config = gp.gp_camera_get_config(camera, context)
         # gp.check_result(error)
 
+def get_exposure_status(camera):
+
+    status = {}
+
+    error, config = gp.gp_camera_get_config(camera)
+    gp.check_result(error)
+
+    error, config_list = gp.gp_camera_list_config(camera, context)
+    gp.check_result(error)
+
+    status["autofocus"]             = _get_config_value(config, "autofocus")
+    status["focusmode"]             = _get_config_value(config, "focusmode")
+    status["expprogram"]            = _get_config_value(config, "expprogram")
+    status["exposuremetermode"]     = _get_config_value(config, "exposuremetermode")
+    status["exposurecompensation"]  = _get_config_value(config, "exposurecompensation")
+    status["shutterspeed"]          = _get_config_value(config, "shutterspeed")
+    status["f-number"]              = _get_config_value(config, "f-number")
+    status["iso"]                   = _get_config_value(config, "iso")
+
+    return status
+
 
 def set_exposure_compensation(camera, compensation):
 
@@ -116,6 +139,46 @@ def set_exposure_compensation(camera, compensation):
     gp.check_result(error)
 
     _set_config_value(camera, config, "exposurecompensation", str(compensation))
+
+
+def set_autofocus(camera, enabled):
+
+    value = "Manual"
+    if enabled:
+        value = "Automatic"
+
+    error, config = gp.gp_camera_get_config(camera)
+    gp.check_result(error)
+
+    _set_config_value(camera, config, "focusmode", value)
+
+
+def run_autofocus(camera, active):
+
+    value = 0
+    if active:
+        value = 1
+
+    error, config = gp.gp_camera_get_config(camera)
+    gp.check_result(error)
+
+    _set_config_value(camera, config, "autofocus", value)
+
+
+def capture_and_download(camera, filename):
+    
+    error, file_path = gp.gp_camera_capture(camera, gp.GP_CAPTURE_IMAGE)
+    gp.check_result(error)
+
+    print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+
+    error, camera_file = gp.gp_camera_file_get(camera, file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+    gp.check_result(error)
+
+    print(filename)
+
+    error = gp.gp_file_save(camera_file, filename)
+    gp.check_result(error)
 
 
 # use Python logging
@@ -163,8 +226,19 @@ if len(cameras) == 0:
 camera = init_camera(port=_lookup_port(port_info_list, cameras[0][1]))
 set_exposure_compensation(camera, "-1")
 
+set_autofocus(camera, True)
+run_autofocus(camera, True)
+time.sleep(2)
+run_autofocus(camera, False)
+set_autofocus(camera, False)
+
+# list_config(camera)
+# print(get_exposure_status(camera))
+
 # error, abilities = gp.gp_camera_get_abilities(camera)
 # gp.check_result(error)
 # _print_abilities(abilities)
+
+# capture_and_download(camera, "foo.arw")
 
 gp.check_result(gp.gp_camera_exit(camera))
