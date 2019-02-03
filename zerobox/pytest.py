@@ -1,12 +1,19 @@
 from datetime import datetime
 import logging
+import os
 import sys
 import time
+from datetime import datetime
+
+from multiprocessing.pool import ThreadPool
 
 import gphoto2 as gp
  
 
-EXIT_CODE_NO_CAMERAS_FOUND          = -1
+EXIT_CODE_UNKNOWN                   = -1
+EXIT_CODE_NO_CAMERAS_FOUND          = -2
+
+EXTENSION                           = ".ARW"
 
 
 def _get_config_value(config, name):
@@ -170,75 +177,120 @@ def capture_and_download(camera, filename):
     error, file_path = gp.gp_camera_capture(camera, gp.GP_CAPTURE_IMAGE)
     gp.check_result(error)
 
-    print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+    # print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
 
     error, camera_file = gp.gp_camera_file_get(camera, file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
     gp.check_result(error)
-
-    print(filename)
 
     error = gp.gp_file_save(camera_file, filename)
     gp.check_result(error)
 
 
-# use Python logging
-logging.basicConfig(format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
-gp.check_result(gp.use_python_logging())
+def run_capture(context, port, filename):
+    error = None
+    camera = None
 
-context = gp.gp_context_new()
+    print("start run_capture for device at port {}".format(port.get_path()))
 
-error, port_info_list = gp.gp_port_info_list_new()
-gp.check_result(error)
+    try:
+        camera = init_camera(port=port)
+        capture_and_download(camera, filename)
+    except Exception as e:
+        print("error")
+        error = e
+    finally:
+        if camera is not None:
+            gp.check_result(gp.gp_camera_exit(camera))
+        else:
+            print("camera None, closing not possible")
 
-error = gp.gp_port_info_list_load(port_info_list)
-gp.check_result(error)
+    return error
 
-error, abilities_list = gp.gp_abilities_list_new()
-gp.check_result(error)
 
-error = gp.gp_abilities_list_load(abilities_list)
-gp.check_result(error)
+if __name__ == "__main__":
 
-error, cameras = gp.gp_abilities_list_detect(abilities_list, port_info_list)
-gp.check_result(error)
+    # inital checks
+    if not EXTENSION.startswith("."):
+        EXTENSION = "." + EXTENSION
 
-if len(cameras) == 0:
-    print("no cameras found. exit.")
-    sys.exit(EXIT_CODE_NO_CAMERAS_FOUND)
+    # use Python logging
+    logging.basicConfig(format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
+    gp.check_result(gp.use_python_logging())
 
-# print("PORTS:")
-# for item in port_info_list:
-#     print(item.get_name())
-#     print(item.get_path())
-#     print(item.get_type())
-#     print("-----")
+    context = gp.gp_context_new()
 
-# print("ABILITIES:")
-# for item in abilities_list:
-#     print(item)
-#     print("-----")
+    error, port_info_list = gp.gp_port_info_list_new()
+    gp.check_result(error)
 
-# print("CAMERAS")
-# for item in cameras:
-#     print(item[0])
-#     print(item[1])
+    error = gp.gp_port_info_list_load(port_info_list)
+    gp.check_result(error)
 
-camera = init_camera(port=_lookup_port(port_info_list, cameras[0][1]))
-set_exposure_compensation(camera, "-1")
+    error, abilities_list = gp.gp_abilities_list_new()
+    gp.check_result(error)
 
-set_autofocus(camera, True)
-run_autofocus(camera, True)
-time.sleep(2)
-run_autofocus(camera, False)
-set_autofocus(camera, False)
+    error = gp.gp_abilities_list_load(abilities_list)
+    gp.check_result(error)
 
-# list_config(camera)
-# print(get_exposure_status(camera))
+    error, cameras = gp.gp_abilities_list_detect(abilities_list, port_info_list)
+    gp.check_result(error)
 
-# error, abilities = gp.gp_camera_get_abilities(camera)
-# gp.check_result(error)
-# _print_abilities(abilities)
+    if len(cameras) == 0:
+        print("no cameras found. exit.")
+        sys.exit(EXIT_CODE_NO_CAMERAS_FOUND)
 
-# capture_and_download(camera, "foo.arw")
+    if len(cameras) == 1:
+        print("1 camera connected")
+    else:
+        print("{} cameras connected".format(len(cameras)))
 
-gp.check_result(gp.gp_camera_exit(camera))
+    for name, addr in cameras:
+        print("{} | {}".format(name, addr))
+
+    pool = ThreadPool(processes=1)
+
+    file_folder = []
+    for i in range(0, len(cameras)):
+        name = "camera_{}".format(i)
+        try:
+            os.makedirs(name)
+        except Exception as e:
+            pass
+
+        file_folder.append(name)
+
+    capture_results = []
+    capture_timer = []
+
+    for i in range(0, len(cameras)):
+        cam = cameras[i]
+        arguments = (context, _lookup_port(port_info_list, cam[1]), os.path.join(file_folder[i], "test" + EXTENSION))
+        # print(run_capture(*arguments))
+        capture_result = pool.apply_async(run_capture, arguments)
+        
+        capture_results.append(capture_result)
+        capture_timer.append(datetime.now())
+
+    for result, t in zip(capture_results, capture_timer):
+        print(result.get())
+        print("took {0:.2f}ms".format((datetime.now() - t).microseconds / 1000))
+
+
+    # camera = init_camera(port=_lookup_port(port_info_list, cameras[0][1]))
+    # set_exposure_compensation(camera, "-1")
+
+    # set_autofocus(camera, True)
+    # run_autofocus(camera, True)
+    # time.sleep(2)
+    # run_autofocus(camera, False)
+    # set_autofocus(camera, False)
+
+    # # list_config(camera)
+    # # print(get_exposure_status(camera))
+
+    # # error, abilities = gp.gp_camera_get_abilities(camera)
+    # # gp.check_result(error)
+    # # _print_abilities(abilities)
+
+    # # capture_and_download(camera, "foo.arw")
+
+    # gp.check_result(gp.gp_camera_exit(camera))
