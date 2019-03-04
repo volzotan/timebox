@@ -6300,7 +6300,6 @@ This is the "EZ" version, which has limited top masking for improved ease of ass
 <sheets>
 <sheet>
 <plain>
-<text x="20.32" y="144.78" size="1.778" layer="91">voltage selection switch (USB/BATT)</text>
 <text x="309.88" y="233.68" size="1.778" layer="91">reverse current protection</text>
 </plain>
 <instances>
@@ -6412,7 +6411,6 @@ This is the "EZ" version, which has limited top masking for improved ease of ass
 </instance>
 <instance part="J1" gate="J1" x="15.24" y="101.6" smashed="yes">
 <attribute name="VALUE" x="12.7" y="89.154" size="1.778" layer="96" font="vector" rot="MR180" align="top-left"/>
-<attribute name="NAME" x="12.7" y="112.014" size="1.778" layer="95" font="vector"/>
 </instance>
 <instance part="GND34" gate="1" x="30.48" y="78.74" smashed="yes">
 <attribute name="VALUE" x="27.94" y="76.2" size="1.778" layer="96" font="vector"/>
@@ -6444,7 +6442,6 @@ This is the "EZ" version, which has limited top masking for improved ease of ass
 <attribute name="VALUE" x="25.4" y="43.18" size="1.778" layer="96"/>
 </instance>
 <instance part="X2" gate="G$1" x="17.78" y="55.88" smashed="yes">
-<attribute name="NAME" x="15.24" y="67.31" size="1.778" layer="95" font="vector"/>
 <attribute name="VALUE" x="26.67" y="48.26" size="1.778" layer="96" font="vector" rot="R90"/>
 </instance>
 <instance part="R3" gate="G$1" x="58.42" y="58.42" smashed="yes" rot="R180">
@@ -6750,6 +6747,14 @@ This is the "EZ" version, which has limited top masking for improved ease of ass
 <pinref part="GND4" gate="1" pin="GND"/>
 <wire x1="53.34" y1="205.74" x2="45.72" y2="205.74" width="0.1524" layer="91"/>
 <wire x1="45.72" y1="205.74" x2="45.72" y2="203.2" width="0.1524" layer="91"/>
+<pinref part="U2" gate="G$1" pin="A0"/>
+<wire x1="53.34" y1="213.36" x2="45.72" y2="213.36" width="0.1524" layer="91"/>
+<wire x1="45.72" y1="213.36" x2="45.72" y2="210.82" width="0.1524" layer="91"/>
+<junction x="45.72" y="205.74"/>
+<pinref part="U2" gate="G$1" pin="A1"/>
+<wire x1="45.72" y1="210.82" x2="45.72" y2="205.74" width="0.1524" layer="91"/>
+<wire x1="53.34" y1="210.82" x2="45.72" y2="210.82" width="0.1524" layer="91"/>
+<junction x="45.72" y="210.82"/>
 </segment>
 <segment>
 <pinref part="C9" gate="G$1" pin="-"/>
@@ -7145,14 +7150,16 @@ This is the "EZ" version, which has limited top masking for improved ease of ass
 </net>
 <net name="USB_EN" class="0">
 <segment>
-<pinref part="U1" gate="G$1" pin="PB22(SER5:2+)"/>
-<wire x1="330.2" y1="76.2" x2="347.98" y2="76.2" width="0.1524" layer="91"/>
-<label x="347.98" y="76.2" size="1.778" layer="95" xref="yes"/>
-</segment>
-<segment>
 <wire x1="144.78" y1="231.14" x2="144.78" y2="226.06" width="0.1524" layer="91"/>
 <pinref part="R6" gate="G$1" pin="1"/>
 <label x="144.78" y="231.14" size="1.778" layer="95" rot="R180"/>
+</segment>
+<segment>
+<pinref part="U1" gate="G$1" pin="PA21(SER5:3+)"/>
+<wire x1="330.2" y1="106.68" x2="342.9" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="342.9" y1="106.68" x2="342.9" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="342.9" y1="104.14" x2="347.98" y2="104.14" width="0.1524" layer="91"/>
+<label x="347.98" y="104.14" size="1.778" layer="95" xref="yes"/>
 </segment>
 </net>
 <net name="N$3" class="0">
