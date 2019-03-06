@@ -1,27 +1,96 @@
 from luma.core.interface.serial import i2c, spi
+from luma.emulator.device import pygame, capture
+
 from luma.core.render import canvas
 from luma.oled.device import sh1106
 
-# from luma.emulator.device import pygame, capture
-
 import time
+import os
 from PIL import ImageFont, Image
 import PIL.ImageOps  
 
 import datetime
+import sys
+from os.path import getmtime
 
-# serial = spi()
-# device = sh1106(serial)
+own_mtime = getmtime(__file__)
 
 COLOR0 = "black"
 COLOR1 = "white"
 
-# device = pygame(width=128, height=64, mode="1", scale=1)
-device = sh1106(spi())
+BTN_1 = 16
+BTN_2 = 20
+BTN_3 = 21
+BTN_L = 5
+BTN_R = 26
+BTN_U = 6
+BTN_D = 19
+BTN_C = 13
+
+device = None
+pyg = None
+
+if os.uname().nodename == "raspberrypi":
+    device = sh1106(spi(), rotate=2)
+
+    import RPi.GPIO as GPIO
+
+    GPIO.setmode(GPIO.BCM)
+
+    GPIO.setup(BTN_1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN_2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN_3, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN_L, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN_R, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN_U, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN_D, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN_C, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+else:
+    device = pygame(width=128, height=64, mode="1", transform="scale2x", scale=2)
+    pyg = device._pygame # grabs the actual pygame object in the device instance 
+
 # device = capture(width=128, height=64, mode="1")
 
-font = ImageFont.truetype("slkscr.ttf", 8)
-font2 = ImageFont.truetype("slkscr.ttf", 16)
+# font = ImageFont.truetype("slkscr.ttf", 8)
+# font2 = ImageFont.truetype("slkscr.ttf", 16)
+font = ImageFont.truetype("ves-3x5.ttf", 5)
+FONT_CHARACTER_WIDTH = 3
+# font = ImageFont.truetype("ves-4x5.ttf", 5)
+# FONT_CHARACTER_WIDTH = 4
+
+STATE_LOGO          = 0
+STATE_MENU          = 1
+STATE_CONFIG_ITEM   = 2
+STATE_DIALOG        = 3
+STATE_RUNNING       = 4
+STATE_RUNNING_MENU  = 5
+STATE_IDLE          = 100
+
+config = {
+    "interval": {
+        "type": "time",
+        "min": 1,
+        "max": 3600,
+        "value": 10
+    },
+    "secondexposure": {
+        "type": "boolean",
+        "value": False
+    }
+}
+
+def checkAndRestartOnFileChange():
+    if getmtime(__file__) != own_mtime:
+        print("file changed. restart...")
+        cleanup()
+        time.sleep(0.5)
+        os.execv(sys.executable, ['python3'] + sys.argv)
+
+
+def cleanup():
+    device.cleanup()
+
 
 def _aperture_to_str(value):
     e = 0.1
@@ -37,74 +106,138 @@ def _aperture_to_str(value):
     return "F{0:.1f}".format(value)
 
 
-def drawRunScreen(canvas, data):
+def getKeyEvents():
+
+    keys = []
+
+    if not pyg:
+        if not GPIO.input(BTN_L):
+            keys.append("l")
+        if not GPIO.input(BTN_R):
+            keys.append("r")
+        if not GPIO.input(BTN_U):
+            keys.append("u")
+        if not GPIO.input(BTN_D):
+            keys.append("d")
+        if not GPIO.input(BTN_C):
+            keys.append("c")
+        if not GPIO.input(BTN_1):
+            keys.append("1")
+        if not GPIO.input(BTN_2):
+            keys.append("2")
+        if not GPIO.input(BTN_3):
+            keys.append("3")
+    else:
+        events = pyg.event.get()
+        for event in events:
+            if event.type == pyg.KEYDOWN:
+                if event.key == pyg.K_LEFT:
+                    keys.append("l")
+                if event.key == pyg.K_RIGHT:
+                    keys.append("r")
+                if event.key == pyg.K_UP:
+                    keys.append("u")
+                if event.key == pyg.K_DOWN:
+                    keys.append("d")
+                if event.key == pyg.K_RETURN:
+                    keys.append("c")
+                if event.key == pyg.K_q:
+                    keys.append("1")
+                if event.key == pyg.K_a:
+                    keys.append("2")
+                if event.key == pyg.K_y:
+                    keys.append("3")
+
+    return keys
+
+
+def text(c, coords, t, invert=False, rightalign=False):
+    fill = COLOR1
+    if invert:
+        fill = COLOR0
+
+    if rightalign:
+        coords[0] -= len(t) * FONT_CHARACTER_WIDTH + len(t) - 1
+        if coords[0] < 0:
+            coords[0] = 0
+
+    c.text(coords, t.upper(), font=font, fill=fill)
+
+    # TODO rightalign
+
+
+def draw_running(draw, config, data):
 
     # CAM SELECTOR
 
-    if data["cam_0"]["active"]:
-        draw.rectangle([(1, 1), (1+29, 1+7)], fill=COLOR1)
-        draw.text((1, -1), "CAM 1", font=font, fill=COLOR0)
-    else:
-        draw.rectangle([(1, 1), (1+29, 1+7)], fill=COLOR0)
-        draw.text((1, -1), "CAM 1", font=font, fill=COLOR1)
+    # end = 9
+    end = 18
 
-    if data["cam_1"]["active"]:
-        draw.rectangle([(1, 8), (1+29, 8+7)], fill=COLOR1)
-        draw.text((1, -1+8), "CAM 2", font=font, fill=COLOR0)
-    else:
-        draw.rectangle([(1, 8), (1+29, 8+7)], fill=COLOR0)
-        draw.text((1, -1+8), "CAM 2", font=font, fill=COLOR1)
+    if data["cam_0"]:
+        if data["cam_0"]["active"]:
+            draw.rectangle([(1, 1), (1+21, 1+6)], fill=COLOR1)
+            text(draw, [2, 2], "CAM 1", invert=True)
+        else:
+            draw.rectangle([(1, 1), (1+21, 1+6)], fill=COLOR0)
+            text(draw, [2, 2], "CAM 1")
 
-    draw.rectangle([(0, 17), (127, 17)], outline=None, fill=COLOR1)
-    draw.rectangle([(32, 0), (32, 17)], outline=None, fill=COLOR1)
+    if data["cam_1"]:
+        if data["cam_1"]["active"]:
+            draw.rectangle([(1, 9), (1+21, 8+7)], fill=COLOR1)
+            text(draw, [2, 2+8], "CAM 2", invert=True)
+        else:
+            draw.rectangle([(1, 8), (1+21, 8+7)], fill=COLOR0)
+            text(draw, [2, 2+8], "CAM 2")
 
-    draw.text((35,  -1), "1/1250", font=font, fill=COLOR1)
-    draw.text((71,  -1), _aperture_to_str(data["cam_0"]["aperture"]), font=font, fill=COLOR1)
-    draw.text((95,  -1), str(data["cam_0"]["iso"]), font=font, fill=COLOR1)
-    draw.text((116, -1), "+8", font=font, fill=COLOR1)
+        end = 17
 
-    draw.text((35,   7), "1/1250", font=font, fill=COLOR1)
-    draw.text((71,   7), _aperture_to_str(data["cam_1"]["aperture"]), font=font, fill=COLOR1)
-    draw.text((95,   7), "300", font=font, fill=COLOR1)
-    draw.text((116,  7), "+8", font=font, fill=COLOR1)
+    draw.rectangle([(0, end), (127, end)], outline=None, fill=COLOR1)
+    draw.rectangle([(24, 0), (24, end)], outline=None, fill=COLOR1)
 
-    # 2ND EX
+    if data["cam_0"]:
+        text(draw, [35,  2], "1/1250")
+        text(draw, [71,  2], _aperture_to_str(data["cam_0"]["aperture"]))
+        text(draw, [95,  2], str(data["cam_0"]["iso"]))
+        text(draw, [127, 2], "+8", rightalign=True)
 
-    draw.text((1, 18), "2.EX", font=font, fill=COLOR1)
-    draw.rectangle([(39, 20), (39+5, 20+5)], outline=None, fill=COLOR1)
-    draw.text((1, 18+8), "T:", font=font, fill=COLOR1)
-    draw.text((25, 18+8), "10.5", font=font, fill=COLOR1)
-    draw.text((1, 18+16), "101", font=font, fill=COLOR1)
-    draw.text((20, 18+16), "/", font=font, fill=COLOR1)
-    draw.text((29, 18+16), "156", font=font, fill=COLOR1)
+    if data["cam_1"]:
+        text(draw, [35,   10], "1/1250")
+        text(draw, [71,   10], _aperture_to_str(data["cam_1"]["aperture"]))
+        text(draw, [95,   10], "300")
+        text(draw, [127,  10], "+8", rightalign=True)
 
-    draw.rectangle([(47, 18), (47, 45)], outline=None, fill=COLOR1)
-    draw.rectangle([(0, 45), (127, 45)], outline=None, fill=COLOR1)
+    # 2ND EXPOSURE
+
+    start = end + 1
+
+    if config["secondexposure"]["value"]:
+        text(draw, [1, start+2], "2.EXP")
+        draw.rectangle([(40, start+1), (40+5, start+1+5)], outline=None, fill=COLOR1)
+        text(draw, [1, start+9], "T:")
+        text(draw, [25, start+9], "10.5")
+        text(draw, [1, start+16], "101")
+        text(draw, [20, start+16], "/")
+        text(draw, [29, start+16], "156")
+    else: 
+        text(draw, [5, start+9], "2.EXP OFF")
+
+    draw.rectangle([(47, start), (47, start+23)], outline=None, fill=COLOR1)
+    draw.rectangle([(0, start+23), (127, start+23)], outline=None, fill=COLOR1)
 
     # INTERVAL
 
-    draw.text((45+5, 18), "INTVAL", font=font, fill=COLOR1)
+    text(draw, [45+5, start+2], "INTVAL")
+    text(draw, [127,  start+2], "00:00:00", rightalign=True)
 
-    draw.text((127-10-26, 18), "00", font=font, fill=COLOR1)
-    draw.text((127-10-15, 18), ":", font=font, fill=COLOR1)
-    draw.text((127-10-13, 18), "00", font=font, fill=COLOR1)
-    draw.text((127-10-2,  18), ":", font=font, fill=COLOR1)
-    draw.text((127-10,    18), "00", font=font, fill=COLOR1)
+    text(draw, [45+5, start+9], "90SEC")
+    text(draw, [127,  start+9], "00:00:00", rightalign=True)
 
-    draw.text((45+5, 26), "90SEC", font=font, fill=COLOR1)
-
-    draw.text((127-10-26, 26), "00", font=font, fill=COLOR1)
-    draw.text((127-10-15, 26), ":", font=font, fill=COLOR1)
-    draw.text((127-10-13, 26), "00", font=font, fill=COLOR1)
-    draw.text((127-10-2,  26), ":", font=font, fill=COLOR1)
-    draw.text((127-10,    26), "00", font=font, fill=COLOR1)
-
-    draw.text((45+5, 34), "FR.SPC", font=font, fill=COLOR1)
-    draw.text((90, 34), "{0:2.2f}GB".format(12.345), font=font, fill=COLOR1)
+    text(draw, [45+5, start+16], "FR.SPC")
+    text(draw, [127,  start+16], "{0:2.2f}GB".format(12.345), rightalign=True)
 
 
     # draw.rectangle([(64, 0), (127, 8)], fill=COLOR0)
-    # draw.text((90, -1), "{0:2.2f}GB".format(12.345), font=font, fill=COLOR1)
+    # text(draw, [90, -1], "{0:2.2f}GB".format(12.345))
 
     # draw.rectangle([(0, 10), (127, 10)], fill=COLOR1)
     # draw.rectangle([(38, 0), (38, 10)], fill=COLOR1)
@@ -112,36 +245,36 @@ def drawRunScreen(canvas, data):
 
     # PROGRESS BAR
 
-    draw.text((1, 60-8-2), "{0:3d}/{1:3d}".format(156, 209), font=font, fill=COLOR1)
-    draw.text((106, 60-8-2), "{0:2d}%".format(43), font=font, fill=COLOR1)
-    draw.text((55, 60-8-2), "00:37", font=font, fill=COLOR1)
+    text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(156, 209))
+    text(draw, [127, 60-8], "{0:2d}%".format(43), rightalign=True)
+    text(draw, [55, 60-8], "00:37")
     draw.rectangle([(0, 60), (127, 63)], fill=COLOR1)
     draw.rectangle([(1, 61), (127-1-70, 63-1)], fill=COLOR0)
 
     # ERROR BAR
     # draw.line([(0, 55), (128, 55)], fill=COLOR1)
-    # draw.text((1, 55), "ERROR FOO", font=font, fill=COLOR1)
+    # text(draw, [1, 55], "ERROR FOO")
 
 
-def draw_dialog(canvas, msg, options):
+def draw_dialog(draw, msg, options):
 
     draw.rectangle([(0, 0), (127, 64)], outline=None, fill=COLOR1)
     draw.rectangle([(1, 1), (127-1, 64-2)], outline=None, fill=COLOR0)
 
-    draw.text((10, 10), msg, font=font, fill=COLOR1)
-    draw.text((10, 30), options[0], font=font, fill=COLOR1)
-    draw.text((70, 30), options[1], font=font, fill=COLOR1)
+    text(draw, [10, 10], msg)
+    text(draw, [10, 30], options[0])
+    text(draw, [70, 30], options[1])
 
 
-def draw_logo(canvas, data):
+def draw_logo(draw, data):
     draw.rectangle([(0, 0), (127, 64)], outline=None, fill=COLOR1)
     draw.bitmap((0,0), data["logo"])
 
-    draw.text((10, 36), "DEVICE", font=font, fill=COLOR1)
-    draw.text((60, 36), data["devicename"], font=font, fill=COLOR1)
-    draw.text((10, 44), "VERSION", font=font, fill=COLOR1)
-    draw.text((60, 44), data["version"], font=font, fill=COLOR1)
-    draw.text((10, 52), "FREE SPC", font=font, fill=COLOR1)
+    text(draw, [10, 36], "DEVICE")
+    text(draw, [60, 36], data["devicename"])
+    text(draw, [10, 44], "VERSION")
+    text(draw, [60, 44], data["version"])
+    text(draw, [10, 52], "FREE SPC")
     draw.rectangle([(60, 55), (122, 59)], outline=None, fill=COLOR1)
     draw.rectangle([(61, 56), (int(61+60*data["free_space"]), 58)], outline=None, fill=COLOR0)
 
@@ -158,13 +291,12 @@ data["cam_0"]["aperture"]               = 11
 data["cam_0"]["iso"]                    = 300
 data["cam_0"]["exposurecompensation"]   = 1
 
-data["cam_1"]["active"]                 = False
+data["cam_1"]["active"]                 = True
 data["cam_1"]["shutter"]                = "1/300"
 data["cam_1"]["aperture"]               = 5.6
 data["cam_1"]["iso"]                    = 300
 data["cam_1"]["exposurecompensation"]   = 1
 
-data = {}
 logo = Image.open("logo.png")
 logo = PIL.ImageOps.invert(logo)
 logo = logo.convert("1")
@@ -174,21 +306,28 @@ now = datetime.datetime.now()
 data["version"] = now.strftime("%d.%m.%y")
 data["free_space"] = 0.45
 
-state = 0
+state = STATE_RUNNING
 
 while True:
     with canvas(device) as draw:
-        # draw.rectangle(device.bounding_box, outline=COLOR1, fill=COLOR0)
 
-        # drawRunScreen(canvas, data)
-        draw_logo(canvas, data)
+        k = getKeyEvents()
+        if len(k) > 0:
+            print(*k)
 
-        if state == 0:
-            draw_logo(canvas, data)
-            state = 1
-        elif state == 1:
-            draw_dialog(canvas, "abort capture?", ["no", "yes"])
+        if state == STATE_LOGO:
+            draw_logo(draw, data)
+            state = STATE_MENU
+            time.sleep(1.0)
+        elif state == STATE_MENU:
+            # draw_dialog(draw, "abort capture?", ["no", "yes"])
+            state = STATE_RUNNING
+        elif state == STATE_RUNNING:
+            draw_running(draw, config, data)
+            #state = STATE_IDLE
         else:
             pass
             
-    time.sleep(1)
+    time.sleep(0.1)
+
+    checkAndRestartOnFileChange()

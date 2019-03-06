@@ -8,7 +8,6 @@ output=$( df -k . )
 output=$( cut -f1 $output )
 echo output
 
-
 if [ $USER != "pi" ]; then
     echo "NOT RUNNING ON PI (as user pi). ABORT"
     exit -1
@@ -36,10 +35,10 @@ sudo systemctl disable triggerhappy.service
 
 # TODO: https://wiki.archlinux.org/index.php/dhcpcd#Speed_up_DHCP_by_disabling_ARP_probing
 
-# expand filesystem
-echo "Expand the filesystem. raspi-config will be opened."
-read -p "Press enter to proceed."
-sudo raspi-config
+# expand filesystem (should be done automatically on first boot by now)
+# echo "Expand the filesystem. raspi-config will be opened."
+# read -p "Press enter to proceed."
+# sudo raspi-config
 
 # install basic stuff
 
@@ -48,20 +47,23 @@ sudo apt-get install rsync zsh picocom
 
 # zerobox dependencies
 
-sudo apt-get install python python-numpy dcraw python-pip
+sudo apt-get install python3 python3-numpy dcraw python3-pip
 pip install gexiv2
 
-    python3-numpy needs to be compiled on the pi and takes about 2 hours. 
-    The python2 version comes with precompiled binaries. 
+# python3-numpy needs to be compiled on the pi and takes about 2 hours. 
+# The python2 version comes with precompiled binaries. 
 
 sudo apt-get install exiv2 gir1.2-gexiv2-0.10
-sudo apt-get install libexiv2-dev (?)
-sudo apt-get install python(3)-gi
-sudo pip(3) install pyserial
+# sudo apt-get install libexiv2-dev (?)
+sudo apt-get install python3-gi
+sudo pip3 install pyserial
 
-    oh-my-zsh
+exit 0
+
+# oh-my-zsh
 sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)“ 
-compile gphoto2 in the newest version, the debian version is lacking some functionality (AF control)
+
+# compile gphoto2 in the newest version, the debian version is lacking some functionality (AF control)
 
 default raspbian jessie lite:
 
