@@ -41,6 +41,28 @@ own_mtime = getmtime(__file__)
 device = None
 pyg = None
 
+keyEvents = []
+
+def button_callback(button):
+    if not pyg:
+        if button == BTN_L:
+            keyEvents.append("l")
+        if button == BTN_R:
+            keyEvents.append("r")
+        if button == BTN_U:
+            keyEvents.append("u")
+        if button == BTN_D:
+            keyEvents.append("d")
+        if button == BTN_C:
+            keyEvents.append("c")
+        if button == BTN_1:
+            keyEvents.append("1")
+        if button == BTN_2:
+            keyEvents.append("2")
+        if button == BTN_3:
+            keyEvents.append("3")
+
+
 if os.uname().nodename == "raspberrypi":
     device = sh1106(spi(), rotate=2)
 
@@ -56,6 +78,17 @@ if os.uname().nodename == "raspberrypi":
     GPIO.setup(BTN_U, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(BTN_D, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(BTN_C, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+    time.sleep(0.1)
+
+    GPIO.add_event_detect(BTN_1, GPIO.RISING, callback=button_callback)
+    GPIO.add_event_detect(BTN_2, GPIO.RISING, callback=button_callback)
+    GPIO.add_event_detect(BTN_3, GPIO.RISING, callback=button_callback)
+    GPIO.add_event_detect(BTN_L, GPIO.RISING, callback=button_callback)
+    GPIO.add_event_detect(BTN_R, GPIO.RISING, callback=button_callback)
+    GPIO.add_event_detect(BTN_U, GPIO.RISING, callback=button_callback)
+    GPIO.add_event_detect(BTN_D, GPIO.RISING, callback=button_callback)
+    GPIO.add_event_detect(BTN_C, GPIO.RISING, callback=button_callback)
 
 else:
     device = pygame(width=128, height=64, mode="1", transform="scale2x", scale=2)
@@ -74,7 +107,7 @@ FONT_CHARACTER_WIDTH = 3
 
 # state
 
-state               = STATE_IDLE # STATE_RUNNING
+state               = STATE_INIT # STATE_RUNNING
 isInvalid           = True
 
 menu_selected       = 0
@@ -118,6 +151,21 @@ def _apertureToStr(value):
     return "F{0:.1f}".format(value)
 
 
+def _timeToStr(value):
+    val = ""
+    hours = int(value/3600)
+    minutes = int(value/60)%60
+    seconds = value%60
+
+    if hours > 0:
+        val += "{}H ".format(hours)
+    if minutes > 0:
+        val += "{}MIN ".format(hours)
+
+    val += "{}S".format(seconds)
+    return val
+
+
 def _configToList(c):
     clist = []
     for key, value in c.items():
@@ -125,6 +173,14 @@ def _configToList(c):
         clist.append(value)
 
     return clist
+
+
+def _zeropad(value, length):
+    value = str(value)
+    if len(value) < length:
+        value = "0" * (length-len(value)) + value
+
+    return value
 
 
 def _changeConfigItem(item, value, pos, op):
@@ -140,40 +196,63 @@ def _changeConfigItem(item, value, pos, op):
         value = not value
 
     elif item["type"] == "float":
+        inc = 1
+        dec = len(str(int(abs(value))))
+        subdec = len(str(abs(value))[dec:])
+        if pos >= dec:
+            inc = 10**(-(pos-dec))
+        else: 
+            inc = 10**(dec-pos-1)
+
+        print(inc) 
+
         if op > 0:
-            if not "max" in item or value + .01 <= item["max"]:
-                value += .01
-            if not "min" in item or value - .01 <= item["min"]:
-                value -= .01
+            new = value + inc
+            if not "max" in item or new <= item["max"]:
+                value = new
+        else:
+            new = value - inc
+            if not "min" in item or new >= item["min"]:
+                value = new
 
     elif item["type"] == "time":
-        pass
+        inc = 0
+        if pos == 0:
+            inc += 3600 * 10
+        elif pos == 1:
+            inc += 3600 * 1
+        elif pos == 3:
+            inc += 60 * 10
+        elif pos == 4:
+            inc += 60 * 1
+        elif pos == 6:
+            inc += 10
+        elif pos == 7:
+            inc += 1
+        else:
+            raise Exception("illegal pos: {}".format(pos))
+
+        if op > 0:
+            value += inc
+        else:
+            value -= inc
+
+        if "min" in item and value < item["min"]:
+            value = item["min"]
+
+        if "max" in item and value > item["max"]:
+            value = item["max"]
 
     return value
 
 
 def getKeyEvents():
+    
+    global keyEvents
 
     keys = []
 
-    if not pyg:
-        if not GPIO.input(BTN_L):
-            keys.append("l")
-        if not GPIO.input(BTN_R):
-            keys.append("r")
-        if not GPIO.input(BTN_U):
-            keys.append("u")
-        if not GPIO.input(BTN_D):
-            keys.append("d")
-        if not GPIO.input(BTN_C):
-            keys.append("c")
-        if not GPIO.input(BTN_1):
-            keys.append("1")
-        if not GPIO.input(BTN_2):
-            keys.append("2")
-        if not GPIO.input(BTN_3):
-            keys.append("3")
-    else:
+    if pyg:
         events = pyg.event.get()
         for event in events:
             if event.type == pyg.KEYDOWN:
@@ -194,6 +273,8 @@ def getKeyEvents():
                 if event.key == pyg.K_y:
                     keys.append("3")
 
+    keys = keyEvents + keys
+    keyEvents = []
     return keys
 
 
@@ -363,10 +444,10 @@ def draw_menu(draw, config, selected_index):
     # text(draw, [ 2, 38], "FREE SPACE :")
 
     text(draw, [54, 8], "123")
-    text(draw, [54, 14], "90SEC")
+    text(draw, [54, 14], _timeToStr(config["interval"]["value"]))
     text(draw, [54, 20], "01:23:45")
-    text(draw, [54, 26], "ON - 10.3")
-    text(draw, [54, 32], "20.1C")
+    text(draw, [54, 26], str(config["secondexposure"]["value"]) + " - " + "10.3")
+    text(draw, [54, 32], "20.1")
     text(draw, [54, 38], "99999") # max: 99999
 
     currentTime = datetime.datetime.now()
@@ -410,9 +491,9 @@ def draw_config(draw, menu, selected_index):
             selected = True
 
         if isinstance(viewmenu[i], dict): # it's a config item!
-            rect(draw, [(0, 1+7*i), (127, 7+7*i)], invert=not selected)
-            text(draw, [2, 2+7*i], viewmenu[i]["name"], invert=selected)
-            text(draw, [127, 2+7*i], viewmenu[i]["value"], invert=selected, rightalign=True)
+            rect(draw, [(0, 7*i), (127, 7+7*i)], invert=not selected)
+            text(draw, [2, 1+7*i], viewmenu[i]["name"], invert=selected)
+            text(draw, [127, 1+7*i], viewmenu[i]["value"], invert=selected, rightalign=True)
 
         elif viewmenu[i] == "-": # separator
             rect(draw, [(0, 1+7*i), (127, 7+7*i)], invert=not selected)
@@ -429,18 +510,33 @@ def draw_configItem(draw, item, value, pos):
     rect(draw, [(0, 8), (100, 8)])
     rect(draw, [(100, 0), (100, 64)])
 
-    text(draw, [127, 20], "BACK >", rightalign=True)
+    text(draw, [127,  1], "BACK >", rightalign=True)
     text(draw, [127, 50], "OK >", rightalign=True)
 
     if item["type"] == "int":
-        text(draw, [50, 30], str(value))
+        valueStr = str(value)
+        text(draw, [70, 30], valueStr, rightalign=True)
+        text(draw, [70, 38], "^" + " "*(len(valueStr)-pos-1), rightalign=True)
     elif item["type"] == "boolean":
-        pass
+        text(draw, [50, 30], str(value))
     elif item["type"] == "float":
-        text(draw, [50, 30], "{0:.2f}".format(value))
-        text(draw, [50 + FONT_CHARACTER_WIDTH*pos, 35], "*")
+        valueStr = "{0:.2f}".format(value)
+        text(draw, [70, 30], valueStr, rightalign=True)
+        text(draw, [70, 38], "^" + " "*(len(valueStr)-pos-1), rightalign=True)
     elif item["type"] == "time":
-        pass
+   
+        text(draw, [34, 20], "{} SEC".format(value))
+        rect(draw, [(34, 29), (65, 29)])
+
+        text(draw, [34, 34], _zeropad(int(value/3600), 2))      # hours
+        text(draw, [42, 34], ":")
+        text(draw, [46, 34], _zeropad(int(value/60)%60, 2))     # minutes
+        text(draw, [54, 34], ":")
+        text(draw, [58, 34], _zeropad(value%60, 2))             # seconds
+
+        text(draw, [34, 42], " " * pos + "^")
+
+        # text(draw, [50, 30], value%100)
     else:
         print("unknown config item type: {}".format(item[type]))
 
@@ -508,11 +604,6 @@ if __name__ == "__main__":
 
     while True:
 
-        # k = getKeyEvents()
-        # if len(k) > 0:
-        #     print(*k)
-
-
         if state == STATE_INIT:
             print("init")
             state += 2 # TODO
@@ -565,10 +656,6 @@ if __name__ == "__main__":
                 validate()
 
             k = getKeyEvents()
-
-            # if len(k) > 0:
-            #     print(*k)
-
             if "u" in k:
                 menu_selected = (menu_selected - 1) % len(menu)
                 invalidate()
@@ -600,15 +687,28 @@ if __name__ == "__main__":
             if "d" in k:
                 configItemValue = _changeConfigItem(selectedConfigItem, configItemValue, configItemPos, -1)
                 invalidate()
-            if "r" in k:
+            if "l" in k:
                 if configItemPos > 0:
                     configItemPos -= 1
-            if "l" in k:
-                if item["type"] == "float":
-                    if configItemPos < len(str(abs(item["value"]))) + 2:
-                        configItemPos += 1
+                    if item["type"] == "float":
+                        if configItemPos == len(str(int(abs(item["value"])))):
+                            configItemPos -= 1
                 elif item["type"] == "time":
-                    pass
+                    if configItemPos > 0:
+                        configItemPos -= 1
+                        if configItemPos == 2 or configItemPos == 5:
+                           configItemPos -= 1 
+            if "r" in k:
+                if item["type"] == "float":
+                    if configItemPos < len(str(abs(item["value"]))):
+                        configItemPos += 1
+                        if configItemPos == len(str(int(abs(item["value"])))):
+                            configItemPos += 1
+                elif item["type"] == "time":
+                    if configItemPos < 10:
+                        configItemPos += 1
+                        if configItemPos == 2 or configItemPos == 5:
+                           configItemPos += 1 
             if "1" in k:
                 selectedConfigItem = None
                 configItemValue = None
