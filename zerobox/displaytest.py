@@ -6,15 +6,13 @@ from luma.oled.device import sh1106
 
 import time
 import os
-from PIL import ImageFont, Image
-import PIL.ImageOps  
-import yaml
-
+from os.path import getmtime
 import datetime
 import sys
-from os.path import getmtime
+import yaml
 
-own_mtime = getmtime(__file__)
+from PIL import ImageFont, Image
+import PIL.ImageOps  
 
 COLOR0 = "black"
 COLOR1 = "white"
@@ -27,6 +25,18 @@ BTN_R = 26
 BTN_U = 6
 BTN_D = 19
 BTN_C = 13
+
+STATE_INIT          = 0
+STATE_LOGO          = 1
+STATE_MENU          = 2
+STATE_CONFIG        = 3
+STATE_CONFIG_ITEM   = 4
+STATE_DIALOG        = 5
+STATE_RUNNING       = 6
+STATE_RUNNING_MENU  = 7
+STATE_IDLE          = 100
+
+own_mtime = getmtime(__file__)
 
 device = None
 pyg = None
@@ -55,24 +65,16 @@ else:
 
 # font = ImageFont.truetype("slkscr.ttf", 8)
 # font2 = ImageFont.truetype("slkscr.ttf", 16)
+
 font = ImageFont.truetype("ves-3x5.ttf", 5)
 FONT_CHARACTER_WIDTH = 3
+
 # font = ImageFont.truetype("ves-4x5.ttf", 5)
 # FONT_CHARACTER_WIDTH = 4
 
-STATE_INIT          = 0
-STATE_LOGO          = 1
-STATE_MENU          = 2
-STATE_CONFIG_ITEM   = 3
-STATE_DIALOG        = 4
-STATE_RUNNING       = 5
-STATE_RUNNING_MENU  = 6
-STATE_IDLE          = 100
-
-
 # state
 
-state               = STATE_INIT
+state               = STATE_IDLE # STATE_RUNNING
 isInvalid           = True
 
 menu_selected       = 0
@@ -81,13 +83,6 @@ selectedConfigItem  = None
 configItemValue     = None
 configItemPos       = 0 # Pointer to change digits of a configItems value
 
-
-menu_fix = [
-    # "[short overview menu]",
-    # "settings",
-    "start",
-    "shutdown"
-]
 
 def checkAndRestartOnFileChange():
     if getmtime(__file__) != own_mtime:
@@ -255,13 +250,13 @@ def draw_running(draw, config, data):
 
     if data["cam_0"]:
         text(draw, [35,  2], "1/1250")
-        text(draw, [71,  2], _aperture_to_str(data["cam_0"]["aperture"]))
+        text(draw, [71,  2], _apertureToStr(data["cam_0"]["aperture"]))
         text(draw, [95,  2], str(data["cam_0"]["iso"]))
         text(draw, [127, 2], "+8", rightalign=True)
 
     if data["cam_1"]:
         text(draw, [35,   10], "1/1250")
-        text(draw, [71,   10], _aperture_to_str(data["cam_1"]["aperture"]))
+        text(draw, [71,   10], _apertureToStr(data["cam_1"]["aperture"]))
         text(draw, [95,   10], "300")
         text(draw, [127,  10], "+8", rightalign=True)
 
@@ -340,7 +335,65 @@ def draw_logo(draw, data):
     draw.rectangle([(56, 38), (56, 59)], outline=None, fill=COLOR1)
 
 
-def draw_menu(draw, menu, selected_index):
+def draw_menu(draw, config, selected_index):
+    # rect(draw, [(0, 22), (127, 22)])
+    # text(draw, [48, 26], "SETTINGS")
+    # rect(draw, [(0, 34), (127, 34)])
+    # text(draw, [54, 41], "START")
+    # rect(draw, [(0, 52), (127, 52)])
+    # text(draw, [48, 56], "SHUTDOWN")
+
+    selectedSettings = False
+    selectedStart = False
+    selectedShutdown = False
+
+    if selected_index == 0:
+        selectedSettings = True
+    elif selected_index == 1:
+        selectedStart = True
+    elif selected_index == 2:
+        selectedShutdown = True
+
+    text(draw, [ 2,  8], "ITERATIONS :")
+    text(draw, [ 2, 14], "INTERVAL   :")
+    text(draw, [ 2, 20], "RUNTIME    :")
+    text(draw, [ 2, 26], "2ND EXP    :")
+    text(draw, [ 2, 32], "TEMP       :")
+    text(draw, [ 2, 38], "IMG IN MEM :")
+    # text(draw, [ 2, 38], "FREE SPACE :")
+
+    text(draw, [54, 8], "123")
+    text(draw, [54, 14], "90SEC")
+    text(draw, [54, 20], "01:23:45")
+    text(draw, [54, 26], "ON - 10.3")
+    text(draw, [54, 32], "20.1C")
+    text(draw, [54, 38], "99999") # max: 99999
+
+    currentTime = datetime.datetime.now()
+    rect(draw, [(127-20, 0), (127, 6)])
+    text(draw, [127-19, 1], currentTime.strftime("%H:%M"), invert=True)
+
+    rect(draw, [(0, 0), (127-22, 6)])
+    text(draw, [2, 1], "OK", invert=True)
+
+    text(draw, [126, 38], "{0:.2f}".format(12.34), rightalign=True)
+    rect(draw, [(75, 38), (100, 42)])
+    rect(draw, [(75+10, 38+1), (100-1, 42-1)], invert=True)
+
+    rect(draw, [(0, 45+2), (42-2, 63)], invert=not selectedSettings)
+    rect(draw, [(42+2, 45+2), (127-42-2, 63)], invert=not selectedStart)
+    rect(draw, [(127-40, 45+2), (127, 63)], invert=not selectedShutdown)
+
+    rect(draw, [(0, 45), (127, 45)])
+    rect(draw, [(42, 45), (42, 63)])
+    rect(draw, [(127-42, 45), (127-42, 63)])
+
+    text(draw, [ 4, 53], "SETTINGS", invert=selectedSettings)
+    text(draw, [55, 53], "START", invert=selectedStart)
+    text(draw, [92, 53], "SHUTDOWN", invert=selectedShutdown)
+
+
+def draw_config(draw, menu, selected_index):
     viewmenu = menu
     viewindex = selected_index
 
@@ -370,7 +423,7 @@ def draw_menu(draw, menu, selected_index):
             text(draw, [2, 2+7*i], viewmenu[i], invert=selected)
 
 
-def draw_configItem(draw, item):
+def draw_configItem(draw, item, value, pos):
 
     text(draw, [2, 2], item["name"])
     rect(draw, [(0, 8), (100, 8)])
@@ -380,11 +433,12 @@ def draw_configItem(draw, item):
     text(draw, [127, 50], "OK >", rightalign=True)
 
     if item["type"] == "int":
-        text(draw, [50, 30], str(configItemValue))
+        text(draw, [50, 30], str(value))
     elif item["type"] == "boolean":
         pass
     elif item["type"] == "float":
-        text(draw, [50, 30], "{0:.2f}".format(configItemValue))
+        text(draw, [50, 30], "{0:.2f}".format(value))
+        text(draw, [50 + FONT_CHARACTER_WIDTH*pos, 35], "*")
     elif item["type"] == "time":
         pass
     else:
@@ -398,6 +452,24 @@ def draw_running_menu(draw, menu, selected):
             text(draw, [2, 2+7*i], menu[i], invert=True)
         else:
             text(draw, [2, 2+7*i], menu[i])
+
+
+def draw_info(draw, msg):
+    maxLength = int((127-6)/(FONT_CHARACTER_WIDTH+1))
+    offset = 3 # for vertical alignment
+
+    rect(draw, [(0, 0), (127, 63)])
+    rect(draw, [(1, 1), (127-1, 63-1)], invert=True)
+
+    numOfLines = int(len(msg)/maxLength)
+    offset = 3 + ((63 - 2) - (numOfLines+1)*6)/2
+
+    if len(msg) > maxLength:
+        for i in range(0, numOfLines):
+            text(draw, [3, offset+i*6], msg[int(maxLength*i) : int(maxLength*(i+1))])
+            text(draw, [3, offset+numOfLines*6], msg[int(maxLength*(numOfLines)):]) # draw remaining line of text
+    else:
+        text(draw, [3, offset], msg)
 
 
 if __name__ == "__main__":
@@ -454,13 +526,42 @@ if __name__ == "__main__":
 
 
         elif state == STATE_MENU:
+            if isInvalid:
+                with canvas(device) as draw:
+                    draw_menu(draw, config, menu_selected)
+                validate()
+
+            k = getKeyEvents()
+            if "l" in k:
+                menu_selected = (menu_selected - 1) % 3
+                invalidate()
+            if "r" in k:
+                menu_selected = (menu_selected + 1) % 3
+                invalidate()
+            if "c" in k:
+                if menu_selected == 0:
+                    state = STATE_CONFIG
+                elif menu_selected == 1:
+                    state = STATE_RUNNING
+                elif menu_selected == 2:
+                    state = STATE_IDLE
+                    # TODO
+                else:
+                    raise Exception("illegal menu selected state: {}".format(menu_selected))
+
+                menu_selected = 0
+                invalidate()
+
+
+        elif state == STATE_CONFIG:
             # draw_dialog(draw, "abort capture?", ["no", "yes"])
 
-            menu = menu_fix + ["-"] + _configToList(config)
+            # menu = menu_fix + ["-"] + _configToList(config)
+            menu = _configToList(config)
 
             if isInvalid:
                 with canvas(device) as draw:
-                    draw_menu(draw, menu, menu_selected)
+                    draw_config(draw, menu, menu_selected)
                 validate()
 
             k = getKeyEvents()
@@ -475,16 +576,19 @@ if __name__ == "__main__":
                 menu_selected = (menu_selected + 1) % len(menu)
                 invalidate()
             if "c" in k:
-                selectedConfigItem = config[_configToList(config)[menu_selected-len(menu_fix)-1]["name"]]
+                selectedConfigItem = config[_configToList(config)[menu_selected]["name"]]
                 configItemValue = selectedConfigItem["value"]
                 state = STATE_CONFIG_ITEM
+                invalidate()
+            if "1" in k:
+                state = STATE_MENU
                 invalidate()
 
 
         elif state == STATE_CONFIG_ITEM:
             if isInvalid:
                 with canvas(device) as draw:
-                    draw_configItem(draw, selectedConfigItem)
+                    draw_configItem(draw, selectedConfigItem, configItemValue, configItemPos)
                 validate()
 
             item = selectedConfigItem
@@ -496,16 +600,25 @@ if __name__ == "__main__":
             if "d" in k:
                 configItemValue = _changeConfigItem(selectedConfigItem, configItemValue, configItemPos, -1)
                 invalidate()
+            if "r" in k:
+                if configItemPos > 0:
+                    configItemPos -= 1
+            if "l" in k:
+                if item["type"] == "float":
+                    if configItemPos < len(str(abs(item["value"]))) + 2:
+                        configItemPos += 1
+                elif item["type"] == "time":
+                    pass
             if "1" in k:
                 selectedConfigItem = None
                 configItemValue = None
-                state = STATE_MENU
+                state = STATE_CONFIG
                 invalidate()
             if "3" in k:
                 selectedConfigItem["value"] = configItemValue
                 selectedConfigItem = None
                 configItemValue = None
-                state = STATE_MENU
+                state = STATE_CONFIG
                 invalidate()
 
 
@@ -514,7 +627,11 @@ if __name__ == "__main__":
                 with canvas(device) as draw:
                     draw_running(draw, config, data)
                 validate()
-            #state = STATE_IDLE
+            
+            k = getKeyEvents()
+            if "1" in k or "2" in k or "3" in k:
+                state = STATE_RUNNING_MENU
+                invalidate()
 
 
         elif state == STATE_RUNNING_MENU:
@@ -527,14 +644,17 @@ if __name__ == "__main__":
                 validate()
 
             k = getKeyEvents()
-            if len(k) > 0:
-                print(*k)
             if "u" in k:
                 menu_selected = (menu_selected - 1) % len(menu)
                 invalidate()
             if "d" in k:
                 menu_selected = (menu_selected + 1) % len(menu)
                 invalidate()
+
+
+        elif state == STATE_IDLE:
+            with canvas(device) as draw:
+                draw_info(draw, "foo")
 
         else:
             pass
