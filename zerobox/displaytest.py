@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from luma.core.interface.serial import i2c, spi
 from luma.emulator.device import pygame, capture
 
@@ -7,6 +9,7 @@ from luma.oled.device import sh1106
 import time
 import os
 from os.path import getmtime
+import subprocess
 import datetime
 import sys
 import yaml
@@ -107,7 +110,7 @@ FONT_CHARACTER_WIDTH = 3
 
 # state
 
-state               = STATE_INIT # STATE_RUNNING
+state               = STATE_MENU # STATE_RUNNING
 isInvalid           = True
 
 menu_selected       = 0
@@ -754,7 +757,8 @@ if __name__ == "__main__":
 
         elif state == STATE_IDLE:
             with canvas(device) as draw:
-                draw_info(draw, "foo")
+                draw_info(draw, "shutdown")
+                subprocess.run(["sudo", "shutdown", "now"])
 
         else:
             pass
