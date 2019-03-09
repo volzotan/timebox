@@ -45,13 +45,16 @@ CONFIG = {
     "LOG_FILENAME_INFO"         : "info.log",
     "LOG_LEVEL_CONSOLE"         : logging.DEBUG,
 
-    "IMAGE_BASE_DIR"            : None,
+    "BASE_DIR"                  : None,
+    "TEMP_DIR"                  : "tmp",
+    "IMAGE_DIR"                 : "RAW",
     "FILE_EXTENSION"            : ".arw",
 
     "AUTOFOCUS_ENABLED"         : False,
     "AUTOFOCUS_DURATION"        : 2,
 
     "DOUBLEEXPOSURE_ENABLED"    : False,
+    "DOUBLEEXPOSURE_THRESHOLD"  : 20, # 10
     "EXPOSURE_1"                : +1,
     "EXPOSURE_2"                : -5,
 
@@ -63,11 +66,14 @@ class CameraConnector(object):
 
     def __init__(self, port, image_base_directory):
         self.port = port
+
         self.image_base_directory = image_base_directory
         self.image_directory = None
 
+        self.status = {}
 
-    def init(self):
+
+    def open(self):
         self.context = gp.gp_context_new()
 
         error, camera = gp.gp_camera_new()
@@ -237,14 +243,29 @@ class CameraConnector(object):
 class Zerobox(object):
 
     def __init__(self):
-        self.cameras = {}
-        self.connectors = {}
         self.config = CONFIG
 
+        self.status = {}
+
+        self.cameras = {}
+        self.connectors = {}
+
+        # expand directories
+
         if os.uname().nodename == "raspberrypi":
-            self.config["IMAGE_BASE_DIR"] = "/home/pi/zerobox/"
+            self.config["BASE_DIR"] = "/home/pi/zerobox/"        
         else:
-            self.config["IMAGE_BASE_DIR"] = "./"
+            self.config["BASE_DIR"] = "./"
+
+        if self.config["IMAGE_DIR"] is None:
+            self.config["IMAGE_DIR"] = self.config["BASE_DIR"]
+        elif not self.config["IMAGE_DIR"].startswith("/"):
+            self.config["IMAGE_DIR"] = os.path.join(self.config["BASE_DIR"], self.config["IMAGE_DIR"])
+
+        if self.config["TEMP_DIR"] is None:
+            self.config["TEMP_DIR"] = self.config["BASE_DIR"]
+        elif not self.config["TEMP_DIR"].startswith("/"):
+            self.config["TEMP_DIR"] = os.path.join(self.config["BASE_DIR"], self.config["TEMP_DIR"])
 
         self.init_log()
 
@@ -252,6 +273,16 @@ class Zerobox(object):
     def close(self):
         for portname, connector in self.connectors.items():
             connector.close()
+
+            if portname not in self.status:
+                self.status[portname] = {}
+            self.status[portname]["port"] = portname
+            self.status[portname]["active"] = False 
+
+
+    def disconnect_camera(self, portname):
+        self.connectors[portname].close()
+        self.status[portname]["active"] = False 
 
 
     def load_config(self, config):
@@ -331,6 +362,24 @@ class Zerobox(object):
         return (path, filename)
 
 
+    def _convert_raw_to_jpeg(rawfile_path, rawfile_name, jpeg_path):
+        # well, actually we just extract the thumbnail JPEG of the RAW
+        # dcraw does not support export as JPEG and output as TIFF
+        # and conversion to JPEG is unnecessary work
+
+        # TODO: overwrite/remove jpeg image?
+
+        rawfile_full_name   = os.path.join(rawfile_path, rawfile_name)
+        thumb               = rawfile_name[:-4] + ".thumb" + ".jpg"
+        thumb_full_name     = os.path.join(rawfile_path, thumb)
+        jpeg_full_name      = os.path.join(jpeg_path, rawfile_name[:-4] + ".jpg")
+
+        subprocess.call(["dcraw", "-e", format(rawfile_full_name)])     
+        os.rename(thumb_full_name, jpeg_full_name)
+
+        return jpeg_full_name
+
+
     def detect_cameras(self):
 
         # use Python logging
@@ -363,8 +412,13 @@ class Zerobox(object):
             print("{} cameras connected".format(len(cameras)))
 
         for camera in cameras:
-            print("{} | {}".format(camera[0], camera[1]))
+            portname = camera[1]
+            print("{} | {}".format(camera[0], portname))
             self.cameras[camera[1]] = camera 
+            if portname not in self.status:
+                self.status[portname] = {}
+            self.status[portname]["port"] = portname
+            self.status[portname]["active"] = False 
 
 
     def connect_camera(self, camera):
@@ -372,6 +426,11 @@ class Zerobox(object):
         conn = CameraConnector(port, self.config["IMAGE_BASE_DIR"])
         conn.init()
         self.connectors[portname] = conn
+
+        if portname not in self.status:
+            self.status[portname] = {}
+        self.status[portname]["active"] = True
+        self.status[portname] = {**self.status[portname], **conn.get_exposure_status()}
 
 
     def focus_camera(self, portname):
@@ -396,25 +455,38 @@ class Zerobox(object):
         else:
             conn.set_exposure_compensation(self.config["EXPOSURE_1"])
             conn.capture_and_download(filename)
-            conn.set_exposure_compensation(self.config["EXPOSURE_2"])
-            conn.capture_and_download(filename + "_2")
+
+            trigger_second_exposure = True
+            if self.config["DOUBLEEXPOSURE_THRESHOLD"] is not None:
+
+                jpeg_full_name = convert_raw_to_jpeg(path, filename, path)
+                exposure = calculate_brightness(jpeg_full_name)
+                log.info("exposure: {}".format(exposure))
+
+                if exposure > self.config["DOUBLEEXPOSURE_THRESHOLD"]:
+                    trigger_second_exposure = False
+
+            if trigger_second_exposure:
+                conn.set_exposure_compensation(self.config["EXPOSURE_2"])
+                conn.capture_and_download(filename + "_2")
 
         # arguments.append((conn, os.path.join(file_folder[i], "test" + EXTENSION)))
 
 
-    def get_status(self):
-        data = {}
+    def get_status(self, force_connection=False):
+        data = {**self.status}
 
-        for portname, connector in self.connectors.items():
-            s = connector.get_exposure_status()
-
-            data[portname] = s
+        if force_connection:
+            for portname, connector in self.connectors.items():
+                s = connector.get_exposure_status()
+                data[portname] = s
 
         return data
 
 
 if __name__ == "__main__":
     z = Zerobox()
+    print(z.get_status())
     z.print_config()
     z.detect_cameras()
 
