@@ -40,6 +40,7 @@ class ZeroboxConnector(rpyc.Service):
         return data
 
     def exposed_run(self):
+        self.zerobox.connect_camera(self.zerobox.cameras[0])
         self.zerobox.trigger_camera(self.zerobox.cameras[0])
 
 
