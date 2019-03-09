@@ -1,8 +1,16 @@
 import logging
 import os
 import sys
+import subprocess
+import datetime
+import math
+import numpy as np
 
 import gphoto2 as gp
+
+import gi
+gi.require_version('GExiv2', '0.10')
+from gi.repository import GExiv2
 
 # --- --- --- --- --- --- --- --- --- ---
 
@@ -53,12 +61,14 @@ CONFIG = {
     "AUTOFOCUS_ENABLED"         : False,
     "AUTOFOCUS_DURATION"        : 2,
 
-    "DOUBLEEXPOSURE_ENABLED"    : False,
+    "DOUBLEEXPOSURE_ENABLED"    : True,
     "DOUBLEEXPOSURE_THRESHOLD"  : 20, # 10
     "EXPOSURE_1"                : +1,
     "EXPOSURE_2"                : -5,
 
 }
+
+EXIF_DATE_FORMAT                = '%Y:%m:%d %H:%M:%S'
 
 # --- --- --- --- --- --- --- --- --- ---
 
@@ -88,7 +98,7 @@ class CameraConnector(object):
 
         self.camera = camera
 
-        # create image directory
+        # create image (sub-)directory
         self.image_directory = os.path.join(self.image_base_directory, "cam_" + self.get_serialnumber())
         try:
             os.makedirs(self.image_directory)
@@ -129,7 +139,7 @@ class CameraConnector(object):
         error, config = gp.gp_camera_get_config(self.camera)
         gp.check_result(error)
 
-        self._set_config_value(self.camera, config, "exposurecompensation", str(compensation))
+        self._set_config_value(config, "exposurecompensation", str(compensation))
 
 
     def get_exposure_status(self):
@@ -267,6 +277,13 @@ class Zerobox(object):
         elif not self.config["TEMP_DIR"].startswith("/"):
             self.config["TEMP_DIR"] = os.path.join(self.config["BASE_DIR"], self.config["TEMP_DIR"])
 
+        # create directories
+        try:
+            os.makedirs(self.config["IMAGE_DIR"])
+            os.makedirs(self.config["TEMP_DIR"])
+        except FileExistsError as e:
+            pass
+
         self.init_log()
 
 
@@ -362,7 +379,7 @@ class Zerobox(object):
         return (path, filename)
 
 
-    def _convert_raw_to_jpeg(rawfile_path, rawfile_name, jpeg_path):
+    def _convert_raw_to_jpeg(self, rawfile_path, rawfile_name, jpeg_path):
         # well, actually we just extract the thumbnail JPEG of the RAW
         # dcraw does not support export as JPEG and output as TIFF
         # and conversion to JPEG is unnecessary work
@@ -378,6 +395,55 @@ class Zerobox(object):
         os.rename(thumb_full_name, jpeg_full_name)
 
         return jpeg_full_name
+
+
+    def _calculate_brightness(self, full_name):
+
+        metadata = GExiv2.Metadata()
+        metadata.open_path(full_name)
+
+        exposure_time = metadata.get_exposure_time()
+        shutter = None
+        # some versions of GExiv2 return Fractions of different types
+        try: 
+            shutter = float(exposure_time.den) / float(exposure_time.nom)
+        except AttributeError as e:
+            try: 
+                shutter = float(exposure_time)
+            except Exception as e:
+                raise e
+
+        iso = int(metadata.get_tag_string("Exif.Photo.ISOSpeedRatings"))
+
+        try: 
+            time = datetime.datetime.strptime(metadata.get_tag_string("Exif.Photo.DateTimeOriginal"), EXIF_DATE_FORMAT)
+        except Exception as e:
+            time = datetime.datetime.strptime(metadata.get_tag_string("Exif.Image.DateTime"), EXIF_DATE_FORMAT)
+
+        aperture = metadata.get_focal_length()
+        if aperture <= 0:
+            # no aperture tag set, probably an lens adapter was used. assume fixed aperture.
+            aperture = 8.0
+
+        return self._intensity(shutter, aperture, iso)
+
+
+    def _intensity(self, shutter, aperture, iso):
+
+        # limits in this calculations:
+        # min shutter is 1/4000th second
+        # min aperture is 22
+        # min iso is 100
+
+        shutter_repr    = math.log(shutter, 2) + 13 # offset = 13 to accomodate shutter values down to 1/4000th second
+        iso_repr        = math.log(iso/100, 2) + 1  # offset = 1, iso 100 -> 1, not 0
+
+        if aperture is not None:
+            aperture_repr = np.interp(math.log(aperture, 2), [0, 4.5], [10, 1])
+        else:
+            aperture_repr = 1
+
+        return shutter_repr + aperture_repr + iso_repr
 
 
     def detect_cameras(self):
@@ -423,8 +489,8 @@ class Zerobox(object):
 
     def connect_camera(self, camera):
         port = self._lookup_port(self.port_info_list, camera)
-        conn = CameraConnector(port, self.config["IMAGE_BASE_DIR"])
-        conn.init()
+        conn = CameraConnector(port, self.config["IMAGE_DIR"])
+        conn.open()
         self.connectors[portname] = conn
 
         if portname not in self.status:
@@ -458,19 +524,17 @@ class Zerobox(object):
 
             trigger_second_exposure = True
             if self.config["DOUBLEEXPOSURE_THRESHOLD"] is not None:
-
-                jpeg_full_name = convert_raw_to_jpeg(path, filename, path)
-                exposure = calculate_brightness(jpeg_full_name)
-                log.info("exposure: {}".format(exposure))
+                jpeg_full_name = self._convert_raw_to_jpeg(filename[0], filename[1], self.config["TEMP_DIR"])
+                exposure = self._calculate_brightness(jpeg_full_name)
+                self.log.info("exposure: {}".format(exposure))
 
                 if exposure > self.config["DOUBLEEXPOSURE_THRESHOLD"]:
                     trigger_second_exposure = False
 
             if trigger_second_exposure:
                 conn.set_exposure_compensation(self.config["EXPOSURE_2"])
-                conn.capture_and_download(filename + "_2")
-
-        # arguments.append((conn, os.path.join(file_folder[i], "test" + EXTENSION)))
+                filename2 = (filename[0], filename[1] + "_2")
+                conn.capture_and_download(filename2)
 
 
     def get_status(self, force_connection=False):
