@@ -303,7 +303,17 @@ class Zerobox(object):
 
 
     def load_config(self, config):
-        self.config = {**self.config, **config}
+        # self.config = {**self.config, **config}
+
+        # no simple merging of config dicts since 
+        # we want to know if we're accidentaly adding 
+        # a second and not overwriting a default config item
+
+        for key, value in config.items():
+            if key not in self.config:
+                raise Exception("no config key to overwrite: {}".format(key))
+
+            self.config[key] = config[key]
 
 
     def init_log(self):
