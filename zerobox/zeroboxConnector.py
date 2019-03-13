@@ -5,46 +5,53 @@ class ZeroboxConnector(rpyc.Service):
 
     def __init__(self):
         print("init")
-        self.state = {}
         self.zerobox = Zerobox()
+
 
     def on_connect(self, conn):
         print("on_connect")
 
+
     def on_disconnect(self, conn):
         print("on_disconnect")
 
-    def exposed_init(self):
-        ports = self.zerobox.detect_cameras()
 
     def exposed_ping(self):
         return None
 
-    def exposed_get_state(self):
-        data["cam_0"]                           = {}
-        data["cam_1"]                           = {}
 
-        data["cam_0"]["port"]                   = "foo"
-        data["cam_0"]["active"]                 = True
-        data["cam_0"]["shutter"]                = "1.0"
-        data["cam_0"]["aperture"]               = 11
-        data["cam_0"]["iso"]                    = 300
-        data["cam_0"]["exposurecompensation"]   = 1
+    def exposed_detect(self):
+        ports = self.zerobox.detect_cameras()
+        return ports
 
-        data["cam_1"]["active"]                 = True
-        data["cam_1"]["shutter"]                = "1/300"
-        data["cam_1"]["aperture"]               = 5.6
-        data["cam_1"]["iso"]                    = 300
-        data["cam_1"]["exposurecompensation"]   = 1
 
-        return data
+    def exposed_disconnect_cameras(self):
+        self.zerobox.disconnect_all_cameras()
 
-    def exposed_run(self):
-        self.zerobox.connect_camera(self.zerobox.cameras[0])
-        self.zerobox.trigger_camera(self.zerobox.cameras[0])
+
+    def exposed_get_status(self):
+        # data = {}
+        status = self.zerobox.get_status()
+        # data = {**data, **status}
+        # return data
+        return status
+
+
+    def exposed_connect(self):
+        cameras = self.zerobox.get_cameras()
+        if len(cameras) > 0:
+            for portname, camera in cameras.items():
+                self.zerobox.connect_camera(camera)
+
+
+    def exposed_trigger(self):
+        for portname, camera in self.zerobox.get_connectors():
+            self.zerobox.trigger_camera(portname)
+
 
 
 if __name__ == "__main__":
     from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(ZeroboxConnector(), port=18861)
+    # allow_public_attrs is necessary to access data in passed dicts
+    t = ThreadedServer(ZeroboxConnector(), port=18861, protocol_config={'allow_public_attrs': True})
     t.start()

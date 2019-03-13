@@ -1,21 +1,44 @@
 #!/usr/bin/env python3
 
+import time
+import psutil
+
+t = time.time() - psutil.boot_time()
+with open("boottime", "a") as f: 
+    f.write("init: ")
+    f.write(str(t))
+    f.write("\n")
+
 from luma.core.interface.serial import i2c, spi
 from luma.emulator.device import pygame, capture
 
 from luma.core.render import canvas
 from luma.oled.device import sh1106
 
-import time
+t = time.time() - psutil.boot_time()
+with open("boottime", "a") as f: 
+    f.write("import1: ")
+    f.write(str(t))
+    f.write("\n")
+
 import os
 from os.path import getmtime
 import subprocess
 import datetime
 import sys
 import yaml
+import rpyc
 
 from PIL import ImageFont, Image
 import PIL.ImageOps  
+
+from zeroboxScheduler import Scheduler
+
+t = time.time() - psutil.boot_time()
+with open("boottime", "a") as f: 
+    f.write("import2: ")
+    f.write(str(t))
+    f.write("\n")
 
 COLOR0 = "black"
 COLOR1 = "white"
@@ -573,12 +596,24 @@ def draw_info(draw, msg):
 
 if __name__ == "__main__":
 
+    # t = time.time() - psutil.boot_time()
+    # with open("boottime", "a") as f: 
+    #     f.write("start: ")
+    #     f.write(str(t))
+    #     f.write("\n")
+
     config = None
     with open("config.yaml", "r") as stream:
         try:
             config = yaml.load(stream)
         except yaml.YAMLError as exc:
             print(exc)
+
+    try:
+        zeroboxConnector = rpyc.connect("localhost", 18861)
+    except ConnectionRefusedError as e:
+        print("zeroboxConnector not available")
+        sys.exit(0)
 
     data = {}
     data["cam_0"]                           = {}
@@ -605,11 +640,21 @@ if __name__ == "__main__":
     data["version"] = now.strftime("%d.%m.%y")
     data["free_space"] = 0.45
 
+    scheduler = Scheduler()
+    scheduler.add_job("trigger", 1000)
+    scheduler.add_job("update_status", 300)
+
     while True:
+
+        triggered_jobs = scheduler.run_schedule()
+        for job in triggered_jobs:
+            print(job)
+
 
         if state == STATE_INIT:
             print("init")
             state += 2 # TODO
+
 
         elif state == STATE_LOGO:
             if isInvalid:
@@ -726,6 +771,12 @@ if __name__ == "__main__":
 
 
         elif state == STATE_RUNNING:
+            if "update_status" in triggered_jobs:
+                status = zeroboxConnector.root.get_status()
+                if len(status) > 0:
+                    data = {**data, **dict(status)}
+                invalidate = True
+
             if invalidate:
                 with canvas(device) as draw:
                     draw_running(draw, config, data)

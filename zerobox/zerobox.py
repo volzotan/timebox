@@ -14,40 +14,8 @@ from gi.repository import GExiv2
 
 # --- --- --- --- --- --- --- --- --- ---
 
-# DEBUG               = True
-
-# LOG_BASE_DIR        = "./"
-# LOG_FILENAME_DEBUG  = "debug.log"
-# LOG_FILENAME_INFO   = "info.log"
-# # LOG_LEVEL_CONSOLE   = logging.DEBUG 
-
-# RAW_DIR             = None # platform dependent
-# FILE_EXTENSION      = ".arw"
-
-# SERIAL_PORT         = "/dev/ttyAMA0"
-# SERIAL_BAUDRATE     = 9600
-# SERIAL_TIMEOUT      = 1 # in sec
-
-# REPEAT_MODE         = False
-# REPEAT_INTERVAL     = 20
-# REPERAT_ITERATIONS  = 120
-
-# AUTOFOCUS_ENABLED   = False
-# DOUBLEEXPOSURE_ENABLED = True
-# WAIT_EXPOSURE_COMP  = 0
-# WAIT_AUTOFOCUS      = 1
-
-# EXPOSURE_THRESHOLD  = 20 # 10
-# FREE_DISK_THRESHOLD = 100 * 1024 * 1024
-
-# EXPOSURE_LOW        = -5
-# EXPOSURE_NORMAL     = +1
-
-# EXIF_DATE_FORMAT    = '%Y:%m:%d %H:%M:%S'
-
-# --- --- --- --- --- --- --- --- --- ---
-
 CONFIG = {
+
     "LOG_BASE_DIR"              : "./",
     "LOG_FILENAME_DEBUG"        : "debug.log",
     "LOG_FILENAME_INFO"         : "info.log",
@@ -57,6 +25,10 @@ CONFIG = {
     "TEMP_DIR"                  : "tmp",
     "IMAGE_DIR"                 : "RAW",
     "FILE_EXTENSION"            : ".arw",
+
+    "SERIAL_PORT"               : "/dev/ttyAMA0",
+    "SERIAL_BAUDRATE"           : 9600,
+    "SERIAL_TIMEOUT"            : 1, # in sec
 
     "AUTOFOCUS_ENABLED"         : False,
     "AUTOFOCUS_DURATION"        : 2,
@@ -69,6 +41,8 @@ CONFIG = {
 }
 
 EXIF_DATE_FORMAT                = '%Y:%m:%d %H:%M:%S'
+
+DEBUG                           = True
 
 # --- --- --- --- --- --- --- --- --- ---
 
@@ -256,6 +230,7 @@ class Zerobox(object):
         self.config = CONFIG
 
         self.status = {}
+        self.status["usbController"] = None
 
         self.cameras = {}
         self.connectors = {}
@@ -284,7 +259,7 @@ class Zerobox(object):
         except FileExistsError as e:
             pass
 
-        self.init_log()
+        self._init_log()
 
 
     def close(self):
@@ -302,6 +277,20 @@ class Zerobox(object):
         self.status[portname]["active"] = False 
 
 
+    def disconnect_all_cameras(self):
+        for portname, connector in self.connectors.items():
+            self.status[portname]["active"] = False
+            connector.close()
+
+
+    def get_cameras(self):
+        return self.cameras
+
+
+    def get_connectors(self):
+        return self.connectors
+
+
     def load_config(self, config):
         # self.config = {**self.config, **config}
 
@@ -316,7 +305,7 @@ class Zerobox(object):
             self.config[key] = config[key]
 
 
-    def init_log(self):
+    def _init_log(self):
         if not os.path.exists(self.config["LOG_BASE_DIR"]):
             print("LOG DIR missing. create...")
             os.makedirs(self.config["LOG_BASE_DIR"])
@@ -501,6 +490,7 @@ class Zerobox(object):
         port = self._lookup_port(self.port_info_list, camera)
         conn = CameraConnector(port, self.config["IMAGE_DIR"])
         conn.open()
+        portname = camera[1]
         self.connectors[portname] = conn
 
         if portname not in self.status:
@@ -525,6 +515,7 @@ class Zerobox(object):
             self.focus_camera
 
         filename = self._acquire_filename(conn.get_image_directory())
+        filename2 = None
 
         if not self.config["DOUBLEEXPOSURE_ENABLED"]:
             conn.capture_and_download(filename)
@@ -545,6 +536,12 @@ class Zerobox(object):
                 conn.set_exposure_compensation(self.config["EXPOSURE_2"])
                 filename2 = (filename[0], filename[1] + "_2")
                 conn.capture_and_download(filename2)
+
+        taken_images = [filename]
+        if filename2 is not None:
+            taken_images.append(filename2)
+
+        return taken_images
 
 
     def get_status(self, force_connection=False):
