@@ -1,16 +1,34 @@
-import board
-import digitalio
-
 import sys
 import time
 import supervisor
 
+import board
+import digitalio
+
+import busio
+import adafruit_ina219
+
+import neopixel
+
+PIN_BUTTON      = board.D11 # PA16
+PIN_USB_EN      = board.D7  # PA21
+PIN_LED         = board.D13 # PA17 
+PIN_DLOAD       = board.D10 # PA18
+
+# see for pinout:
+# https://circuitpython.readthedocs.io/en/3.x/ports/atmel-samd/README.html#pinout
 
 input_buffer = ""
 
+i2c = busio.I2C(board.SCL, board.SDA)
+ina219 = adafruit_ina219.INA219(i2c)
 
-def init_pins():
-    pass
+RED = (255, 0, 0)
+YELLOW = (255, 150, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+CLEAR = (0, 0, 0)
+pixel = neopixel.NeoPixel(PIN_LED, 1, brightness=0.3, auto_write=True)
 
 def communicate():
     global input_buffer
@@ -42,7 +60,29 @@ def communicate():
 
 if __name__ == "__main__":
 
-    init_pins()
+    # init pins
+
+    button = DigitalInOut(PIN_BUTTON)
+    button.direction = Direction.INPUT
+    button.pull = Pull.UP
+
+    mosfet = DigitalInOut(PIN_USB_EN)
+    mosfet.direction = Direction.OUTPUT
+    # mosfet.pull = Pull.DOWN
+
+    dummy_load = DigitalInOut(PIN_DLOAD)
+    dummy_load.direction = Direction.OUTPUT
+
+    # LED status
+
+    pixel.fill(GREEN)
+    time.sleep(1.0)
+    pixel.fill(CLEAR)
+
+    print("Bus Voltage:   {} V".format(ina219.bus_voltage))
+    print("Shunt Voltage: {} mV".format(ina219.shunt_voltage / 1000))
+    print("Load Voltage:  {} V".format(ina219.bus_voltage + ina219.shunt_voltage))
+    print("Current:       {} mA".format(ina219.current))
 
     while True:
         communicate()
