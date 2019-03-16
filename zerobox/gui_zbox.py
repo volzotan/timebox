@@ -33,6 +33,7 @@ from PIL import ImageFont, Image
 import PIL.ImageOps  
 
 from zeroboxScheduler import Scheduler
+from devices import UsbDirectController, RTC
 
 t = time.time() - psutil.boot_time()
 with open("boottime", "a") as f: 
@@ -43,9 +44,9 @@ with open("boottime", "a") as f:
 COLOR0 = "black"
 COLOR1 = "white"
 
-BTN_1 = 16
+BTN_1 = 21
 BTN_2 = 20
-BTN_3 = 21
+BTN_3 = 16
 BTN_L = 5
 BTN_R = 26
 BTN_U = 6
@@ -105,7 +106,7 @@ if os.uname().nodename == "raspberrypi":
     GPIO.setup(BTN_D, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(BTN_C, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-    time.sleep(0.1)
+    time.sleep(0.3)
 
     GPIO.add_event_detect(BTN_1, GPIO.RISING, callback=button_callback)
     GPIO.add_event_detect(BTN_2, GPIO.RISING, callback=button_callback)
@@ -442,7 +443,7 @@ def draw_logo(draw, data):
     draw.rectangle([(56, 38), (56, 59)], outline=None, fill=COLOR1)
 
 
-def draw_menu(draw, config, selected_index):
+def draw_menu(draw, config, data, selected_index):
     # rect(draw, [(0, 22), (127, 22)])
     # text(draw, [48, 26], "SETTINGS")
     # rect(draw, [(0, 34), (127, 34)])
@@ -473,7 +474,7 @@ def draw_menu(draw, config, selected_index):
     text(draw, [54, 14], _timeToStr(config["interval"]["value"]))
     text(draw, [54, 20], "01:23:45")
     text(draw, [54, 26], str(config["secondexposure"]["value"]) + " - " + "10.3")
-    text(draw, [54, 32], "20.1")
+    text(draw, [54, 32], "{0:.2f} C".format(data["temperature"]))
     text(draw, [54, 38], "99999") # max: 99999
 
     currentTime = datetime.datetime.now()
@@ -596,11 +597,7 @@ def draw_info(draw, msg):
 
 if __name__ == "__main__":
 
-    # t = time.time() - psutil.boot_time()
-    # with open("boottime", "a") as f: 
-    #     f.write("start: ")
-    #     f.write(str(t))
-    #     f.write("\n")
+    # Load Config
 
     config = None
     with open("config.yaml", "r") as stream:
@@ -609,11 +606,25 @@ if __name__ == "__main__":
         except yaml.YAMLError as exc:
             print(exc)
 
+    # Find a zeroboxConnector
+
+    # try:
+    #     zeroboxConnector = rpyc.connect("localhost", 18861)
+    # except ConnectionRefusedError as e:
+    #     print("zeroboxConnector not available")
+    #     sys.exit(-1)
+
+    # setup the Scheduler
+
+    scheduler = Scheduler()
+    scheduler.add_job("trigger", 1000)
+    scheduler.add_job("update_status", 300)
+
+    clock = None
     try:
-        zeroboxConnector = rpyc.connect("localhost", 18861)
-    except ConnectionRefusedError as e:
-        print("zeroboxConnector not available")
-        sys.exit(0)
+        clock = RTC()
+    except Exception as e:
+        print(e)
 
     data = {}
     data["cam_0"]                           = {}
@@ -640,10 +651,6 @@ if __name__ == "__main__":
     data["version"] = now.strftime("%d.%m.%y")
     data["free_space"] = 0.45
 
-    scheduler = Scheduler()
-    scheduler.add_job("trigger", 1000)
-    scheduler.add_job("update_status", 300)
-
     while True:
 
         triggered_jobs = scheduler.run_schedule()
@@ -666,8 +673,14 @@ if __name__ == "__main__":
 
         elif state == STATE_MENU:
             if isInvalid:
+
+                data = {}
+                data["temperature"] = 0
+                if clock is not None:
+                    data["temperature"] = clock.read_temperature()
+
                 with canvas(device) as draw:
-                    draw_menu(draw, config, menu_selected)
+                    draw_menu(draw, config, data, menu_selected)
                 validate()
 
             k = getKeyEvents()
@@ -677,7 +690,7 @@ if __name__ == "__main__":
             if "r" in k:
                 menu_selected = (menu_selected + 1) % 3
                 invalidate()
-            if "c" in k:
+            if "3" in k:
                 if menu_selected == 0:
                     state = STATE_CONFIG
                 elif menu_selected == 1:
@@ -710,13 +723,15 @@ if __name__ == "__main__":
             if "d" in k:
                 menu_selected = (menu_selected + 1) % len(menu)
                 invalidate()
-            if "c" in k:
+            if "3" in k:
                 selectedConfigItem = config[_configToList(config)[menu_selected]["name"]]
                 configItemValue = selectedConfigItem["value"]
                 state = STATE_CONFIG_ITEM
+                menu_selected = 0
                 invalidate()
             if "1" in k:
                 state = STATE_MENU
+                menu_selected = 0
                 invalidate()
 
 
@@ -812,7 +827,7 @@ if __name__ == "__main__":
                 subprocess.run(["sudo", "shutdown", "now"])
 
         else:
-            pass
+            raise Exception("illegal state: {}".format(state))
                 
         #time.sleep(0.1)
 

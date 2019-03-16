@@ -42,6 +42,7 @@ sudo apt-get install -y exiv2 gir1.2-gexiv2-0.10
 sudo apt-get install -y python3-gi
 sudo pip3 install pyserial
 sudo pip3 install psutil
+sudo pip3 install rpyc
 # only available with pip2?
 # sudo pip3 install gexiv2
 
@@ -52,18 +53,20 @@ sudo apt-get install -y python3-yaml
 pip3 install luma.oled
 pip3 install luma.emulator
 
+sudo apt-get install -y python3-smbus
+
 # oh-my-zsh
 # wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O ohmyzsh.sh && sh ohmyzsh.sh
-sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
-chsh -s /bin/zsh
+# sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
+# chsh -s /bin/zsh
 
 # set up the systemd services
-sudo cp /home/pi/zerobox/*.service /etc/systemd/system/
-sudo chmod -R +x /home/pi/zerobox
-sudo systemctl enable zerobox
-sudo systemctl enable zerobox_gui
-sudo systemctl start zerobox
-sudo systemctl start zerobox_gui
+# sudo cp /home/pi/zerobox/*.service /etc/systemd/system/
+# sudo chmod -R +x /home/pi/zerobox
+# sudo systemctl enable zerobox
+# sudo systemctl enable zerobox_gui
+# sudo systemctl start zerobox
+# sudo systemctl start zerobox_gui
 
 # TODO: 
 #   enable i2c / SPI

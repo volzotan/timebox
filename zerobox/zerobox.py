@@ -7,6 +7,7 @@ import math
 import numpy as np
 
 import gphoto2 as gp
+from devices import UsbDirectController
 
 import gi
 gi.require_version('GExiv2', '0.10')
@@ -48,13 +49,18 @@ DEBUG                           = True
 
 class CameraConnector(object):
 
+    MODE_MANUAL             = "M"
+    MODE_APERTURE_PRIORITY  = "M"
+    MODE_AUTOMATIC          = "P"
+    MODE_UNKNOWN            = "?"
+
     def __init__(self, port, image_base_directory):
         self.port = port
 
         self.image_base_directory = image_base_directory
         self.image_directory = None
 
-        self.status = {}
+        self.exposure_mode = None
 
 
     def open(self):
@@ -78,6 +84,14 @@ class CameraConnector(object):
             os.makedirs(self.image_directory)
         except FileExistsError as e:
             pass
+
+        status = self.get_exposure_status()
+        if status["expprogram"] == "A":
+            self.exposure_mode = MODE_APERTURE_PRIORITY
+        elif status["expprogram"] == "M":
+            self.exposure_mode = MODE_MANUAL
+        else:
+            self.exposure_mode = MODE_UNKNOWN
 
 
     def close(self):
@@ -114,6 +128,19 @@ class CameraConnector(object):
         gp.check_result(error)
 
         self._set_config_value(config, "exposurecompensation", str(compensation))
+
+
+    def set_exposure_manual(self, shutter, aperture, iso):
+
+        # set mode to manual
+
+        # set shutter speed 
+
+        # set aperture
+
+        # set iso
+
+        pass
 
 
     def get_exposure_status(self):
