@@ -3,23 +3,11 @@
 import time
 import psutil
 
-t = time.time() - psutil.boot_time()
-with open("boottime", "a") as f: 
-    f.write("init: ")
-    f.write(str(t))
-    f.write("\n")
-
 from luma.core.interface.serial import i2c, spi
 from luma.emulator.device import pygame, capture
 
 from luma.core.render import canvas
 from luma.oled.device import sh1106
-
-t = time.time() - psutil.boot_time()
-with open("boottime", "a") as f: 
-    f.write("import1: ")
-    f.write(str(t))
-    f.write("\n")
 
 import os
 from os.path import getmtime
@@ -34,12 +22,6 @@ import PIL.ImageOps
 
 from zeroboxScheduler import Scheduler
 from devices import UsbDirectController, RTC
-
-t = time.time() - psutil.boot_time()
-with open("boottime", "a") as f: 
-    f.write("import2: ")
-    f.write(str(t))
-    f.write("\n")
 
 COLOR0 = "black"
 COLOR1 = "white"
@@ -59,14 +41,20 @@ STATE_MENU          = 2
 STATE_CONFIG        = 3
 STATE_CONFIG_ITEM   = 4
 STATE_DIALOG        = 5
-STATE_RUNNING       = 6
-STATE_RUNNING_MENU  = 7
+STATE_PRE_RUN       = 6
+STATE_RUNNING       = 7
+STATE_RUNNING_MENU  = 8
 STATE_IDLE          = 100
 
 own_mtime = getmtime(__file__)
 
+PLATFORM_UNKNOWN    = 0
+PLATFORM_PI         = 1
+PLATFORM_OSX        = 2
+
 device = None
 pyg = None
+platform = PLATFORM_UNKNOWN
 
 keyEvents = []
 
@@ -91,6 +79,12 @@ def button_callback(button):
 
 
 if os.uname().nodename == "raspberrypi":
+    platform = PLATFORM_PI
+else:
+    platform = PLATFORM_OSX
+
+
+if platform == PLATFORM_PI:
     device = sh1106(spi(), rotate=2)
 
     import RPi.GPIO as GPIO
@@ -161,7 +155,8 @@ def invalidate():
 
 
 def validate():
-    pass
+    isInvalid = False
+    # pass
 
 
 def _apertureToStr(value):
@@ -212,12 +207,15 @@ def _zeropad(value, length):
 
 def _changeConfigItem(item, value, pos, op):
     if item["type"] == "int":
+        dec = len(str(int(abs(value))))
         if op > 0:
-            if not "max" in item or value + 1 <= item["max"]:
-                value += 1
+            new_value = value + (10 ** (dec-pos-1))
+            if not "max" in item or new_value <= item["max"]:
+                value = new_value
         else:
-            if not "min" in item or value - 1 >= item["min"]:
-                value -= 1
+            new_value = value - (10 ** (dec-pos-1))
+            if not "min" in item or new_value >= item["min"]:
+                value = new_value
 
     elif item["type"] == "boolean":
         value = not value
@@ -335,16 +333,24 @@ def draw_running(draw, config, data):
     # end = 9
     end = 18
 
-    if data["cam_0"]:
-        if data["cam_0"]["active"]:
+    cam0 = None
+    cam1 = None
+
+    if len(data["cameras"].items()) > 0:
+        cam0 = list(data["cameras"].values())[0]
+    if len(data["cameras"].items()) > 1:
+        cam1 =  list(data["cameras"].values())[1]
+
+    if cam0 is not None:
+        if cam0["active"]:
             draw.rectangle([(1, 1), (1+21, 1+6)], fill=COLOR1)
             text(draw, [2, 2], "CAM 1", invert=True)
         else:
             draw.rectangle([(1, 1), (1+21, 1+6)], fill=COLOR0)
             text(draw, [2, 2], "CAM 1")
 
-    if data["cam_1"]:
-        if data["cam_1"]["active"]:
+    if cam1 is not None:
+        if cam1["active"]:
             draw.rectangle([(1, 9), (1+21, 8+7)], fill=COLOR1)
             text(draw, [2, 2+8], "CAM 2", invert=True)
         else:
@@ -356,17 +362,29 @@ def draw_running(draw, config, data):
     draw.rectangle([(0, end), (127, end)], outline=None, fill=COLOR1)
     draw.rectangle([(24, 0), (24, end)], outline=None, fill=COLOR1)
 
-    if data["cam_0"]:
-        text(draw, [35,  2], "1/1250")
-        text(draw, [71,  2], _apertureToStr(data["cam_0"]["aperture"]))
-        text(draw, [95,  2], str(data["cam_0"]["iso"]))
-        text(draw, [127, 2], "+8", rightalign=True)
+    if cam0:
+        if "error" in cam0 and cam0["error"] is not None:
+            text(draw, [27,  2], cam0["error"])
+        else:
+            if "shutterspeed" in cam0:
+                text(draw, [35,  2], cam0["shutterspeed"])
+            if "aperture" in cam0:
+                text(draw, [71,  2], _apertureToStr(cam0["aperture"]))
+            if "iso" in cam0:
+                text(draw, [95,  2], str(cam0["iso"]))
+            if "expcompensation" in cam0:
+                text(draw, [127, 2], "+8", rightalign=True)
 
-    if data["cam_1"]:
+    if cam1:
         text(draw, [35,   10], "1/1250")
-        text(draw, [71,   10], _apertureToStr(data["cam_1"]["aperture"]))
+        text(draw, [71,   10], _apertureToStr(cam1["aperture"]))
         text(draw, [95,   10], "300")
         text(draw, [127,  10], "+8", rightalign=True)
+
+    # ERROR MESSAGE
+
+    # if data["message"] is not None:
+    #     text(draw, [27,  2], data["message"])
 
     # 2ND EXPOSURE
 
@@ -474,7 +492,16 @@ def draw_menu(draw, config, data, selected_index):
     text(draw, [54, 14], _timeToStr(config["interval"]["value"]))
     text(draw, [54, 20], "01:23:45")
     text(draw, [54, 26], str(config["secondexposure"]["value"]) + " - " + "10.3")
-    text(draw, [54, 32], "{0:.2f} C".format(data["temperature"]))
+
+    temp_str = "---"
+    if data["temperature"] is not None:
+        temp_str = "{0:.2f} C".format(data["temperature"])
+    if data["temperature_cpu"] is not None:
+        temp_str = "{0:.2f} C (CPU)".format(data["temperature_cpu"])
+    if data["temperature"] is not None and data["temperature_cpu"] is not None:
+        temp_str =  "{0:.2f} | {1:.2f} CPU".format(data["temperature"], data["temperature_cpu"])
+    text(draw, [54, 32], temp_str)
+    
     text(draw, [54, 38], "99999") # max: 99999
 
     currentTime = datetime.datetime.now()
@@ -482,7 +509,7 @@ def draw_menu(draw, config, data, selected_index):
     text(draw, [127-19, 1], currentTime.strftime("%H:%M"), invert=True)
 
     rect(draw, [(0, 0), (127-22, 6)])
-    text(draw, [2, 1], "OK", invert=True)
+    text(draw, [2, 1], data["message"], invert=True)
 
     text(draw, [126, 38], "{0:.2f}".format(12.34), rightalign=True)
     rect(draw, [(75, 38), (100, 42)])
@@ -520,7 +547,11 @@ def draw_config(draw, menu, selected_index):
         if isinstance(viewmenu[i], dict): # it's a config item!
             rect(draw, [(0, 7*i), (127, 7+7*i)], invert=not selected)
             text(draw, [2, 1+7*i], viewmenu[i]["name"], invert=selected)
-            text(draw, [127, 1+7*i], viewmenu[i]["value"], invert=selected, rightalign=True)
+
+            if viewmenu[i]["type"] == "float":
+                text(draw, [127, 1+7*i], "{0:.2f}".format(viewmenu[i]["value"]), invert=selected, rightalign=True)
+            else:
+                text(draw, [127, 1+7*i], viewmenu[i]["value"], invert=selected, rightalign=True)
 
         elif viewmenu[i] == "-": # separator
             rect(draw, [(0, 1+7*i), (127, 7+7*i)], invert=not selected)
@@ -532,6 +563,8 @@ def draw_config(draw, menu, selected_index):
 
 
 def draw_configItem(draw, item, value, pos):
+
+    print(pos)
 
     text(draw, [2, 2], item["name"])
     rect(draw, [(0, 8), (100, 8)])
@@ -549,6 +582,8 @@ def draw_configItem(draw, item, value, pos):
     elif item["type"] == "float":
         valueStr = "{0:.2f}".format(value)
         text(draw, [70, 30], valueStr, rightalign=True)
+        if value < 0:
+            pos += 1
         text(draw, [70, 38], "^" + " "*(len(valueStr)-pos-1), rightalign=True)
     elif item["type"] == "time":
    
@@ -616,9 +651,12 @@ if __name__ == "__main__":
 
     # setup the Scheduler
 
+    zeroboxConnector = None
+
     scheduler = Scheduler()
-    scheduler.add_job("trigger", 1000)
-    scheduler.add_job("update_status", 300)
+    scheduler.add_job("trigger", 5000)
+    scheduler.add_job("update_status", 500)
+    scheduler.add_job("force_update_status", 2000)
 
     clock = None
     try:
@@ -627,35 +665,32 @@ if __name__ == "__main__":
         print(e)
 
     data = {}
-    data["cam_0"]                           = {}
-    data["cam_1"]                           = {}
+    data["cameras"] = {}
+    data["message"] = "..." 
 
-    data["cam_0"]["active"]                 = True
-    data["cam_0"]["shutter"]                = "1.0"
-    data["cam_0"]["aperture"]               = 11
-    data["cam_0"]["iso"]                    = 300
-    data["cam_0"]["exposurecompensation"]   = 1
+    # data["cam_0"]                           = {}
+    # data["cam_1"]                           = {}
 
-    data["cam_1"]["active"]                 = True
-    data["cam_1"]["shutter"]                = "1/300"
-    data["cam_1"]["aperture"]               = 5.6
-    data["cam_1"]["iso"]                    = 300
-    data["cam_1"]["exposurecompensation"]   = 1
+    # data["cam_0"]["active"]                 = True
+    # data["cam_0"]["shutter"]                = "1.0"
+    # data["cam_0"]["aperture"]               = 11
+    # data["cam_0"]["iso"]                    = 300
+    # data["cam_0"]["exposurecompensation"]   = 1
 
-    logo = Image.open("logo.png")
-    logo = PIL.ImageOps.invert(logo)
-    logo = logo.convert("1")
-    data["logo"] = logo
-    data["devicename"] = "undefined"
-    now = datetime.datetime.now()
-    data["version"] = now.strftime("%d.%m.%y")
-    data["free_space"] = 0.45
+    # data["cam_1"]["active"]                 = True
+    # data["cam_1"]["shutter"]                = "1/300"
+    # data["cam_1"]["aperture"]               = 5.6
+    # data["cam_1"]["iso"]                    = 300
+    # data["cam_1"]["exposurecompensation"]   = 1
 
     while True:
 
         triggered_jobs = scheduler.run_schedule()
         for job in triggered_jobs:
             print(job)
+
+        if "update_status" in triggered_jobs:
+            invalidate()
 
 
         if state == STATE_INIT:
@@ -665,8 +700,20 @@ if __name__ == "__main__":
 
         elif state == STATE_LOGO:
             if isInvalid:
+
+                screen = {}
+                logo = Image.open("logo.png")
+                logo = PIL.ImageOps.invert(logo)
+                logo = logo.convert("1")
+                screen["logo"] = logo
+                screen["devicename"] = "undefined"
+                now = datetime.datetime.now()
+                screen["version"] = now.strftime("%d.%m.%y")
+                screen["free_space"] = 0.45
+
                 with canvas(device) as draw:
-                    draw_logo(draw, data)
+                    draw_logo(draw, screen)
+
             state = STATE_MENU
             time.sleep(1.0)
 
@@ -674,14 +721,22 @@ if __name__ == "__main__":
         elif state == STATE_MENU:
             if isInvalid:
 
-                data = {}
-                data["temperature"] = 0
+                menu = {}
+                menu["message"] = "..."
+                menu["temperature"] = None
+                menu["temperature_cpu"] = None
                 if clock is not None:
-                    data["temperature"] = clock.read_temperature()
+                    menu["temperature"] = clock.read_temperature()
+                if platform == PLATFORM_PI:
+                    temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
+                    menu["temperature_cpu"] = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
 
                 with canvas(device) as draw:
-                    draw_menu(draw, config, data, menu_selected)
+                    draw_menu(draw, config, menu, menu_selected)
                 validate()
+
+                # device.hide()
+                # device.show()
 
             k = getKeyEvents()
             if "l" in k:
@@ -694,7 +749,7 @@ if __name__ == "__main__":
                 if menu_selected == 0:
                     state = STATE_CONFIG
                 elif menu_selected == 1:
-                    state = STATE_RUNNING
+                    state = STATE_PRE_RUN
                 elif menu_selected == 2:
                     state = STATE_IDLE
                     # TODO
@@ -710,6 +765,10 @@ if __name__ == "__main__":
 
             # menu = menu_fix + ["-"] + _configToList(config)
             menu = _configToList(config)
+            menu.append("-")
+            menu.append("camera on")
+            menu.append("camera off")
+            menu.append("display off")
 
             if isInvalid:
                 with canvas(device) as draw:
@@ -754,7 +813,7 @@ if __name__ == "__main__":
                 if configItemPos > 0:
                     configItemPos -= 1
                     if item["type"] == "float":
-                        if configItemPos == len(str(int(abs(item["value"])))):
+                        if configItemPos == len(str(int(abs(configItemValue)))):
                             configItemPos -= 1
                 elif item["type"] == "time":
                     if configItemPos > 0:
@@ -762,10 +821,16 @@ if __name__ == "__main__":
                         if configItemPos == 2 or configItemPos == 5:
                            configItemPos -= 1 
             if "r" in k:
-                if item["type"] == "float":
-                    if configItemPos < len(str(abs(item["value"]))):
+                if item["type"] == "int":
+                    if configItemPos < len(str(abs(configItemValue))):
                         configItemPos += 1
-                        if configItemPos == len(str(int(abs(item["value"])))):
+                        if configItemPos == len(str(int(abs(configItemValue)))):
+                            configItemPos += 1
+                if item["type"] == "float":
+                    print("{0:.2f}".format(abs(configItemValue)))
+                    if configItemPos < len("{0:.2f}".format(abs(configItemValue)))-1:
+                        configItemPos += 1
+                        if configItemPos == len(str(int(abs(configItemValue)))):
                             configItemPos += 1
                 elif item["type"] == "time":
                     if configItemPos < 10:
@@ -785,12 +850,46 @@ if __name__ == "__main__":
                 invalidate()
 
 
+        elif state == STATE_PRE_RUN:
+            # if isInvalid:
+            #     with canvas(device) as draw:
+            #         draw_info(draw, "start")
+            #     validate()
+
+            zeroboxConnector = rpyc.connect("localhost", 18861)
+            zeroboxConnector.root.detect()
+            cameras = zeroboxConnector.root.get_cameras()
+
+            for portname, camera in cameras.items():
+                try:
+                    zeroboxConnector.root.connect(portname)
+                except Exception as e:
+                    print(e)
+
+                    # TODO: go to exception state
+                    # if portname not in data["cameras"]:
+                    #     data["cameras"][portname] = {}
+
+                    # data["cameras"][portname]["message"] = "conn error"
+
+            state = STATE_RUNNING
+
+
         elif state == STATE_RUNNING:
-            if "update_status" in triggered_jobs:
-                status = zeroboxConnector.root.get_status()
-                if len(status) > 0:
-                    data = {**data, **dict(status)}
-                invalidate = True
+            if "update_status" in triggered_jobs or "force_update_status" in triggered_jobs:
+
+                if zeroboxConnector is not None:
+                    force = False
+                    if "force_update_status" in triggered_jobs:
+                        force = True
+                    status = zeroboxConnector.root.get_status(force=force)
+                    if len(status) > 0:
+                        data = {**data, **dict(status)}
+                        data["message"] = None
+                else:
+                    data["message"] = "connector not found"
+
+                invalidate()
 
             if invalidate:
                 with canvas(device) as draw:
@@ -824,11 +923,13 @@ if __name__ == "__main__":
         elif state == STATE_IDLE:
             with canvas(device) as draw:
                 draw_info(draw, "shutdown")
-                subprocess.run(["sudo", "shutdown", "now"])
+            time.sleep(1.0)
+            subprocess.run(["sudo", "shutdown", "now"])
+
 
         else:
             raise Exception("illegal state: {}".format(state))
                 
-        #time.sleep(0.1)
+        time.sleep(0.1)
 
         checkAndRestartOnFileChange()

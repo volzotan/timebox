@@ -14,6 +14,10 @@ secondexposure:
     type: boolean
     value: False
 
+se_use_threshold:
+    type: boolean
+    value: True
+
 se_threshold:
     type: float
     min: 0

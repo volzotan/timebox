@@ -87,15 +87,39 @@ class CameraConnector(object):
 
         status = self.get_exposure_status()
         if status["expprogram"] == "A":
-            self.exposure_mode = MODE_APERTURE_PRIORITY
+            self.exposure_mode = self.MODE_APERTURE_PRIORITY
         elif status["expprogram"] == "M":
-            self.exposure_mode = MODE_MANUAL
+            self.exposure_mode = self.MODE_MANUAL
         else:
-            self.exposure_mode = MODE_UNKNOWN
+            self.exposure_mode = self.MODE_UNKNOWN
 
 
     def close(self):
         gp.check_result(gp.gp_camera_exit(self.camera))
+        self.camera = None
+
+
+    # def check(self):
+        
+    #     # is init?
+    #     if self.camera is None:
+    #         raise Exception("Connection not opened")
+
+    #     try:
+    #         error, summmary = gp.gp_camera_summary(self.camera)
+    #         gp.check_result(error)
+    #     except gp.GPhoto2Error as ge:
+    #         # connector is initialized, but camera can not be controlled
+    #         print(e) # TODO: use logging
+
+    #         self.close()
+
+    #         try:
+    #             self.open()
+    #         except Exception as e:
+    #             print("reopening failed: {}".format(e))
+
+    #             raise Exception("closed and reopening failed")
 
 
     def set_autofocus(self, enabled):
@@ -258,6 +282,7 @@ class Zerobox(object):
 
         self.status = {}
         self.status["usbController"] = None
+        self.status["cameras"] = {}
 
         self.cameras = {}
         self.connectors = {}
@@ -472,7 +497,7 @@ class Zerobox(object):
         return shutter_repr + aperture_repr + iso_repr
 
 
-    def detect_cameras(self):
+    def _detect_cameras(self):
 
         # use Python logging
         # logging.basicConfig(format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
@@ -495,6 +520,13 @@ class Zerobox(object):
         error, cameras = gp.gp_abilities_list_detect(abilities_list, self.port_info_list)
         gp.check_result(error)
 
+        return cameras
+
+
+    def detect_cameras(self):
+
+        cameras = self._detect_cameras()
+
         if len(cameras) == 0:
             return []
 
@@ -507,23 +539,38 @@ class Zerobox(object):
             portname = camera[1]
             print("{} | {}".format(camera[0], portname))
             self.cameras[camera[1]] = camera 
-            if portname not in self.status:
-                self.status[portname] = {}
-            self.status[portname]["port"] = portname
-            self.status[portname]["active"] = False 
+            if portname not in self.status["cameras"]:
+                self.status["cameras"][portname] = {}
+            self.status["cameras"][portname]["port"] = portname
+            self.status["cameras"][portname]["active"] = False 
 
 
     def connect_camera(self, camera):
         port = self._lookup_port(self.port_info_list, camera)
         conn = CameraConnector(port, self.config["IMAGE_DIR"])
-        conn.open()
+
         portname = camera[1]
+        if portname not in self.status["cameras"]:
+            self.status["cameras"][portname] = {}
+
+        try:
+            conn.open()
+        except gp.GPhoto2Error as ge:
+            self.log.error("Could not connect camera: {}".format(ge))
+            self.status["cameras"][portname]["error"] = "gphoto error"
+            self.status["cameras"][portname]["active"] = False
+            raise Exception("Could not open camera connection. GPhoto2Error.")
+        except Exception as e:
+            self.log.error("Could not connect camera: {}".format(e))
+            self.status["cameras"][portname]["error"] = "unknown error"
+            self.status["cameras"][portname]["active"] = False
+            raise Exception("Could not open camera connection. Unknown exception.")
+
         self.connectors[portname] = conn
 
-        if portname not in self.status:
-            self.status[portname] = {}
-        self.status[portname]["active"] = True
-        self.status[portname] = {**self.status[portname], **conn.get_exposure_status()}
+        self.status["cameras"][portname]["error"] = None
+        self.status["cameras"][portname]["active"] = True
+        self.status["cameras"][portname] = {**self.status["cameras"][portname], **conn.get_exposure_status()}
 
 
     def focus_camera(self, portname):
@@ -576,8 +623,36 @@ class Zerobox(object):
 
         if force_connection:
             for portname, connector in self.connectors.items():
-                s = connector.get_exposure_status()
-                data[portname] = s
+                try:
+                    s = connector.get_exposure_status()
+                    old = data["cameras"][portname]
+                    data["cameras"][portname] = {**old, **s}
+                    data["cameras"][portname]["error"] = None
+                except gp.GPhoto2Error as ge:
+                    self.log.error("getting exposure status failed: {}".format(ge))
+
+                    detected_cameras = self._detect_cameras()
+                    detected_portnames = [x[1] for x in detected_cameras]
+
+                    if portname not in detected_portnames:
+                        data["cameras"][portname]["error"] = "disconnected"
+                    else:
+                        data["cameras"][portname]["error"] = "not responding"
+
+                    # connector.check()
+
+                    # # camera probably disconnected
+                    # connector.close()
+
+                    # # error message
+                    # data["cameras"][portname]["error"] = "conn error"
+
+                    # # check if gphoto2 still detects a camera at the given port
+
+                    # try:
+                    #     self.connect_camera(self.cameras[portname])
+                    # except Exception as e:
+                    #     print(e)
 
         return data
 

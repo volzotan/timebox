@@ -3,8 +3,11 @@ import serial
 from datetime import datetime
 import time
 import os
-import smbus
 
+try:
+    import smbus
+except ImportError as e:
+    print("importing smbus failed. Not a raspberry pi platform, i2c will not be available.")
 
 class UsbDirectController(object):
 
@@ -15,8 +18,10 @@ class UsbDirectController(object):
     def __init__(self, port):
         self.port = port
 
+
     # def close(self):
     #     pass
+
 
     def turnOn(self, turnOn):
         try:
@@ -35,6 +40,7 @@ class UsbDirectController(object):
         except Exception as e:
             print(e)
             return None
+
 
     def _send_command(cmd):
         response = ""
