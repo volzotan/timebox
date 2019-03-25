@@ -20,6 +20,10 @@ class ZeroboxConnector(rpyc.Service):
         return None
 
 
+    def exposed_get_free_space(self):
+        return self.zerobox.get_free_space()
+
+
     def exposed_detect(self):
         self.zerobox.detect_cameras()
 

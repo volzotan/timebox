@@ -4,6 +4,7 @@ import sys
 import subprocess
 import datetime
 import math
+import shutil
 import numpy as np
 
 import gphoto2 as gp
@@ -403,7 +404,7 @@ class Zerobox(object):
 
 
     def get_free_space(self):
-        return 0 # TODO
+        return shutil.disk_usage(self.config["IMAGE_DIR"]).free
 
 
     def _lookup_port(self, port_list, port_address):
@@ -634,40 +635,42 @@ class Zerobox(object):
                     detected_cameras = self._detect_cameras()
                     detected_portnames = [x[1] for x in detected_cameras]
 
-                    if portname not in detected_portnames:
-                        data["cameras"][portname]["error"] = "disconnected"
-                    else:
+                    if portname in detected_portnames:
+                        self.log.error("camera {} not responding".format(portname))
                         data["cameras"][portname]["error"] = "not responding"
+                    else:
+                        self.log.error("camera {} disconnected".format(portname))
+                        data["cameras"][portname]["error"] = "disconnected"
 
-                    # connector.check()
+                        try:
+                            connector.close()
+                        except Exception as e:
+                            pass
 
-                    # # camera probably disconnected
-                    # connector.close()
-
-                    # # error message
-                    # data["cameras"][portname]["error"] = "conn error"
-
-                    # # check if gphoto2 still detects a camera at the given port
-
-                    # try:
-                    #     self.connect_camera(self.cameras[portname])
-                    # except Exception as e:
-                    #     print(e)
+                        try:
+                            connector.open()
+                        except Exception as e:
+                            self.log.warn("reconnect failed: {}".format(e))
 
         return data
 
 
 if __name__ == "__main__":
     z = Zerobox()
-    print(z.get_status())
-    z.print_config()
-    z.detect_cameras()
+    # print(z.get_status())
+    # print("free space on {}: {}".format(z.config["IMAGE_DIR"], z.get_free_space()/1024.0**3))
+    # z.print_config()
+    # z.detect_cameras()
 
-    for portname, camera in z.cameras.items():
-        z.connect_camera(camera)
-        z.trigger_camera(portname)
+    # for portname, camera in z.cameras.items():
+    #     z.connect_camera(camera)
+    #     z.trigger_camera(portname)
 
-    print(z.get_status())
+    # print(z.get_status())
+
+    usbController = UsbDirectController("/dev/tty.usbmodem14201")
+    print(usbController.get_status())
+
     z.close()
 
         

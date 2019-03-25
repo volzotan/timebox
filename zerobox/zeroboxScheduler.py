@@ -26,6 +26,14 @@ class Scheduler(object):
         return self.jobs
 
 
+    def get_next_invocation(self, job_object):
+        for job in self.jobs:
+            if job["job_object"] == job_object:
+                return job["next_invocation"]
+
+        return None
+
+
     def run_schedule(self):
         triggered_jobs = []
 

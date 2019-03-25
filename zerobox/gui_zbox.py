@@ -17,6 +17,8 @@ import sys
 import yaml
 import rpyc
 
+import logging as log
+
 from PIL import ImageFont, Image
 import PIL.ImageOps  
 
@@ -137,6 +139,9 @@ selectedConfigItem  = None
 configItemValue     = None
 configItemPos       = 0 # Pointer to change digits of a configItems value
 
+time_start          = None
+time_end            = None
+
 
 def checkAndRestartOnFileChange():
     if getmtime(__file__) != own_mtime:
@@ -173,19 +178,22 @@ def _apertureToStr(value):
     return "F{0:.1f}".format(value)
 
 
-def _timeToStr(value):
+def _timeToStr(value, short=False):
     val = ""
     hours = int(value/3600)
     minutes = int(value/60)%60
     seconds = value%60
 
-    if hours > 0:
-        val += "{}H ".format(hours)
-    if minutes > 0:
-        val += "{}MIN ".format(hours)
+    if short:
+        return "{0:02d}:{1:02d}:{2:02d}".format(hours, minutes, seconds)
+    else:
+        if hours > 0:
+            val += "{}H ".format(hours)
+        if minutes > 0:
+            val += "{}MIN ".format(hours)
 
-    val += "{}S".format(seconds)
-    return val
+        val += "{}S".format(seconds)
+        return val
 
 
 def _configToList(c):
@@ -407,10 +415,13 @@ def draw_running(draw, config, data):
     # INTERVAL
 
     text(draw, [45+5, start+2], "INTVAL")
-    text(draw, [127,  start+2], "00:00:00", rightalign=True)
+    text(draw, [45+5, start+9], str(config["interval"]["value"]))
 
-    text(draw, [45+5, start+9], "90SEC")
-    text(draw, [127,  start+9], "00:00:00", rightalign=True)
+    time_done = (datetime.datetime.now() - time_start).seconds
+    time_remaining = (time_end - datetime.datetime.now()).seconds
+
+    text(draw, [127,  start+2], _timeToStr(time_done, short=True), rightalign=True)
+    text(draw, [127,  start+9], _timeToStr(time_remaining, short=True), rightalign=True)
 
     text(draw, [45+5, start+16], "FR.SPC")
     text(draw, [127,  start+16], "{0:2.2f}GB".format(12.345), rightalign=True)
@@ -425,11 +436,14 @@ def draw_running(draw, config, data):
 
     # PROGRESS BAR
 
+    progress = time_done / (time_done + time_remaining)
+
     text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(156, 209))
-    text(draw, [127, 60-8], "{0:2d}%".format(43), rightalign=True)
-    text(draw, [55, 60-8], "00:37")
+    text(draw, [127, 60-8], "{0:2d}%".format(int(progress*100)), rightalign=True)
+    if "next_invocation" in data and data["next_invocation"] is not None:
+        text(draw, [55, 60-8], _timeToStr((data["next_invocation"]-datetime.datetime.now()).seconds, short=True))
     draw.rectangle([(0, 60), (127, 63)], fill=COLOR1)
-    draw.rectangle([(1, 61), (127-1-70, 63-1)], fill=COLOR0)
+    draw.rectangle([(1, 61), (1+(127-2)*progress, 63-1)], fill=COLOR0)
 
     # ERROR BAR
     # draw.line([(0, 55), (128, 55)], fill=COLOR1)
@@ -511,7 +525,11 @@ def draw_menu(draw, config, data, selected_index):
     rect(draw, [(0, 0), (127-22, 6)])
     text(draw, [2, 1], data["message"], invert=True)
 
-    text(draw, [126, 38], "{0:.2f}".format(12.34), rightalign=True)
+    free_space = "?"
+    if data["free_space"] is not None:
+        free_space = "{0:.2f}".format(data["free_space"]/1024.0**3)
+    text(draw, [126, 38], free_space, rightalign=True)
+
     rect(draw, [(75, 38), (100, 42)])
     rect(draw, [(75+10, 38+1), (100-1, 42-1)], invert=True)
 
@@ -632,6 +650,10 @@ def draw_info(draw, msg):
 
 if __name__ == "__main__":
 
+    # Logging
+
+    log.basicConfig(level=log.DEBUG)
+
     # Load Config
 
     config = None
@@ -643,18 +665,22 @@ if __name__ == "__main__":
 
     # Find a zeroboxConnector
 
-    # try:
-    #     zeroboxConnector = rpyc.connect("localhost", 18861)
-    # except ConnectionRefusedError as e:
-    #     print("zeroboxConnector not available")
-    #     sys.exit(-1)
+    zeroboxConnector = None
+
+    try:
+        zeroboxConnector = rpyc.connect("localhost", 18861)
+    except ConnectionRefusedError as e:
+        print("zeroboxConnector not available")
+        sys.exit(-1)
+
+    # Find UsbDirectController
+
+    usbController = UsbDirectController.find_all()
+    log.info("found {} usbController".format(len(usbController)))
 
     # setup the Scheduler
 
-    zeroboxConnector = None
-
     scheduler = Scheduler()
-    scheduler.add_job("trigger", 5000)
     scheduler.add_job("update_status", 500)
     scheduler.add_job("force_update_status", 2000)
 
@@ -664,9 +690,14 @@ if __name__ == "__main__":
     except Exception as e:
         print(e)
 
-    data = {}
-    data["cameras"] = {}
-    data["message"] = "..." 
+    data                = {}
+    data["cameras"]     = {}
+    data["message"]     = "..." 
+    data["free_space"]  = None
+
+    if zeroboxConnector is not None:
+        data["free_space"] = zeroboxConnector.root.get_free_space()
+
 
     # data["cam_0"]                           = {}
     # data["cam_1"]                           = {}
@@ -730,6 +761,7 @@ if __name__ == "__main__":
                 if platform == PLATFORM_PI:
                     temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
                     menu["temperature_cpu"] = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
+                menu["free_space"] = data["free_space"]
 
                 with canvas(device) as draw:
                     draw_menu(draw, config, menu, menu_selected)
@@ -872,6 +904,11 @@ if __name__ == "__main__":
 
                     # data["cameras"][portname]["message"] = "conn error"
 
+            time_start = datetime.datetime.now()
+            time_end   = time_start + datetime.timedelta(seconds=(config["interval"]["value"] * config["iterations"]["value"]))
+
+            scheduler.add_job("trigger", config["interval"]["value"]*1000)
+
             state = STATE_RUNNING
 
 
@@ -888,6 +925,8 @@ if __name__ == "__main__":
                         data["message"] = None
                 else:
                     data["message"] = "connector not found"
+
+                data["next_invocation"] = scheduler.get_next_invocation("trigger")
 
                 invalidate()
 
@@ -929,6 +968,7 @@ if __name__ == "__main__":
 
         else:
             raise Exception("illegal state: {}".format(state))
+
                 
         time.sleep(0.1)
 

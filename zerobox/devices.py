@@ -3,6 +3,9 @@ import serial
 from datetime import datetime
 import time
 import os
+import re
+import serial.tools.list_ports
+import logging as log
 
 try:
     import smbus
@@ -15,6 +18,9 @@ class UsbDirectController(object):
     CMD_ON      = "on"
     CMD_OFF     = "off"
 
+    SERIAL_BAUDRATE = 9600
+    SERIAL_TIMEOUT = 1.0
+
     def __init__(self, port):
         self.port = port
 
@@ -22,8 +28,27 @@ class UsbDirectController(object):
     # def close(self):
     #     pass
 
+    @staticmethod
+    def find_all():
+        controller = []
+        all_ports = list(serial.tools.list_ports.comports())
+        for port in all_ports:
+            if "arduino" in port[1].lower():
+                potential_controller = UsbDirectController(port[0])
+                try:
+                    potential_controller.get_status()
+                    controller.append(potential_controller)
+                except Exception as e:
+                    pass
 
-    def turnOn(self, turnOn):
+        return controller
+
+
+    def __repr__(self):
+        return "UsbDirectController at {}".format(self.port)
+
+
+    def turn_on(self, turn_on):
         try:
             if turnOn:
                 self._send_command(self.CMD_ON)
@@ -36,19 +61,33 @@ class UsbDirectController(object):
 
     def get_status(self):
         try:
-            return self._send_command(self.CMD_STATUS)
+            response = self._send_command(self.CMD_STATUS)
+            # print(response)
         except Exception as e:
             print(e)
             return None
 
 
-    def _send_command(cmd):
+    def _send_command(self, cmd):
         response = ""
         ser = None
 
         try:
-            ser = serial.Serial(self.port, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
-            response = ser.read(100) # TODO: add parsing
+
+            log.debug("serial send: {}".format(cmd))
+
+            ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
+
+            ser.write(bytearray(cmd, "utf-8"))
+            ser.write(bytearray("\n", "utf-8"))
+
+            response = ser.read(100)
+            response = response.decode("utf-8") 
+
+            # remove every non-alphanumeric / -underscore / -space character
+            response = re.sub("[^a-zA-Z0-9_ ]", '', response)
+
+            log.debug("serial receive: {}".format(response))
 
             if response is None or len(response) == 0:
                 raise Exception("empty response")
@@ -59,14 +98,20 @@ class UsbDirectController(object):
             if not response.startswith("K"):
                 raise Exception("serial error, non K response: {}".format(response))
 
-        except Exception as e:
-            log.error("comm failed: {}".format(e))
+            if len(response) > 1:
+                return response[2:]
+
+        except serial.serialutil.SerialException as se:
+            log.error("comm failed, SerialException: {}".format(e))
             raise e
+
+        except Exception as e:
+            log.error("comm failed, unknown exception: {}".format(e))
+            raise e
+
         finally:
             if ser is not None:
                 ser.close()
-
-        return response
 
 
 class RTC():
