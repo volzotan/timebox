@@ -3,7 +3,7 @@ import time
 import supervisor
 
 import board
-import digitalio
+from digitalio import DigitalInOut, Direction, Pull
 
 import busio
 import adafruit_ina219
@@ -20,8 +20,8 @@ PIN_DLOAD       = board.D10 # PA18
 
 input_buffer = ""
 
-i2c = busio.I2C(board.SCL, board.SDA)
-ina219 = adafruit_ina219.INA219(i2c)
+# i2c = busio.I2C(board.SCL, board.SDA)
+# ina219 = adafruit_ina219.INA219(i2c)
 
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
@@ -33,7 +33,7 @@ pixel = neopixel.NeoPixel(PIN_LED, 1, brightness=0.3, auto_write=True)
 def communicate():
     global input_buffer
 
-    if(supervisor.runtime.serial_bytes_available):
+    if supervisor.runtime.serial_bytes_available:
         c = sys.stdin.read(1)
 
         if c != "\n":
@@ -46,12 +46,19 @@ def communicate():
 
             if input_buffer == "ping":
                 print("K")
-            if input_buffer == "on":
+
+            elif input_buffer == "on":
                 # TODO
                 print("K")
+
             elif input_buffer == "off":
                 # TODO
                 print("K")
+
+            elif input_buffer == "status":
+                print("K ", sep="")
+                print(0)
+
             else:
                 print("E unknown command")
 
@@ -79,10 +86,10 @@ if __name__ == "__main__":
     time.sleep(1.0)
     pixel.fill(CLEAR)
 
-    print("Bus Voltage:   {} V".format(ina219.bus_voltage))
-    print("Shunt Voltage: {} mV".format(ina219.shunt_voltage / 1000))
-    print("Load Voltage:  {} V".format(ina219.bus_voltage + ina219.shunt_voltage))
-    print("Current:       {} mA".format(ina219.current))
+    # print("Bus Voltage:   {} V".format(ina219.bus_voltage))
+    # print("Shunt Voltage: {} mV".format(ina219.shunt_voltage / 1000))
+    # print("Load Voltage:  {} V".format(ina219.bus_voltage + ina219.shunt_voltage))
+    # print("Current:       {} mA".format(ina219.current))
 
     while True:
         communicate()
