@@ -21,6 +21,7 @@ CONFIG = {
     "LOG_BASE_DIR"              : "./",
     "LOG_FILENAME_DEBUG"        : "debug.log",
     "LOG_FILENAME_INFO"         : "info.log",
+    "LOG_FORMAT"                : "%(asctime)s | %(levelname)-7s | %(message)s",
     "LOG_LEVEL_CONSOLE"         : logging.DEBUG,
 
     "BASE_DIR"                  : None,
@@ -284,6 +285,7 @@ class Zerobox(object):
         self.status = {}
         self.status["usbController"] = None
         self.status["cameras"] = {}
+        self.status["captures"] = []
 
         self.cameras = {}
         self.connectors = {}
@@ -371,7 +373,7 @@ class Zerobox(object):
         self.log.setLevel(logging.DEBUG)
 
         # create formatter
-        formatter = logging.Formatter('%(asctime)s | %(levelname)-7s | %(message)s')
+        formatter = logging.Formatter(self.config["LOG_FORMAT"])
 
         # console handler and set level to debug
         consoleHandler = logging.StreamHandler()
@@ -403,8 +405,19 @@ class Zerobox(object):
         self.log.debug(" ")
 
 
+    def get_total_space(self):
+        return shutil.disk_usage(self.config["IMAGE_DIR"]).total
+
+
     def get_free_space(self):
         return shutil.disk_usage(self.config["IMAGE_DIR"]).free
+
+
+    def get_images_in_memory(self):
+        files = []
+        for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR"]):
+            files = files + filenames
+        return files
 
 
     def _lookup_port(self, port_list, port_address):
@@ -598,6 +611,8 @@ class Zerobox(object):
             conn.set_exposure_compensation(self.config["EXPOSURE_1"])
             conn.capture_and_download(filename)
 
+            self.status["captures"].append([datetime.datetime.now()])
+
             trigger_second_exposure = True
             if self.config["DOUBLEEXPOSURE_THRESHOLD"] is not None:
                 jpeg_full_name = self._convert_raw_to_jpeg(filename[0], filename[1], self.config["TEMP_DIR"])
@@ -668,8 +683,10 @@ if __name__ == "__main__":
 
     # print(z.get_status())
 
-    usbController = UsbDirectController("/dev/tty.usbmodem14201")
-    print(usbController.get_status())
+    # usbController = UsbDirectController("/dev/tty.usbmodem14201")
+    # print(usbController.get_status())
+
+    print(z.get_images_in_memory())
 
     z.close()
 

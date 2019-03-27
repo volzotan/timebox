@@ -20,12 +20,27 @@ class ZeroboxConnector(rpyc.Service):
         return None
 
 
+    def exposed_get_total_space(self):
+        return self.zerobox.get_total_space()
+
+
     def exposed_get_free_space(self):
         return self.zerobox.get_free_space()
 
 
+    def exposed_get_images_in_memory(self):
+        return self.zerobox.get_images_in_memory()
+
+
+    def exposed_load_config(self, config):
+        config_copy = {}
+        for key in config:
+            config_copy[key] = config[key]
+        return self.zerobox.load_config(config_copy)
+
+
     def exposed_detect(self):
-        self.zerobox.detect_cameras()
+        return self.zerobox.detect_cameras()
 
 
     def exposed_get_cameras(self):

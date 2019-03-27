@@ -130,7 +130,7 @@ FONT_CHARACTER_WIDTH = 3
 
 # state
 
-state               = STATE_MENU # STATE_RUNNING
+state               = STATE_INIT #STATE_MENU # STATE_RUNNING
 isInvalid           = True
 
 menu_selected       = 0
@@ -199,6 +199,8 @@ def _timeToStr(value, short=False):
 def _configToList(c):
     clist = []
     for key, value in c.items():
+        if "type" not in value:
+            continue
         value["name"] = key
         clist.append(value)
 
@@ -468,9 +470,12 @@ def draw_logo(draw, data):
     text(draw, [60, 36], data["devicename"])
     text(draw, [10, 44], "VERSION")
     text(draw, [60, 44], data["version"])
-    text(draw, [10, 52], "FREE SPC")
-    draw.rectangle([(60, 55), (122, 59)], outline=None, fill=COLOR1)
-    draw.rectangle([(61, 56), (int(61+60*data["free_space"]), 58)], outline=None, fill=COLOR0)
+    text(draw, [10, 52], "MEMORY")
+
+    if data["free_space"] is not None and data["total_space"] is not None:
+        ratio = 1 - (data["free_space"] / data["total_space"])
+        draw.rectangle([(60, 52), (116, 56)], outline=None, fill=COLOR1)
+        draw.rectangle([(61, 53), (int(61+54*ratio), 55)], outline=None, fill=COLOR0)
 
     draw.rectangle([(56, 38), (56, 59)], outline=None, fill=COLOR1)
 
@@ -502,7 +507,7 @@ def draw_menu(draw, config, data, selected_index):
     text(draw, [ 2, 38], "IMG IN MEM :")
     # text(draw, [ 2, 38], "FREE SPACE :")
 
-    text(draw, [54, 8], "123")
+    text(draw, [54, 8], config["iterations"]["value"])
     text(draw, [54, 14], _timeToStr(config["interval"]["value"]))
     text(draw, [54, 20], "01:23:45")
     text(draw, [54, 26], str(config["secondexposure"]["value"]) + " - " + "10.3")
@@ -516,7 +521,10 @@ def draw_menu(draw, config, data, selected_index):
         temp_str =  "{0:.2f} | {1:.2f} CPU".format(data["temperature"], data["temperature_cpu"])
     text(draw, [54, 32], temp_str)
     
-    text(draw, [54, 38], "99999") # max: 99999
+    images_in_memory = "?"
+    if data["images_in_memory"] is not None:
+        images_in_memory = str(data["images_in_memory"])
+    text(draw, [54, 38], images_in_memory) # max: 99999
 
     currentTime = datetime.datetime.now()
     rect(draw, [(127-20, 0), (127, 6)])
@@ -530,8 +538,11 @@ def draw_menu(draw, config, data, selected_index):
         free_space = "{0:.2f}".format(data["free_space"]/1024.0**3)
     text(draw, [126, 38], free_space, rightalign=True)
 
-    rect(draw, [(75, 38), (100, 42)])
-    rect(draw, [(75+10, 38+1), (100-1, 42-1)], invert=True)
+    if data["free_space"] is not None and data["total_space"] is not None:
+        ratio = data["free_space"] / data["total_space"]
+        rect(draw, [(75, 38), (100, 42)])
+        if ratio < 0.99:
+            rect(draw, [(75+1+23*ratio, 38+1), (100-1, 42-1)], invert=True)
 
     rect(draw, [(0, 45+2), (42-2, 63)], invert=not selectedSettings)
     rect(draw, [(42+2, 45+2), (127-42-2, 63)], invert=not selectedStart)
@@ -650,10 +661,6 @@ def draw_info(draw, msg):
 
 if __name__ == "__main__":
 
-    # Logging
-
-    log.basicConfig(level=log.DEBUG)
-
     # Load Config
 
     config = None
@@ -663,6 +670,24 @@ if __name__ == "__main__":
         except yaml.YAMLError as exc:
             print(exc)
 
+    # Logging
+
+    logging_level = log.DEBUG
+    if config["log"]["level"] == "DEBUG":
+        logging_level = log.DEBUG
+    elif config["log"]["level"] == "INFO":
+        logging_level = log.INFO
+    elif config["log"]["level"] == "WARNING":
+        logging_level = log.WARNING
+    elif config["log"]["level"] == "ERROR":
+        logging_level = log.ERROR
+    elif config["log"]["level"] == "CRITICAL":
+        logging_level = log.CRITICAL
+    else:
+        print("invalid log level in config: {}".format(config["log"]["level"]))
+
+    log.basicConfig(format=config["log"]["format"], level=logging_level)
+
     # Find a zeroboxConnector
 
     zeroboxConnector = None
@@ -670,8 +695,15 @@ if __name__ == "__main__":
     try:
         zeroboxConnector = rpyc.connect("localhost", 18861)
     except ConnectionRefusedError as e:
-        print("zeroboxConnector not available")
+        log.error("zeroboxConnector not available")
         sys.exit(-1)
+
+    # Find cameras
+
+    cameras = []
+    if zeroboxConnector is not None:
+        cameras = zeroboxConnector.root.detect()
+        log.info("found {} camera(s)".format(len(cameras)))
 
     # Find UsbDirectController
 
@@ -687,15 +719,18 @@ if __name__ == "__main__":
     clock = None
     try:
         clock = RTC()
+        log.info("clock found")
     except Exception as e:
-        print(e)
+        log.warn("no clock found")
 
     data                = {}
     data["cameras"]     = {}
-    data["message"]     = "..." 
+    data["message"]     = "cam: {} | controller: {}".format(len(cameras), len(usbController)) 
+    data["total_space"] = None
     data["free_space"]  = None
 
     if zeroboxConnector is not None:
+        data["total_space"] = zeroboxConnector.root.get_total_space()
         data["free_space"] = zeroboxConnector.root.get_free_space()
 
 
@@ -717,8 +752,8 @@ if __name__ == "__main__":
     while True:
 
         triggered_jobs = scheduler.run_schedule()
-        for job in triggered_jobs:
-            print(job)
+        # for job in triggered_jobs:
+        #     print(job)
 
         if "update_status" in triggered_jobs:
             invalidate()
@@ -726,7 +761,8 @@ if __name__ == "__main__":
 
         if state == STATE_INIT:
             print("init")
-            state += 2 # TODO
+            invalidate()
+            state = STATE_LOGO
 
 
         elif state == STATE_LOGO:
@@ -740,20 +776,30 @@ if __name__ == "__main__":
                 screen["devicename"] = "undefined"
                 now = datetime.datetime.now()
                 screen["version"] = now.strftime("%d.%m.%y")
-                screen["free_space"] = 0.45
+
+                screen["total_space"] = None
+                screen["free_space"] = None
+                if zeroboxConnector is not None:
+                    screen["total_space"] = data["total_space"]
+                    screen["free_space"] = data["free_space"]
 
                 with canvas(device) as draw:
                     draw_logo(draw, screen)
 
-            state = STATE_MENU
-            time.sleep(1.0)
+                validate()
+
+            k = getKeyEvents()
+            if "3" in k:
+                state = STATE_MENU
 
 
         elif state == STATE_MENU:
             if isInvalid:
 
                 menu = {}
-                menu["message"] = "..."
+
+                menu["message"] = data["message"]
+
                 menu["temperature"] = None
                 menu["temperature_cpu"] = None
                 if clock is not None:
@@ -761,7 +807,13 @@ if __name__ == "__main__":
                 if platform == PLATFORM_PI:
                     temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
                     menu["temperature_cpu"] = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
+
+                menu["total_space"] = data["total_space"]
                 menu["free_space"] = data["free_space"]
+
+                menu["images_in_memory"] = None
+                if zeroboxConnector is not None:
+                    menu["images_in_memory"] = len(zeroboxConnector.root.get_images_in_memory())
 
                 with canvas(device) as draw:
                     draw_menu(draw, config, menu, menu_selected)
@@ -889,6 +941,7 @@ if __name__ == "__main__":
             #     validate()
 
             zeroboxConnector = rpyc.connect("localhost", 18861)
+            zeroboxConnector.root.load_config({})
             zeroboxConnector.root.detect()
             cameras = zeroboxConnector.root.get_cameras()
 
