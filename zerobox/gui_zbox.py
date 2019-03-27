@@ -702,7 +702,7 @@ if __name__ == "__main__":
 
     cameras = []
     if zeroboxConnector is not None:
-        cameras = zeroboxConnector.root.detect()
+        cameras = zeroboxConnector.root.detect_cameras()
         log.info("found {} camera(s)".format(len(cameras)))
 
     # Find UsbDirectController
@@ -725,7 +725,7 @@ if __name__ == "__main__":
 
     data                = {}
     data["cameras"]     = {}
-    data["message"]     = "cam: {} | controller: {}".format(len(cameras), len(usbController)) 
+    data["message"]     = "..."
     data["total_space"] = None
     data["free_space"]  = None
 
@@ -794,6 +794,12 @@ if __name__ == "__main__":
 
 
         elif state == STATE_MENU:
+
+            if "force_update_status" in triggered_jobs:
+                if zeroboxConnector is not None:
+                    cameras = zeroboxConnector.root.detect_cameras()
+                    data["message"] = "cam: {} | controller: {}".format(len(cameras), len(usbController)) 
+
             if isInvalid:
 
                 menu = {}
@@ -942,8 +948,7 @@ if __name__ == "__main__":
 
             zeroboxConnector = rpyc.connect("localhost", 18861)
             zeroboxConnector.root.load_config({})
-            zeroboxConnector.root.detect()
-            cameras = zeroboxConnector.root.get_cameras()
+            cameras = zeroboxConnector.root.detect_cameras()
 
             for portname, camera in cameras.items():
                 try:
@@ -963,6 +968,10 @@ if __name__ == "__main__":
             scheduler.add_job("trigger", config["interval"]["value"]*1000)
 
             state = STATE_RUNNING
+
+
+        elif state == STATE_START_RUNNING:
+            pass
 
 
         elif state == STATE_RUNNING:

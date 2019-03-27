@@ -545,18 +545,31 @@ class Zerobox(object):
             return []
 
         if len(cameras) == 1:
-            print("1 camera connected")
+            self.log.debug("1 camera detected")
         else:
-            print("{} cameras connected".format(len(cameras)))
+            self.log.debug("{} cameras detected".format(len(cameras)))
+
+
+        # if a camera is disconnected and connected again, it may be the
+        # same camera but is listed at a different portname 
+
+        # option 1: connect to camera and get serialnumber
+        # option 2: throw away all previously known cameras
+
+        self.cameras = {}
 
         for camera in cameras:
+            camera_obj = camera[0]
             portname = camera[1]
-            print("{} | {}".format(camera[0], portname))
-            self.cameras[camera[1]] = camera 
+            print("{} | {}".format(camera_obj, portname))
+
+            self.cameras[portname] = camera 
             if portname not in self.status["cameras"]:
                 self.status["cameras"][portname] = {}
             self.status["cameras"][portname]["port"] = portname
             self.status["cameras"][portname]["active"] = False 
+
+        return self.cameras
 
 
     def connect_camera(self, camera):

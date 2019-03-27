@@ -39,7 +39,7 @@ class ZeroboxConnector(rpyc.Service):
         return self.zerobox.load_config(config_copy)
 
 
-    def exposed_detect(self):
+    def exposed_detect_cameras(self):
         return self.zerobox.detect_cameras()
 
 
