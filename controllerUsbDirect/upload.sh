@@ -1,1 +1,1 @@
-rsync -av --exclude="upload.sh" * /Volumes/CIRCUITPY
+rsync -av --exclude="upload.sh" * /Volumes/USBCTRL

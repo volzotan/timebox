@@ -20,15 +20,34 @@ PIN_DLOAD       = board.D10 # PA18
 
 input_buffer = ""
 
-# i2c = busio.I2C(board.SCL, board.SDA)
-# ina219 = adafruit_ina219.INA219(i2c)
+i2c = busio.I2C(board.SCL, board.SDA)
+ina219 = adafruit_ina219.INA219(i2c)
 
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 CLEAR = (0, 0, 0)
-pixel = neopixel.NeoPixel(PIN_LED, 1, brightness=0.3, auto_write=True)
+
+# led = DigitalInOut(PIN_LED)
+# led.direction = Direction.OUTPUT
+
+pixels = neopixel.NeoPixel(PIN_LED, 1, brightness=0.3, auto_write=True)
+pixels.fill((100, 100, 100))
+pixels.show()
+
+button = DigitalInOut(PIN_BUTTON)
+button.direction = Direction.INPUT
+button.pull = Pull.UP
+
+mosfet = DigitalInOut(PIN_USB_EN)
+mosfet.direction = Direction.OUTPUT
+    # mosfet.pull = Pull.DOWN
+mosfet.value = False
+
+dummy_load = DigitalInOut(PIN_DLOAD)
+dummy_load.direction = Direction.OUTPUT
+
 
 def communicate():
     global input_buffer
@@ -48,16 +67,20 @@ def communicate():
                 print("K")
 
             elif input_buffer == "on":
-                # TODO
+                mosfet.value = True
                 print("K")
 
             elif input_buffer == "off":
-                # TODO
+                mosfet.value = False
                 print("K")
 
             elif input_buffer == "status":
                 print("K ", sep="")
-                print(0)
+
+                print("Bus Voltage:   {} V".format(ina219.bus_voltage))
+                print("Shunt Voltage: {} mV".format(ina219.shunt_voltage / 1000))
+                print("Load Voltage:  {} V".format(ina219.bus_voltage + ina219.shunt_voltage))
+                print("Current:       {} mA".format(ina219.current))
 
             else:
                 print("E unknown command")
@@ -67,29 +90,14 @@ def communicate():
 
 if __name__ == "__main__":
 
-    # init pins
-
-    button = DigitalInOut(PIN_BUTTON)
-    button.direction = Direction.INPUT
-    button.pull = Pull.UP
-
-    mosfet = DigitalInOut(PIN_USB_EN)
-    mosfet.direction = Direction.OUTPUT
-    # mosfet.pull = Pull.DOWN
-
-    dummy_load = DigitalInOut(PIN_DLOAD)
-    dummy_load.direction = Direction.OUTPUT
+    print("INIT")
 
     # LED status
 
-    pixel.fill(GREEN)
-    time.sleep(1.0)
-    pixel.fill(CLEAR)
-
-    # print("Bus Voltage:   {} V".format(ina219.bus_voltage))
-    # print("Shunt Voltage: {} mV".format(ina219.shunt_voltage / 1000))
-    # print("Load Voltage:  {} V".format(ina219.bus_voltage + ina219.shunt_voltage))
-    # print("Current:       {} mA".format(ina219.current))
+    # pixel.fill(GREEN)
+    # pixels.fill((30, 10, 10))
+    # time.sleep(1.0)
+    # pixel.fill(CLEAR)
 
     while True:
         communicate()
