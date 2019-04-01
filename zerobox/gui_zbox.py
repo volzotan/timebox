@@ -873,11 +873,31 @@ if __name__ == "__main__":
                 menu_selected = (menu_selected + 1) % len(menu)
                 invalidate()
             if "3" in k:
-                selectedConfigItem = config[_configToList(config)[menu_selected]["name"]]
-                configItemValue = selectedConfigItem["value"]
-                state = STATE_CONFIG_ITEM
-                menu_selected = 0
-                invalidate()
+                length_configitems = len(_configToList(config))
+                if menu_selected < length_configitems:
+                    selectedConfigItem = config[_configToList(config)[menu_selected]["name"]]
+                    configItemValue = selectedConfigItem["value"]
+                    state = STATE_CONFIG_ITEM
+                    menu_selected = 0
+                    invalidate()
+                else:
+                    option = menu_selected - length_configitems
+                    if option == 0:
+                        pass # separator
+                    elif option == 1:
+                        # camera on
+                        for c in usbController:
+                            c.turn_on(True)
+                    elif option == 2:
+                        # camera off
+                        for c in usbController:
+                            c.turn_on(False)
+                    elif option == 3:
+                        # display off
+                        # sicher?
+                        pass
+                    else:
+                        raise Exception("illegal menu option: {}".format(option))
             if "1" in k:
                 state = STATE_MENU
                 menu_selected = 0

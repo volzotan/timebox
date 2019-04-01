@@ -50,7 +50,7 @@ class UsbDirectController(object):
 
     def turn_on(self, turn_on):
         try:
-            if turnOn:
+            if turn_on:
                 self._send_command(self.CMD_ON)
             else:
                 self._send_command(self.CMD_OFF)
