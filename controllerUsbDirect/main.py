@@ -18,87 +18,161 @@ PIN_DLOAD       = board.D10 # PA18
 # see for pinout:
 # https://circuitpython.readthedocs.io/en/3.x/ports/atmel-samd/README.html#pinout
 
-input_buffer = ""
-
-i2c = busio.I2C(board.SCL, board.SDA)
-ina219 = adafruit_ina219.INA219(i2c)
-
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+WHITE = (255, 255, 255)
 CLEAR = (0, 0, 0)
 
-# led = DigitalInOut(PIN_LED)
-# led.direction = Direction.OUTPUT
 
-pixels = neopixel.NeoPixel(PIN_LED, 1, brightness=0.3, auto_write=True)
-pixels.fill((100, 100, 100))
-pixels.show()
+class UsbController(object):
 
-button = DigitalInOut(PIN_BUTTON)
-button.direction = Direction.INPUT
-button.pull = Pull.UP
+    TIMER_DLOAD_INT = 0.500
+    TIMER_DLOAD_DUR = 0.010
 
-mosfet = DigitalInOut(PIN_USB_EN)
-mosfet.direction = Direction.OUTPUT
-    # mosfet.pull = Pull.DOWN
-mosfet.value = False
+    input_buffer = ""
 
-dummy_load = DigitalInOut(PIN_DLOAD)
-dummy_load.direction = Direction.OUTPUT
+    # timer
+    timer_dload = None
+
+    i2c = busio.I2C(board.SCL, board.SDA)
+    ina219 = adafruit_ina219.INA219(i2c)
+
+    # current consumption ring buffer 
+    ina_current_time = [None] * 100
+    ina_current_value = [None] * 100
+    ina_current_index = 0
+
+    pixel = neopixel.NeoPixel(PIN_LED, 1, brightness=0.1, auto_write=True)
+
+    button = DigitalInOut(PIN_BUTTON)
+    button.direction = Direction.INPUT
+    button.pull = Pull.UP
+
+    mosfet = DigitalInOut(PIN_USB_EN)
+    mosfet.direction = Direction.OUTPUT
+    mosfet.value = False
+
+    dummy_load = DigitalInOut(PIN_DLOAD)
+    dummy_load.direction = Direction.OUTPUT
+
+    def __init__(self):     
+
+        print("INIT")
+
+        # LED status
+        self.pixel.fill(GREEN)
+        self.pixel.show()
+        time.sleep(1.0)
+        self.pixel.fill(CLEAR)
 
 
-def communicate():
-    global input_buffer
+    def event(self):
 
-    if supervisor.runtime.serial_bytes_available:
-        c = sys.stdin.read(1)
+        now = time.monotonic()
 
-        if c != "\n":
-            input_buffer += c
-
-            if len(input_buffer) > 100:
-                input_buffer = ""
-                print("E buffer length exceeded")
-        else:
-
-            if input_buffer == "ping":
-                print("K")
-
-            elif input_buffer == "on":
-                mosfet.value = True
-                print("K")
-
-            elif input_buffer == "off":
-                mosfet.value = False
-                print("K")
-
-            elif input_buffer == "status":
-                print("K ", sep="")
-
-                print("Bus Voltage:   {} V".format(ina219.bus_voltage))
-                print("Shunt Voltage: {} mV".format(ina219.shunt_voltage / 1000))
-                print("Load Voltage:  {} V".format(ina219.bus_voltage + ina219.shunt_voltage))
-                print("Current:       {} mA".format(ina219.current))
-
+        if self.timer_dload is not None and now - self.timer_dload > 0:
+            if self.dummy_load.value:
+                print("<")
+                self.dummy_load.value = False
+                self.timer_dload = self.timer_dload - self.TIMER_DLOAD_DUR + self.TIMER_DLOAD_INT
             else:
-                print("E unknown command")
+                print(">")
+                self.dummy_load.value = True
+                self.timer_dload = self.timer_dload + self.TIMER_DLOAD_DUR
 
-            input_buffer = ""
+
+    def read_current(self):
+
+        last_index = self.ina_current_index-1%100
+        now = time.monotonic()
+
+        if self.ina_current_time[last_index] is not None:
+            if now - self.ina_current_time[last_index] < 0.500:
+                return
+        
+        self.ina_current_time[self.ina_current_index] = now
+        self.ina_current_value[self.ina_current_index] = self.ina219.current
+        self.ina_current_index = (self.ina_current_index + 1) % 100
+                           
+
+    def communicate(self):
+
+        if supervisor.runtime.serial_bytes_available:
+            c = sys.stdin.read(1)
+
+            if c != "\n":
+                self.input_buffer += c
+
+                if len(self.input_buffer) > 100:
+                    self.input_buffer = ""
+                    print("E buffer length exceeded")
+            else:
+
+                if self.input_buffer == "ping":
+                    print("K")
+
+                elif self.input_buffer == "on":
+                    self.mosfet.value = True
+                    self.pixel.fill(WHITE)
+                    self.pixel.show()
+                    print("K")
+
+                elif self.input_buffer == "off":
+                    self.mosfet.value = False
+                    self.pixel.fill(CLEAR)
+                    self.pixel.show()
+                    print("K")
+
+                elif self.input_buffer == "dummyload on":
+                    self.timer_dload = time.monotonic()
+                    print("K")
+
+                elif self.input_buffer == "dummyload off":
+                    self.timer_dload = None
+                    self.dummy_load.value = False
+                    print("K")
+
+                elif self.input_buffer == "led on":
+                    self.pixel.fill(YELLOW)
+                    self.pixel.show()
+                    print("K")
+
+                elif self.input_buffer == "led off":
+                    self.pixel.fill(CLEAR)
+                    self.pixel.show()
+                    print("K")
+
+                elif self.input_buffer == "status":
+                    print("K ", sep="")
+
+                    print("Bus Voltage:   {} V".format(self.ina219.bus_voltage))
+                    print("Shunt Voltage: {} mV".format(self.ina219.shunt_voltage / 1000))
+                    print("Load Voltage:  {} V".format(self.ina219.bus_voltage + self.ina219.shunt_voltage))
+                    print("Current:       {} mA".format(self.ina219.current))
+
+                elif self.input_buffer == "status v":
+                    print("K ", sep="")
+                    print(self.ina_current_value)
+
+                else:
+                    print("E unknown command")
+
+                self.input_buffer = ""
+
+
+    def loop(self):
+
+        while True:
+            self.communicate()
+            self.event()
+            self.read_current()
+            time.sleep(0.1)
 
 
 if __name__ == "__main__":
 
-    print("INIT")
+    c = UsbController()
+    c.loop()
 
-    # LED status
-
-    # pixel.fill(GREEN)
-    # pixels.fill((30, 10, 10))
-    # time.sleep(1.0)
-    # pixel.fill(CLEAR)
-
-    while True:
-        communicate()
-        time.sleep(0.1)
