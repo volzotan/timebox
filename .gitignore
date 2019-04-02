@@ -1,7 +1,9 @@
 
 eagle/**/*.s#[0-9]
+eagle/**/*.s$[0-9]
 eagle/**/*.s##
 eagle/**/*.b#[0-9]
+eagle/**/*.b$[0-9]
 eagle/**/*.b##
 eagle/**/*.lck
 eagle/**/eagle.epf

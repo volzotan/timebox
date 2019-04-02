@@ -858,7 +858,6 @@ if __name__ == "__main__":
             menu.append("-")
             menu.append("camera on")
             menu.append("camera off")
-            menu.append("display off")
 
             if isInvalid:
                 with canvas(device) as draw:
@@ -892,10 +891,6 @@ if __name__ == "__main__":
                         # camera off
                         for c in usbController:
                             c.turn_on(False)
-                    elif option == 3:
-                        # display off
-                        # sicher?
-                        pass
                     else:
                         raise Exception("illegal menu option: {}".format(option))
             if "1" in k:
