@@ -44,9 +44,11 @@ STATE_CONFIG        = 3
 STATE_CONFIG_ITEM   = 4
 STATE_DIALOG        = 5
 STATE_PRE_RUN       = 6
-STATE_RUNNING       = 7
-STATE_RUNNING_MENU  = 8
-STATE_IDLE          = 100
+STATE_START_RUNNING = 7
+STATE_RUNNING       = 8
+STATE_RUNNING_MENU  = 9
+STATE_IDLE          = 10
+STATE_SHUTDOWN      = 11
 
 own_mtime = getmtime(__file__)
 
@@ -141,6 +143,8 @@ configItemPos       = 0 # Pointer to change digits of a configItems value
 
 time_start          = None
 time_end            = None
+
+images_taken        = None
 
 
 def checkAndRestartOnFileChange():
@@ -401,13 +405,24 @@ def draw_running(draw, config, data):
     start = end + 1
 
     if config["secondexposure"]["value"]:
-        text(draw, [1, start+2], "2.EXP")
-        draw.rectangle([(40, start+1), (40+5, start+1+5)], outline=None, fill=COLOR1)
-        text(draw, [1, start+9], "T:")
-        text(draw, [25, start+9], "10.5")
+        # text(draw, [1, start+2], "2.EXP")
+        # draw.rectangle([(40, start+1), (40+5, start+1+5)], outline=None, fill=COLOR1)
+        # text(draw, [1, start+9], "T:")
+        # text(draw, [25, start+9], "10.5")
+        # text(draw, [1, start+16], "101")
+        # text(draw, [20, start+16], "/")
+        # text(draw, [29, start+16], "156")
+
+        text(draw, [1, start+2], "T:")
+        text(draw, [30, start+2], "{0:.1f}".format(config["se_threshold"]["value"]))
+        text(draw, [1, start+9], "LAST:")
+        last_image_brightness = "?"
+        if data["last_image_brightness"] is not None:
+            "{0:.1f}".format(data["last_image_brightness"])
+        text(draw, [30, start+9], last_image_brightness)
         text(draw, [1, start+16], "101")
         text(draw, [20, start+16], "/")
-        text(draw, [29, start+16], "156")
+        text(draw, [30, start+16], "156")
     else: 
         text(draw, [5, start+9], "2.EXP OFF")
 
@@ -440,7 +455,7 @@ def draw_running(draw, config, data):
 
     progress = time_done / (time_done + time_remaining)
 
-    text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(156, 209))
+    text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(data["images_taken"], config["iterations"]["value"]))
     text(draw, [127, 60-8], "{0:2d}%".format(int(progress*100)), rightalign=True)
     if "next_invocation" in data and data["next_invocation"] is not None:
         text(draw, [55, 60-8], _timeToStr((data["next_invocation"]-datetime.datetime.now()).seconds, short=True))
@@ -481,12 +496,6 @@ def draw_logo(draw, data):
 
 
 def draw_menu(draw, config, data, selected_index):
-    # rect(draw, [(0, 22), (127, 22)])
-    # text(draw, [48, 26], "SETTINGS")
-    # rect(draw, [(0, 34), (127, 34)])
-    # text(draw, [54, 41], "START")
-    # rect(draw, [(0, 52), (127, 52)])
-    # text(draw, [48, 56], "SHUTDOWN")
 
     selectedSettings = False
     selectedStart = False
@@ -509,8 +518,11 @@ def draw_menu(draw, config, data, selected_index):
 
     text(draw, [54, 8], config["iterations"]["value"])
     text(draw, [54, 14], _timeToStr(config["interval"]["value"]))
-    text(draw, [54, 20], "01:23:45")
-    text(draw, [54, 26], str(config["secondexposure"]["value"]) + " - " + "10.3")
+    text(draw, [54, 20], _timeToStr(config["interval"]["value"] * config["iterations"]["value"], short=True))
+    text_se = str(config["secondexposure"]["value"])
+    if config["secondexposure"]["value"] and config["se_use_threshold"]["value"]:
+        text_se += " - T:" + "{0:.1f}".format(config["se_threshold"]["value"])
+    text(draw, [54, 26], text_se)
 
     temp_str = "---"
     if data["temperature"] is not None:
@@ -592,8 +604,6 @@ def draw_config(draw, menu, selected_index):
 
 
 def draw_configItem(draw, item, value, pos):
-
-    print(pos)
 
     text(draw, [2, 2], item["name"])
     rect(draw, [(0, 8), (100, 8)])
@@ -723,11 +733,12 @@ if __name__ == "__main__":
     except Exception as e:
         log.warn("no clock found")
 
-    data                = {}
-    data["cameras"]     = {}
-    data["message"]     = "..."
-    data["total_space"] = None
-    data["free_space"]  = None
+    data                            = {}
+    data["cameras"]                 = {}
+    data["message"]                 = "..."
+    data["total_space"]             = None
+    data["free_space"]              = None
+    data["last_image_brightness"]   = None
 
     if zeroboxConnector is not None:
         data["total_space"] = zeroboxConnector.root.get_total_space()
@@ -841,8 +852,7 @@ if __name__ == "__main__":
                 elif menu_selected == 1:
                     state = STATE_PRE_RUN
                 elif menu_selected == 2:
-                    state = STATE_IDLE
-                    # TODO
+                    state = STATE_SHUTDOWN
                 else:
                     raise Exception("illegal menu selected state: {}".format(menu_selected))
 
@@ -876,8 +886,8 @@ if __name__ == "__main__":
                 if menu_selected < length_configitems:
                     selectedConfigItem = config[_configToList(config)[menu_selected]["name"]]
                     configItemValue = selectedConfigItem["value"]
+                    configItemPos = 0
                     state = STATE_CONFIG_ITEM
-                    menu_selected = 0
                     invalidate()
                 else:
                     option = menu_selected - length_configitems
@@ -927,10 +937,9 @@ if __name__ == "__main__":
                            configItemPos -= 1 
             if "r" in k:
                 if item["type"] == "int":
-                    if configItemPos < len(str(abs(configItemValue))):
+                    print(configItemPos)
+                    if configItemPos < len(str(int(abs(configItemValue))))-1:
                         configItemPos += 1
-                        if configItemPos == len(str(int(abs(configItemValue)))):
-                            configItemPos += 1
                 if item["type"] == "float":
                     print("{0:.2f}".format(abs(configItemValue)))
                     if configItemPos < len("{0:.2f}".format(abs(configItemValue)))-1:
@@ -980,13 +989,15 @@ if __name__ == "__main__":
             time_start = datetime.datetime.now()
             time_end   = time_start + datetime.timedelta(seconds=(config["interval"]["value"] * config["iterations"]["value"]))
 
+            images_taken = 0
+
             scheduler.add_job("trigger", config["interval"]["value"]*1000)
 
-            state = STATE_RUNNING
+            state = STATE_START_RUNNING
 
 
         elif state == STATE_START_RUNNING:
-            pass
+            state = STATE_RUNNING
 
 
         elif state == STATE_RUNNING:
@@ -1007,8 +1018,38 @@ if __name__ == "__main__":
 
                 invalidate()
 
+            if "trigger" in triggered_jobs:
+                if zeroboxConnector is not None:
+                    try:
+                        zeroboxConnector.root.trigger()
+                        images_taken += 1
+                    except Exception as e:
+                        data["message"] = "exception"
+                        print(e)
+                else:
+                    data["message"] = "connector not found" 
+
+                if images_taken == config["iterations"]["value"]:
+                    # we're done ...
+
+                    scheduler.remove_job("trigger")
+                    zeroboxConnector.root.disconnect_all_cameras()
+                    for controller in usbController:
+                        controller.turn_on(False)
+
+                    data["message"] = "success. took {} images in {}".format(images_taken, _timeToStr((time_end-time_start).seconds, short=True))
+
+                    time_start = None
+                    time_end = None
+                    images_taken = 0
+
+                    state = STATE_IDLE
+
+                invalidate()
+
             if invalidate:
                 with canvas(device) as draw:
+                    data["images_taken"] = images_taken
                     draw_running(draw, config, data)
                 validate()
             
@@ -1020,7 +1061,7 @@ if __name__ == "__main__":
 
         elif state == STATE_RUNNING_MENU:
 
-            menu = ["back", "pause", "stop"]
+            menu = ["back", "stop"]
 
             if isInvalid:
                 with canvas(device) as draw:
@@ -1034,11 +1075,53 @@ if __name__ == "__main__":
             if "d" in k:
                 menu_selected = (menu_selected + 1) % len(menu)
                 invalidate()
+            if "1" in k:
+                menu_selected = 0
+                state = STATE_RUNNING
+                invalidate()
+            if "3" in k:
+                if menu_selected == 0:
+                    menu_selected = 0
+                    state = STATE_RUNNING
+
+                elif menu_selected == 1:
+                    scheduler.remove_job("trigger")
+                    zeroboxConnector.root.disconnect_all_cameras()
+                    for controller in usbController:
+                        controller.turn_on(False)
+
+                    report = "Abort. Took {} images in {}".format(images_taken, _timeToStr((time_end-time_start).seconds, short=True))
+                    data["message"] = report
+
+                    time_start = None
+                    time_end = None
+                    images_taken = 0
+
+                    state = STATE_IDLE
+                    # display report
+                    # took 123 photos in 1h23min 
+
+                else:
+                    raise Exception("illegal menu selected state: {}".format(menu_selected))
+
+                invalidate()
 
 
         elif state == STATE_IDLE:
+
             with canvas(device) as draw:
-                draw_info(draw, "shutdown")
+                draw_info(draw, data["message"])
+
+            k = getKeyEvents()
+            if "3" in k:
+                data["message"] = None
+                state = STATE_MENU
+                invalidate()
+
+
+        elif state == STATE_SHUTDOWN:
+            with canvas(device) as draw:
+                draw_info(draw, "shutdown ...")
             time.sleep(1.0)
             subprocess.run(["sudo", "shutdown", "now"])
 

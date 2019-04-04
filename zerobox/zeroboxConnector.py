@@ -69,7 +69,7 @@ class ZeroboxConnector(rpyc.Service):
             self.zerobox.trigger_camera(portname)
 
 
-    def exposed_disconnect_cameras(self):
+    def exposed_disconnect_all_cameras(self):
         self.zerobox.disconnect_all_cameras()
 
 

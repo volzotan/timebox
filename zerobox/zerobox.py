@@ -317,16 +317,6 @@ class Zerobox(object):
         self._init_log()
 
 
-    def close(self):
-        for portname, connector in self.connectors.items():
-            connector.close()
-
-            if portname not in self.status:
-                self.status[portname] = {}
-            self.status[portname]["port"] = portname
-            self.status[portname]["active"] = False 
-
-
     def disconnect_camera(self, portname):
         self.connectors[portname].close()
         self.status[portname]["active"] = False 
@@ -334,8 +324,8 @@ class Zerobox(object):
 
     def disconnect_all_cameras(self):
         for portname, connector in self.connectors.items():
-            self.status[portname]["active"] = False
             connector.close()
+            self.status[portname]["active"] = False
 
 
     def get_cameras(self):
@@ -542,7 +532,8 @@ class Zerobox(object):
         cameras = self._detect_cameras()
 
         if len(cameras) == 0:
-            return []
+            self.log.debug("no cameras detected")
+            return {}
 
         if len(cameras) == 1:
             self.log.debug("1 camera detected")
