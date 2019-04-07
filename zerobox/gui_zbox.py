@@ -24,6 +24,7 @@ import PIL.ImageOps
 
 from zeroboxScheduler import Scheduler
 from devices import UsbDirectController, RTC
+from zerobox import CameraConnector
 
 COLOR0 = "black"
 COLOR1 = "white"
@@ -356,7 +357,7 @@ def draw_running(draw, config, data):
         cam1 =  list(data["cameras"].values())[1]
 
     if cam0 is not None:
-        if cam0["active"]:
+        if cam0["state"] == CameraConnector.STATE_BUSY:
             draw.rectangle([(1, 1), (1+21, 1+6)], fill=COLOR1)
             text(draw, [2, 2], "CAM 1", invert=True)
         else:
@@ -364,7 +365,7 @@ def draw_running(draw, config, data):
             text(draw, [2, 2], "CAM 1")
 
     if cam1 is not None:
-        if cam1["active"]:
+        if cam1["state"] == CameraConnector.STATE_BUSY:
             draw.rectangle([(1, 9), (1+21, 8+7)], fill=COLOR1)
             text(draw, [2, 2+8], "CAM 2", invert=True)
         else:
@@ -972,6 +973,20 @@ if __name__ == "__main__":
 
             zeroboxConnector = rpyc.connect("localhost", 18861)
             zeroboxConnector.root.load_config({})
+
+            zeroboxConfig = {}
+
+            zeroboxConfig["AUTOFOCUS_ENABLED"] = config["autofocus"]["value"]
+            zeroboxConfig["SECONDEXPOSURE_ENABLED"] = config["secondexposure"]["value"]
+            if config["se_use_threshold"]["value"]:
+                zeroboxConfig["SECONDEXPOSURE_THRESHOLD"] = config["se_threshold"]["value"]
+            else:
+                zeroboxConfig["SECONDEXPOSURE_THRESHOLD"] = None
+            zeroboxConfig["EXPOSURE_1"] = config["se_expcompensation_1"]["value"]
+            zeroboxConfig["EXPOSURE_2"] = config["se_expcompensation_2"]["value"]
+
+            zeroboxConnector.root.load_config(zeroboxConfig)
+
             cameras = zeroboxConnector.root.detect_cameras()
 
             for portname, camera in cameras.items():
@@ -1007,6 +1022,10 @@ if __name__ == "__main__":
                     force = False
                     if "force_update_status" in triggered_jobs:
                         force = True
+                        # if None in zeroboxConnector.root.check_trigger_result():
+                        #     # probably the camera is capturing right now. Do not try to get the status
+                        #     force = False
+
                     status = zeroboxConnector.root.get_status(force=force)
                     if len(status) > 0:
                         data = {**data, **dict(status)}
@@ -1021,8 +1040,13 @@ if __name__ == "__main__":
             if "trigger" in triggered_jobs:
                 if zeroboxConnector is not None:
                     try:
-                        zeroboxConnector.root.trigger()
-                        images_taken += 1
+                        prev_trigger_results = zeroboxConnector.root.check_trigger_result()
+                        if None in prev_trigger_results:
+                            # previous trigger has not finished yet
+                            log.warn("previous image hasn't finished yet. Skipping trigger")
+                        else:
+                            zeroboxConnector.root.trigger()
+                            images_taken += 1 # TODO: use zerobox class "captures" variable instead?
                     except Exception as e:
                         data["message"] = "exception"
                         print(e)

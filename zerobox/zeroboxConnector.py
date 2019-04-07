@@ -1,11 +1,34 @@
 from zerobox import Zerobox
 import rpyc
 
+import logging as log
+from datetime import datetime
+
+from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import Pool
+import multiprocessing
+
+
+def _trigger(zerobox, portname):
+    return zerobox.trigger_camera(portname)
+
+
 class ZeroboxConnector(rpyc.Service):
 
     def __init__(self):
         print("init")
+
         self.zerobox = Zerobox()
+
+        self.pool = ThreadPool(processes=1)
+        self.capture_results = []
+        self.capture_timer = []
+
+
+    def close(self):
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.terminate()
 
 
     def on_connect(self, conn):
@@ -65,8 +88,39 @@ class ZeroboxConnector(rpyc.Service):
 
 
     def exposed_trigger(self):
-        for portname, camera in self.zerobox.get_connectors():
-            self.zerobox.trigger_camera(portname)
+
+        self.capture_results = []
+        self.capture_timer = []
+        arguments = []
+
+        for portname, cameraconnector in self.zerobox.get_connectors().items():
+            arguments.append((self.zerobox, portname))
+
+        for arg in arguments:
+            self.capture_timer.append(datetime.now())
+            capture_result = self.pool.apply_async(_trigger, arg)
+            self.capture_results.append(capture_result)
+
+        # for portname, cameraconnector in self.zerobox.get_connectors().items():
+        #     self.zerobox.trigger_camera(portname)
+
+
+    def exposed_check_trigger_result(self):
+
+        results = []
+        
+        for result, t in zip(self.capture_results, self.capture_timer):
+            try:    
+                # r = result.get() # get blocks
+                r = result.get(timeout=0.1) #s
+                results.append(r)
+                print("took {0:.2f}ms".format((datetime.now() - t).microseconds / 1000))
+            except multiprocessing.context.TimeoutError as e:
+                #log.warn("timeout while waiting for result")
+                print("timeout")
+                results.append(None)
+
+        return results
 
 
     def exposed_disconnect_all_cameras(self):
@@ -79,3 +133,8 @@ if __name__ == "__main__":
     # allow_public_attrs is necessary to access data in passed dicts
     t = ThreadedServer(ZeroboxConnector(), port=18861, protocol_config={'allow_public_attrs': True})
     t.start()
+
+    # c = ZeroboxConnector()
+    # c.zerobox.connectors = {"narf": "barf"}
+    # c.exposed_trigger()
+    # c.exposed_check_trigger_result()

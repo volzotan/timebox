@@ -32,8 +32,7 @@ class Scheduler(object):
         if job_to_remove is None:
             raise Exception("job not found")
 
-        self.jobs.remove(job_to_remove
-            ) 
+        self.jobs.remove(job_to_remove) 
 
     def info(self):
         return self.jobs

@@ -36,8 +36,8 @@ CONFIG = {
     "AUTOFOCUS_ENABLED"         : False,
     "AUTOFOCUS_DURATION"        : 2,
 
-    "DOUBLEEXPOSURE_ENABLED"    : True,
-    "DOUBLEEXPOSURE_THRESHOLD"  : 20, # 10
+    "SECONDEXPOSURE_ENABLED"    : True,
+    "SECONDEXPOSURE_THRESHOLD"  : 20, # 10
     "EXPOSURE_1"                : +1,
     "EXPOSURE_2"                : -5,
 
@@ -56,6 +56,14 @@ class CameraConnector(object):
     MODE_AUTOMATIC          = "P"
     MODE_UNKNOWN            = "?"
 
+    STATE_INITIALIZED       = 0
+    STATE_CONNECTED         = 1
+    STATE_BUSY              = 2
+    STATE_CLOSED            = 3
+    STATE_ERROR             = 4
+    STATE_UNKNOWN           = 5
+
+
     def __init__(self, port, image_base_directory):
         self.port = port
 
@@ -63,6 +71,8 @@ class CameraConnector(object):
         self.image_directory = None
 
         self.exposure_mode = None
+
+        self.state = self.STATE_INITIALIZED
 
 
     def open(self):
@@ -95,10 +105,18 @@ class CameraConnector(object):
         else:
             self.exposure_mode = self.MODE_UNKNOWN
 
+        self.state = self.STATE_CONNECTED
+
 
     def close(self):
         gp.check_result(gp.gp_camera_exit(self.camera))
         self.camera = None
+
+        self.state = self.STATE_CLOSED
+
+
+    def get_state(self):
+        return self.state
 
 
     # def check(self):
@@ -179,6 +197,8 @@ class CameraConnector(object):
         # error, config_list = gp.gp_camera_list_config(self.camera, self.context)
         # gp.check_result(error)
 
+        status["state"]                = self.state
+
         status["autofocus"]             = self._get_config_value(config, "autofocus")
         status["focusmode"]             = self._get_config_value(config, "focusmode")
         status["expprogram"]            = self._get_config_value(config, "expprogram")
@@ -203,17 +223,24 @@ class CameraConnector(object):
 
 
     def capture_and_download(self, filename):
+
+        self.state = self.STATE_BUSY
         
-        error, file_path = gp.gp_camera_capture(self.camera, gp.GP_CAPTURE_IMAGE)
-        gp.check_result(error)
+        try:
+            error, file_path = gp.gp_camera_capture(self.camera, gp.GP_CAPTURE_IMAGE)
+            gp.check_result(error)
 
-        # print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+            # print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
 
-        error, camera_file = gp.gp_camera_file_get(self.camera, file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-        gp.check_result(error)
+            error, camera_file = gp.gp_camera_file_get(self.camera, file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+            gp.check_result(error)
 
-        error = gp.gp_file_save(camera_file, os.path.join(*filename))
-        gp.check_result(error)
+            error = gp.gp_file_save(camera_file, os.path.join(*filename))
+            gp.check_result(error)
+        except Exception as e:
+            raise e
+        finally:
+            self.state = self.STATE_CONNECTED
 
 
     def _get_config_value(self, config, name):
@@ -317,15 +344,18 @@ class Zerobox(object):
         self._init_log()
 
 
+    def __repr__(self):
+        # return "Zerobox (cameras: {})".format(len(self.connectors.items()))
+        pass
+
+
     def disconnect_camera(self, portname):
         self.connectors[portname].close()
-        self.status[portname]["active"] = False 
 
 
     def disconnect_all_cameras(self):
         for portname, connector in self.connectors.items():
             connector.close()
-            self.status[portname]["active"] = False
 
 
     def get_cameras(self):
@@ -557,8 +587,8 @@ class Zerobox(object):
             self.cameras[portname] = camera 
             if portname not in self.status["cameras"]:
                 self.status["cameras"][portname] = {}
+                self.status["cameras"][portname]["state"] = None
             self.status["cameras"][portname]["port"] = portname
-            self.status["cameras"][portname]["active"] = False 
 
         return self.cameras
 
@@ -576,18 +606,17 @@ class Zerobox(object):
         except gp.GPhoto2Error as ge:
             self.log.error("Could not connect camera: {}".format(ge))
             self.status["cameras"][portname]["error"] = "gphoto error"
-            self.status["cameras"][portname]["active"] = False
+            self.status["cameras"][portname]["state"] = None
             raise Exception("Could not open camera connection. GPhoto2Error.")
         except Exception as e:
             self.log.error("Could not connect camera: {}".format(e))
             self.status["cameras"][portname]["error"] = "unknown error"
-            self.status["cameras"][portname]["active"] = False
+            self.status["cameras"][portname]["state"] = None
             raise Exception("Could not open camera connection. Unknown exception.")
 
         self.connectors[portname] = conn
 
         self.status["cameras"][portname]["error"] = None
-        self.status["cameras"][portname]["active"] = True
         self.status["cameras"][portname] = {**self.status["cameras"][portname], **conn.get_exposure_status()}
 
 
@@ -603,13 +632,16 @@ class Zerobox(object):
     def trigger_camera(self, portname):
         conn = self.connectors[portname]
 
+        if conn.get_state() == CameraConnector.STATE_BUSY:
+            raise Exception("Camera busy")
+
         if self.config["AUTOFOCUS_ENABLED"]:
             self.focus_camera
 
         filename = self._acquire_filename(conn.get_image_directory())
         filename2 = None
 
-        if not self.config["DOUBLEEXPOSURE_ENABLED"]:
+        if not self.config["SECONDEXPOSURE_ENABLED"]:
             conn.capture_and_download(filename)
         else:
             conn.set_exposure_compensation(self.config["EXPOSURE_1"])
@@ -618,12 +650,12 @@ class Zerobox(object):
             self.status["captures"].append([datetime.datetime.now()])
 
             trigger_second_exposure = True
-            if self.config["DOUBLEEXPOSURE_THRESHOLD"] is not None:
+            if self.config["SECONDEXPOSURE_THRESHOLD"] is not None:
                 jpeg_full_name = self._convert_raw_to_jpeg(filename[0], filename[1], self.config["TEMP_DIR"])
                 exposure = self._calculate_brightness(jpeg_full_name)
                 self.log.info("exposure: {}".format(exposure))
 
-                if exposure > self.config["DOUBLEEXPOSURE_THRESHOLD"]:
+                if exposure > self.config["SECONDEXPOSURE_THRESHOLD"]:
                     trigger_second_exposure = False
 
             if trigger_second_exposure:
@@ -643,6 +675,10 @@ class Zerobox(object):
 
         if force_connection:
             for portname, connector in self.connectors.items():
+
+                if connector.get_state() == CameraConnector.STATE_BUSY:
+                    self.log.warn("camera {} busy. getting status aborted".format(portname))
+
                 try:
                     s = connector.get_exposure_status()
                     old = data["cameras"][portname]
