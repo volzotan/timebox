@@ -197,7 +197,7 @@ class CameraConnector(object):
         # error, config_list = gp.gp_camera_list_config(self.camera, self.context)
         # gp.check_result(error)
 
-        status["state"]                = self.state
+        status["state"]                 = self.state
 
         status["autofocus"]             = self._get_config_value(config, "autofocus")
         status["focusmode"]             = self._get_config_value(config, "focusmode")
@@ -588,6 +588,7 @@ class Zerobox(object):
             if portname not in self.status["cameras"]:
                 self.status["cameras"][portname] = {}
                 self.status["cameras"][portname]["state"] = None
+                self.status["cameras"][portname]["last_image_brightness"] = None
             self.status["cameras"][portname]["port"] = portname
 
         return self.cameras
@@ -658,6 +659,8 @@ class Zerobox(object):
                 if exposure > self.config["SECONDEXPOSURE_THRESHOLD"]:
                     trigger_second_exposure = False
 
+                self.status["cameras"][portname]["last_image_brightness"] = exposure
+
             if trigger_second_exposure:
                 conn.set_exposure_compensation(self.config["EXPOSURE_2"])
                 filename2 = (filename[0], filename[1] + "_2")
@@ -678,6 +681,8 @@ class Zerobox(object):
 
                 if connector.get_state() == CameraConnector.STATE_BUSY:
                     self.log.warn("camera {} busy. getting status aborted".format(portname))
+                    data["cameras"][portname]["state"] = connector.get_state()
+                    continue
 
                 try:
                     s = connector.get_exposure_status()

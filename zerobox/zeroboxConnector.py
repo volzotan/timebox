@@ -117,7 +117,6 @@ class ZeroboxConnector(rpyc.Service):
                 print("took {0:.2f}ms".format((datetime.now() - t).microseconds / 1000))
             except multiprocessing.context.TimeoutError as e:
                 #log.warn("timeout while waiting for result")
-                print("timeout")
                 results.append(None)
 
         return results

@@ -357,7 +357,10 @@ def draw_running(draw, config, data):
         cam1 =  list(data["cameras"].values())[1]
 
     if cam0 is not None:
-        if cam0["state"] == CameraConnector.STATE_BUSY:
+        if cam0["state"] == CameraConnector.STATE_CONNECTED:
+            draw.rectangle([(0, 1), (0, 1+6)], fill=COLOR1)
+            text(draw, [2, 2], "CAM 1")
+        elif cam0["state"] == CameraConnector.STATE_BUSY:
             draw.rectangle([(1, 1), (1+21, 1+6)], fill=COLOR1)
             text(draw, [2, 2], "CAM 1", invert=True)
         else:
@@ -418,8 +421,8 @@ def draw_running(draw, config, data):
         text(draw, [30, start+2], "{0:.1f}".format(config["se_threshold"]["value"]))
         text(draw, [1, start+9], "LAST:")
         last_image_brightness = "?"
-        if data["last_image_brightness"] is not None:
-            "{0:.1f}".format(data["last_image_brightness"])
+        if cam0 is not None and cam0["last_image_brightness"] is not None:
+            last_image_brightness = "{0:.1f}".format(float(cam0["last_image_brightness"]))
         text(draw, [30, start+9], last_image_brightness)
         text(draw, [1, start+16], "101")
         text(draw, [20, start+16], "/")
@@ -869,6 +872,7 @@ if __name__ == "__main__":
             menu.append("-")
             menu.append("camera on")
             menu.append("camera off")
+            menu.append("reset to default config")
 
             if isInvalid:
                 with canvas(device) as draw:
