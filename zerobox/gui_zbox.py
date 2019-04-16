@@ -212,6 +212,11 @@ def _configToList(c):
     return clist
 
 
+def _write_config_to_file(c):
+    with open("config.yaml", "w") as outfile:
+        yaml.dump(c, outfile, default_flow_style=False)
+
+
 def _zeropad(value, length):
     value = str(value)
     if len(value) < length:
@@ -677,12 +682,17 @@ if __name__ == "__main__":
 
     # Load Config
 
-    config = None
-    with open("config.yaml", "r") as stream:
+    config = {}
+    with open("config_default.yaml", "r") as stream:
         try:
-            config = yaml.load(stream)
+            config = {**config,**yaml.load(stream)}
         except yaml.YAMLError as exc:
             print(exc)
+    try:
+        with open("config.yaml", "r") as stream:
+            config = {**config,**yaml.load(stream)}
+    except FileNotFoundError as e:
+        print("no config file found")
 
     # Logging
 
@@ -747,6 +757,7 @@ if __name__ == "__main__":
     if zeroboxConnector is not None:
         data["total_space"] = zeroboxConnector.root.get_total_space()
         data["free_space"] = zeroboxConnector.root.get_free_space()
+
 
 
     # data["cam_0"]                           = {}
@@ -967,6 +978,8 @@ if __name__ == "__main__":
                 configItemValue = None
                 state = STATE_CONFIG
                 invalidate()
+
+                _write_config_to_file(config)
 
 
         elif state == STATE_PRE_RUN:
