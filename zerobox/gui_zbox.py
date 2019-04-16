@@ -29,6 +29,9 @@ from zerobox import CameraConnector
 COLOR0 = "black"
 COLOR1 = "white"
 
+CONFIG_FILE_DEFAULT = "config_default.yaml"
+CONFIG_FILE_USER = "config.yaml"
+
 BTN_1 = 21
 BTN_2 = 20
 BTN_3 = 16
@@ -213,7 +216,7 @@ def _configToList(c):
 
 
 def _write_config_to_file(c):
-    with open("config.yaml", "w") as outfile:
+    with open(CONFIG_FILE_USER, "w") as outfile:
         yaml.dump(c, outfile, default_flow_style=False)
 
 
@@ -683,13 +686,13 @@ if __name__ == "__main__":
     # Load Config
 
     config = {}
-    with open("config_default.yaml", "r") as stream:
+    with open(CONFIG_FILE_DEFAULT, "r") as stream:
         try:
             config = {**config,**yaml.load(stream)}
         except yaml.YAMLError as exc:
             print(exc)
     try:
-        with open("config.yaml", "r") as stream:
+        with open(CONFIG_FILE_USER, "r") as stream:
             config = {**config,**yaml.load(stream)}
     except FileNotFoundError as e:
         print("no config file found")
@@ -917,6 +920,14 @@ if __name__ == "__main__":
                         # camera off
                         for c in usbController:
                             c.turn_on(False)
+                    elif option == 3:
+                        # reset to default config
+                        with open(CONFIG_FILE_DEFAULT, "r") as stream:
+                            try:
+                                config = yaml.load(stream)
+                            except yaml.YAMLError as exc:
+                                print(exc)
+                        _write_config_to_file(config)
                     else:
                         raise Exception("illegal menu option: {}".format(option))
             if "1" in k:
