@@ -75,7 +75,6 @@ class Gui():
         else:
             self.platform = PLATFORM_OSX
 
-
         if self.platform == PLATFORM_PI:
             self.device = sh1106(spi(), rotate=2)
 
@@ -134,6 +133,15 @@ class Gui():
 
         self.images_taken        = None
 
+        # ----
+
+        self.config = {}
+
+        self.zeroboxConnector = None
+        self.cameras = []
+        self.usbController = None
+        self.clock = None
+
 
     def _init_log(self):
 
@@ -160,7 +168,6 @@ class Gui():
 
         # Load Config
 
-        self.config = {}
         with open(CONFIG_FILE_DEFAULT, "r") as stream:
             try:
                 self.config = {**self.config,**yaml.load(stream)}
@@ -168,7 +175,7 @@ class Gui():
                 print(exc)
         try:
             with open(CONFIG_FILE_USER, "r") as stream:
-                config = {**self.config,**yaml.load(stream)}
+                self.config = {**self.config,**yaml.load(stream)}
         except FileNotFoundError as e:
             print("no config file found")
 
@@ -178,8 +185,6 @@ class Gui():
 
         # Find a zeroboxConnector
 
-        self.zeroboxConnector = None
-
         try:
             self.zeroboxConnector = rpyc.connect("localhost", 18861)
         except ConnectionRefusedError as e:
@@ -188,10 +193,9 @@ class Gui():
 
         # Find cameras
 
-        cameras = []
         if self.zeroboxConnector is not None:
-            cameras = self.zeroboxConnector.root.detect_cameras()
-            self.log.info("found {} camera(s)".format(len(cameras)))
+            self.cameras = self.zeroboxConnector.root.detect_cameras()
+            self.log.info("found {} camera(s)".format(len(self.cameras)))
 
         # Find UsbDirectController
 
@@ -570,7 +574,7 @@ class Gui():
 
         progress = time_done / (time_done + time_remaining)
 
-        self.text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(self.data["images_taken"], self.config["iterations"]["value"]))
+        self.text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(self.images_taken, self.config["iterations"]["value"]))
         self.text(draw, [127, 60-8], "{0:2d}%".format(int(progress*100)), rightalign=True)
         if "next_invocation" in self.data and self.data["next_invocation"] is not None:
             self.text(draw, [55, 60-8], self._timeToStr((self.data["next_invocation"]-datetime.datetime.now()).seconds, short=True))
@@ -987,8 +991,8 @@ class Gui():
             if "3" in k:
                 length_configitems = len(self._configToList(self.config))
                 if self.menu_selected < length_configitems:
-                    selectedConfigItem = self.config[self._configToList(self.config)[self.menu_selected]["name"]]
-                    self.configItemValue = selectedConfigItem["value"]
+                    self.selectedConfigItem = self.config[self._configToList(self.config)[self.menu_selected]["name"]]
+                    self.configItemValue = self.selectedConfigItem["value"]
                     self.configItemPos = 0
                     self.state = STATE_CONFIG_ITEM
                     self.invalidate()
@@ -1008,7 +1012,7 @@ class Gui():
                         # reset to default config
                         with open(CONFIG_FILE_DEFAULT, "r") as stream:
                             try:
-                                config = yaml.load(stream)
+                                self.config = yaml.load(stream)
                             except yaml.YAMLError as exc:
                                 print(exc)
                         self._write_config_to_file(self.config)
@@ -1116,7 +1120,7 @@ class Gui():
             self.time_start = datetime.datetime.now()
             self.time_end   = self.time_start + datetime.timedelta(seconds=(self.config["interval"]["value"] * self.config["iterations"]["value"]))
 
-            images_taken = 0
+            self.images_taken = 0
 
             interval = self.config["interval"]["value"]*1000
             if self.config["persistentcamera"]["value"]:
