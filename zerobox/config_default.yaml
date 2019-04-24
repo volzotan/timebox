@@ -64,5 +64,6 @@ autofocus:
 # --------------------------------------------------------
 
 log:
+    basedir: "."
     level: DEBUG
     format: "%(asctime)s | %(levelname)-7s | %(message)s"

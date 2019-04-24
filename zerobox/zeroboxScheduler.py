@@ -12,9 +12,11 @@ class Scheduler(object):
     # def stop(self):
     #     pass
 
-    def add_job(self, job_object, interval):
+    def add_job(self, job_object, interval, delay=None):
         new_job = {}
         new_job["start"] = datetime.now()
+        if delay is not None:
+            new_job["start"] = new_job["start"] + timedelta(milliseconds=int(delay))
         new_job["interval"] = timedelta(milliseconds=int(interval))
         new_job["last_invocation"] = None
         new_job["next_invocation"] = new_job["start"]
