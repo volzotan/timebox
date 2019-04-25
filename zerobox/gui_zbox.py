@@ -803,7 +803,7 @@ class Gui():
                 status = self.zeroboxConnector.root.get_status(force=force)
                 if len(status) > 0:
                     self.data = {**self.data, **dict(status)}
-                    self.data["message"] = None
+                    # self.data["message"] = None
 
 
                 prev_trigger_results = self.zeroboxConnector.root.check_trigger_result()
@@ -1128,13 +1128,17 @@ class Gui():
             else:
                 self.scheduler.add_job("camera_on", interval)
                 self.scheduler.add_job("trigger", interval, delay=float(self.config["pc_pre_wait"]["value"])*1000)
-                # max time the camera may be alive. shut already be shut down after the trigger event returned, but just as a safeguard
+                # max time the camera may be alive. shut already be shut down after
+                # the trigger event returned, but just as a safeguard
                 self.scheduler.add_job("camera_off", interval, delay=(30.0+float(self.config["pc_pre_wait"]["value"]))*1000)
 
             self.state = STATE_START_RUNNING
 
 
         elif self.state == STATE_START_RUNNING:
+
+            # TODO: check for connected cameras and other prerequisites
+
             self.state = STATE_RUNNING
 
 
@@ -1146,7 +1150,7 @@ class Gui():
             
             k = self.getKeyEvents()
             if "1" in k or "2" in k or "3" in k:
-                state = STATE_RUNNING_MENU
+                self.state = STATE_RUNNING_MENU
                 self.invalidate()
 
 
@@ -1164,18 +1168,18 @@ class Gui():
                 self.menu_selected = (self.menu_selected - 1) % len(menu)
                 self.invalidate()
             if "d" in k:
-                menu_selected = (self.menu_selected + 1) % len(menu)
+                self.menu_selected = (self.menu_selected + 1) % len(menu)
                 self.invalidate()
             if "1" in k:
-                menu_selected = 0
+                self.menu_selected = 0
                 self.state = STATE_RUNNING
                 self.invalidate()
             if "3" in k:
-                if menu_selected == 0:
+                if self.menu_selected == 0:
                     self.menu_selected = 0
                     self.state = STATE_RUNNING
 
-                elif menu_selected == 1:
+                elif self.menu_selected == 1:
                     self.scheduler.remove_job("trigger")
                     self.zeroboxConnector.root.disconnect_all_cameras()
                     for controller in self.usbController:
@@ -1211,6 +1215,7 @@ class Gui():
 
 
         elif self.state == STATE_SHUTDOWN:
+
             with canvas(self.device) as draw:
                 self.draw_info(draw, "shutdown ...")
             time.sleep(1.0)

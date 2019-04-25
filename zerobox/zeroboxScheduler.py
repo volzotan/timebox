@@ -24,6 +24,14 @@ class Scheduler(object):
         self.jobs.append(new_job)
 
 
+    def is_job_scheduled(self, job_object):
+        for job in self.jobs:
+            if job["job_object"] == job_object:
+                return True
+
+        return False
+
+
     def remove_job(self, job_object):
         job_to_remove = None
         for job in self.jobs:
@@ -34,7 +42,8 @@ class Scheduler(object):
         if job_to_remove is None:
             raise Exception("job not found")
 
-        self.jobs.remove(job_to_remove) 
+        self.jobs.remove(job_to_remove)
+
 
     def info(self):
         return self.jobs
