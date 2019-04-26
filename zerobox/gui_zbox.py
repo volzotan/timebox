@@ -12,10 +12,11 @@ from luma.oled.device import sh1106
 import os
 from os.path import getmtime
 import subprocess
-import datetime
+from datetime import datetime
 import sys
 import yaml
 import rpyc
+from rpyc.utils.classic import obtain
 
 import logging
 
@@ -23,7 +24,7 @@ from PIL import ImageFont, Image
 import PIL.ImageOps  
 
 from zeroboxScheduler import Scheduler
-from devices import UsbDirectController, RTC
+from devices import RTC
 from zerobox import CameraConnector
 
 COLOR0 = "black"
@@ -119,7 +120,7 @@ class Gui():
 
         # state
 
-        self.state               = STATE_INIT #STATE_MENU # STATE_RUNNING
+        self.state               = STATE_INIT
         self.isInvalid           = True
 
         self.menu_selected       = 0
@@ -128,14 +129,11 @@ class Gui():
         self.configItemValue     = None
         self.configItemPos       = 0 # Pointer to change digits of a configItems value
 
-        self.time_start          = None
-        self.time_end            = None
-
-        self.images_taken        = None
-
         # ----
 
         self.config = {}
+        self.status = {}
+        self.session = {}
 
         self.zeroboxConnector = None
         self.cameras = []
@@ -189,7 +187,6 @@ class Gui():
             self.zeroboxConnector = rpyc.connect("localhost", 18861)
         except ConnectionRefusedError as e:
             self.log.error("zeroboxConnector not available")
-            sys.exit(-1)
 
         # Find cameras
 
@@ -199,8 +196,9 @@ class Gui():
 
         # Find UsbDirectController
 
-        self.usbController = UsbDirectController.find_all()
-        self.log.info("found {} usbController".format(len(self.usbController)))
+        if self.zeroboxConnector is not None:
+            self.usbController = self.zeroboxConnector.root.exposed_get_usb_controller()
+            self.log.info("found {} usbController".format(len(self.usbController)))
 
         # setup the Scheduler
 
@@ -403,6 +401,11 @@ class Gui():
                 print(result)
 
 
+    def _get_session(self):
+        data = self.zeroboxConnector.root.get_session()
+        return obtain(data)
+
+
     def getKeyEvents(self):
 
         keys = []
@@ -553,8 +556,8 @@ class Gui():
         self.text(draw, [45+5, start+2], "INTVAL")
         self.text(draw, [45+5, start+9], str(self.config["interval"]["value"]))
 
-        time_done = (datetime.datetime.now() - self.time_start).seconds
-        time_remaining = (self.time_end - datetime.datetime.now()).seconds
+        time_done = (datetime.now() - self.session["start"]).seconds
+        time_remaining = (self.session["end"] - datetime.now()).seconds
 
         self.text(draw, [127,  start+2], self._timeToStr(time_done, short=True), rightalign=True)
         self.text(draw, [127,  start+9], self._timeToStr(time_remaining, short=True), rightalign=True)
@@ -574,10 +577,10 @@ class Gui():
 
         progress = time_done / (time_done + time_remaining)
 
-        self.text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(self.images_taken, self.config["iterations"]["value"]))
+        self.text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(len(self.session["images"]), self.config["iterations"]["value"]))
         self.text(draw, [127, 60-8], "{0:2d}%".format(int(progress*100)), rightalign=True)
         if "next_invocation" in self.data and self.data["next_invocation"] is not None:
-            self.text(draw, [55, 60-8], self._timeToStr((self.data["next_invocation"]-datetime.datetime.now()).seconds, short=True))
+            self.text(draw, [55, 60-8], self._timeToStr((self.data["next_invocation"]-datetime.now()).seconds, short=True))
         draw.rectangle([(0, 60), (127, 63)], fill=COLOR1)
         draw.rectangle([(1, 61), (1+(127-2)*progress, 63-1)], fill=COLOR0)
 
@@ -657,7 +660,7 @@ class Gui():
             images_in_memory = str(info["images_in_memory"])
         self.text(draw, [54, 38], images_in_memory) # max: 99999
 
-        currentTime = datetime.datetime.now()
+        currentTime = datetime.now()
         self.rect(draw, [(127-20, 0), (127, 6)])
         self.text(draw, [127-19, 1], currentTime.strftime("%H:%M"), invert=True)
 
@@ -820,61 +823,17 @@ class Gui():
 
             self.invalidate()
 
-        if "camera_on" in jobs:
-            pass
-
-        if "trigger" in jobs:
-            if self.zeroboxConnector is not None:
-                try:
-                    prev_trigger_results = self.zeroboxConnector.root.check_trigger_result()
-                    if None in prev_trigger_results:
-                        # previous trigger has not finished yet
-                        log.warn("previous image hasn't finished yet. Skipping trigger")
-                    else:
-                        self._process_trigger_results(prev_trigger_results)
-
-                        if self.config["persistentcamera"]["value"]:
-                            for controller in self.usbController:
-                                controller.turn_on(True)
-                            self.zeroboxConnector.root.trigger()
-                        else:
-                            self.zeroboxConnector.root.trigger()
-
-                except Exception as e:
-                    self.data["message"] = "exception"
-                    print(e)
-            else:
-                self.data["message"] = "connector not found"
-
-            if self.images_taken == self.config["iterations"]["value"]:
-                # we're done ...
-
-                self.scheduler.remove_job("trigger")
-                self.zeroboxConnector.root.disconnect_all_cameras()
-                for controller in self.usbController:
-                    controller.turn_on(False)
-
-                self.data["message"] = "success. took {} images in {}".format(self.images_taken, self._timeToStr((self.time_end-self.time_start).seconds, short=True))
-
-                self.time_start = None
-                self.time_end = None
-                self.images_taken = 0
-
-                self.state = STATE_IDLE
-
-            self.invalidate()
-
+        # if "trigger" in jobs:
+        #     self.data["message"] = "success. took {} images in {}".format(self.images_taken, self._timeToStr(
+        #         (self.time_end - self.time_start).seconds, short=True))
 
     def loop(self):
 
         triggered_jobs = self.scheduler.run_schedule()
         self.process_jobs(triggered_jobs)
-        # for job in triggered_jobs:
-        #     print(job)
 
         if "update_status" in triggered_jobs:
             self.invalidate()
-
 
         if self.state == STATE_INIT:
             print("init")
@@ -891,7 +850,7 @@ class Gui():
                 logo = logo.convert("1")
                 screen["logo"] = logo
                 screen["devicename"] = "undefined"
-                now = datetime.datetime.now()
+                now = datetime.now()
                 screen["version"] = now.strftime("%d.%m.%y")
 
                 screen["total_space"] = None
@@ -908,6 +867,14 @@ class Gui():
             k = self.getKeyEvents()
             if "3" in k:
                 self.state = STATE_MENU
+
+                if self.zeroboxConnector is not None:
+                    self.status = {**self.status, **self.zeroboxConnector.root.get_status()}
+                    if self.status["state"] == self.zeroboxConnector.root.STATE_RUNNING:
+                        self.session = self._get_session()
+                        self.state = STATE_RUNNING
+
+                self.invalidate()
 
 
         elif self.state == STATE_MENU:
@@ -1049,7 +1016,7 @@ class Gui():
                     if self.configItemPos > 0:
                         self.configItemPos -= 1
                         if self.configItemPos == 2 or self.configItemPos == 5:
-                           self.configItemPos -= 1
+                            self.configItemPos -= 1
             if "r" in k:
                 if item["type"] == "int":
                     print(self.configItemPos)
@@ -1065,7 +1032,7 @@ class Gui():
                     if self.configItemPos < 10:
                         self.configItemPos += 1
                         if self.configItemPos == 2 or self.configItemPos == 5:
-                           self.configItemPos += 1
+                            self.configItemPos += 1
             if "1" in k:
                 self.selectedConfigItem = None
                 self.configItemValue = None
@@ -1087,50 +1054,36 @@ class Gui():
             #         draw_info(draw, "start")
             #     validate()
 
-            self.zeroboxConnector = rpyc.connect("localhost", 18861)
-            self.zeroboxConnector.root.load_config({})
+            self.zeroboxConnector.root.load_config(self.config)
 
-            zeroboxConfig = {}
-
-            zeroboxConfig["AUTOFOCUS_ENABLED"] = self.config["autofocus"]["value"]
-            zeroboxConfig["SECONDEXPOSURE_ENABLED"] = self.config["secondexposure"]["value"]
-            if self.config["se_use_threshold"]["value"]:
-                zeroboxConfig["SECONDEXPOSURE_THRESHOLD"] = self.config["se_threshold"]["value"]
-            else:
-                zeroboxConfig["SECONDEXPOSURE_THRESHOLD"] = None
-            zeroboxConfig["EXPOSURE_1"] = self.config["se_expcompensation_1"]["value"]
-            zeroboxConfig["EXPOSURE_2"] = self.config["se_expcompensation_2"]["value"]
-
-            self.zeroboxConnector.root.load_config(zeroboxConfig)
-
-            self.cameras = self.zeroboxConnector.root.detect_cameras()
-
-            for portname, camera in self.cameras.items():
-                try:
-                    self.zeroboxConnector.root.connect(portname)
-                except Exception as e:
-                    print(e)
-
-                    # TODO: go to exception state
-                    # if portname not in data["cameras"]:
-                    #     data["cameras"][portname] = {}
-
-                    # data["cameras"][portname]["message"] = "conn error"
-
-            self.time_start = datetime.datetime.now()
-            self.time_end   = self.time_start + datetime.timedelta(seconds=(self.config["interval"]["value"] * self.config["iterations"]["value"]))
-
-            self.images_taken = 0
-
-            interval = self.config["interval"]["value"]*1000
-            if self.config["persistentcamera"]["value"]:
-                self.scheduler.add_job("trigger", interval)
-            else:
-                self.scheduler.add_job("camera_on", interval)
-                self.scheduler.add_job("trigger", interval, delay=float(self.config["pc_pre_wait"]["value"])*1000)
-                # max time the camera may be alive. shut already be shut down after
-                # the trigger event returned, but just as a safeguard
-                self.scheduler.add_job("camera_off", interval, delay=(30.0+float(self.config["pc_pre_wait"]["value"]))*1000)
+            # self.cameras = self.zeroboxConnector.root.detect_cameras()
+            #
+            # for portname, camera in self.cameras.items():
+            #     try:
+            #         self.zeroboxConnector.root.connect(portname)
+            #     except Exception as e:
+            #         print(e)
+            #
+            #         # TODO: go to exception state
+            #         # if portname not in data["cameras"]:
+            #         #     data["cameras"][portname] = {}
+            #
+            #         # data["cameras"][portname]["message"] = "conn error"
+            #
+            # self.time_start = datetime.now()
+            # self.time_end   = self.time_start + datetime.timedelta(seconds=(self.config["interval"]["value"] * self.config["iterations"]["value"]))
+            #
+            # self.images_taken = 0
+            #
+            # interval = self.config["interval"]["value"]*1000
+            # if self.config["persistentcamera"]["value"]:
+            #     self.scheduler.add_job("trigger", interval)
+            # else:
+            #     self.scheduler.add_job("camera_on", interval)
+            #     self.scheduler.add_job("trigger", interval, delay=float(self.config["pc_pre_wait"]["value"])*1000)
+            #     # max time the camera may be alive. shut already be shut down after
+            #     # the trigger event returned, but just as a safeguard
+            #     self.scheduler.add_job("camera_off", interval, delay=(30.0+float(self.config["pc_pre_wait"]["value"]))*1000)
 
             self.state = STATE_START_RUNNING
 
@@ -1138,6 +1091,9 @@ class Gui():
         elif self.state == STATE_START_RUNNING:
 
             # TODO: check for connected cameras and other prerequisites
+
+            self.zeroboxConnector.root.start()
+            self.session = self._get_session()
 
             self.state = STATE_RUNNING
 
@@ -1180,24 +1136,23 @@ class Gui():
                     self.state = STATE_RUNNING
 
                 elif self.menu_selected == 1:
-                    self.scheduler.remove_job("trigger")
-                    self.zeroboxConnector.root.disconnect_all_cameras()
-                    for controller in self.usbController:
-                        controller.turn_on(False)
+                    # self.scheduler.remove_job("trigger")
+                    # self.zeroboxConnector.root.disconnect_all_cameras()
+                    # for controller in self.usbController:
+                    #     controller.turn_on(False)
+                    self.zeroboxConnector.root.stop()
 
-                    report = "Abort. Took {} images in {}".format(self.images_taken, self._timeToStr((self.time_end-self.time_start).seconds, short=True))
+                    report = "Abort. Took {} images in {}".format(
+                        len(self.session["images"]),
+                        self._timeToStr((self.session["end"]-self.session["start"]).seconds, short=True))
                     self.data["message"] = report
-
-                    self.time_start = None
-                    self.time_end = None
-                    self.images_taken = 0
 
                     self.state = STATE_IDLE
                     # display report
                     # took 123 photos in 1h23min 
 
                 else:
-                    raise Exception("illegal menu selected state: {}".format(menu_selected))
+                    raise Exception("illegal menu selected state: {}".format(self.menu_selected))
 
                 self.invalidate()
 

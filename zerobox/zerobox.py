@@ -310,7 +310,6 @@ class Zerobox(object):
         self.config = CONFIG
 
         self.status = {}
-        self.status["usbController"] = None
         self.status["cameras"] = {}
         self.status["captures"] = []
 

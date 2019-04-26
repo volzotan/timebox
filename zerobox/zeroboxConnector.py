@@ -1,11 +1,12 @@
 from zerobox import Zerobox
 from zeroboxScheduler import Scheduler
+from devices import UsbDirectController
 
 import rpyc
 from rpyc.utils.server import ThreadedServer
 
 import logging as log
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import sys
 import yaml
@@ -34,6 +35,7 @@ class ZeroboxConnector(rpyc.Service):
 
         self.zerobox = Zerobox()
         self.scheduler = Scheduler()
+        self.usbDirectController = []
 
         self.pool = ThreadPool(processes=1)
         self.capture_results = []
@@ -158,12 +160,14 @@ class ZeroboxConnector(rpyc.Service):
 
             if len(results) > 0 and None not in results:
                 print(results)
+
                 # TODO
+                # if done?
 
         else:
-            log.warn("illegal state: {}".format(self.state))
+            log.warning("illegal state: {}".format(self.state))
 
-    def exposed_load_connector_config(self, connector_config):
+    def exposed_load_config(self, connector_config):
         config_copy = {}
         for key in connector_config:
             config_copy[key] = connector_config[key]
@@ -180,7 +184,7 @@ class ZeroboxConnector(rpyc.Service):
         zeroboxConfig["EXPOSURE_1"] = self.config["se_expcompensation_1"]["value"]
         zeroboxConfig["EXPOSURE_2"] = self.config["se_expcompensation_2"]["value"]
 
-        self.zerobox.load_config(config_copy)
+        self.zerobox.load_config(zeroboxConfig)
 
     # def exposed_load_zerobox_config(self, config):
     #     config_copy = {}
@@ -194,9 +198,9 @@ class ZeroboxConnector(rpyc.Service):
     def exposed_start(self):
 
         self.session = {}
-        self.session["start"] = datetime.now()
-        self.session["end"] = None
-        self.session["images"] = []
+        self.session["start"]   = datetime.now()
+        self.session["end"]     = self.session["start"] + timedelta(seconds=(self.config["interval"]["value"] * self.config["iterations"]["value"]))
+        self.session["images"]  = []
 
         for key in self.config.keys():
             if "type" in self.config[key]:
@@ -234,14 +238,17 @@ class ZeroboxConnector(rpyc.Service):
         return self.session
 
     def exposed_get_status(self, force=False):
-        # data = {}
-        status = self.zerobox.get_status(force_connection=force)
-        # data = {**data, **status}
-        # return data
-        return status
+        data = {}
+        data["state"] = self.state
+        data["zerobox_status"] = self.zerobox.get_status(force_connection=force)
+        return data
 
     def exposed_get_cameras(self):
         return self.zerobox.get_cameras()
+
+    def exposed_get_usb_controller(self):
+        self.usbDirectController = UsbDirectController.find_all()
+        return self.usbDirectController
 
     def exposed_get_total_space(self):
         return self.zerobox.get_total_space()
@@ -282,9 +289,14 @@ class Ztimer():
                 print("zeroboxConnector not available. failed.")
                 sys.exit(-1)
 
-        while True:
-            zeroboxConnector.root.loop()
-            time.sleep(self.interval)
+        try:
+            while True:
+                zeroboxConnector.root.loop()
+                time.sleep(self.interval)
+        except KeyboardInterrupt as e:
+            print("Keyboard Interrupt. Exiting...")
+        except Exception as e:
+            print("Unknown Exception: {}".format(e))
 
 
 if __name__ == "__main__":
@@ -293,9 +305,15 @@ if __name__ == "__main__":
     timer_thread = Thread(target = timer.run)
     timer_thread.start()
 
-    # allow_public_attrs is necessary to access data in passed dicts
-    t = ThreadedServer(ZeroboxConnector(), port=18861, protocol_config={'allow_public_attrs': True})
-    t.start()
+    try:
+        # allow_public_attrs is necessary to access data in passed dicts
+        t = ThreadedServer(ZeroboxConnector(), port=18861, protocol_config={
+            "allow_public_attrs": True,
+            "allow_pickle": True
+        })
+        t.start()
+    except Exception as e:
+        print(e)
 
     # c = ZeroboxConnector()
     # c.zerobox.connectors = {"narf": "barf"}
