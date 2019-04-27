@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from zerobox import Zerobox
 from zeroboxScheduler import Scheduler
 from devices import UsbDirectController
@@ -82,20 +84,9 @@ class ZeroboxConnector(rpyc.Service):
         return None
 
 
-    def exposed_detect_cameras(self):
-        return self.zerobox.detect_cameras()
-
-
-    def exposed_connect(self, portname):
-        cameras = self.zerobox.get_cameras()
-
-        if portname not in cameras:
-            raise Exception("no camera detected on port {}".format(portname))
-        
-        self.zerobox.connect_camera(cameras[portname])
-
-
     def exposed_trigger(self):
+
+        log.debug("trigger")
 
         self.capture_results = []
         self.capture_timer = []
@@ -146,11 +137,11 @@ class ZeroboxConnector(rpyc.Service):
         elif self.state == self.STATE_RUNNING:
 
             if "camera_on" in jobs:
-                for controller in self.usbController:
+                for controller in self.usbDirectController:
                     controller.turn_on(True)
 
             if "camera_off" in jobs:
-                for controller in self.usbController:
+                for controller in self.usbDirectController:
                     controller.turn_on(False)
 
             if "trigger" in jobs:
@@ -200,11 +191,18 @@ class ZeroboxConnector(rpyc.Service):
         self.session = {}
         self.session["start"]   = datetime.now()
         self.session["end"]     = self.session["start"] + timedelta(seconds=(self.config["interval"]["value"] * self.config["iterations"]["value"]))
+        self.session["next_invocation"] = None
         self.session["images"]  = []
 
         for key in self.config.keys():
             if "type" in self.config[key]:
                 self.session[key] = self.config[key]["value"]
+
+        self.exposed_detect_usbDirectController()
+        self.exposed_detect_cameras()
+
+        if self.session["persistentcamera"]:
+            self.exposed_connect_to_all()
 
         interval = self.session["interval"]*1000
         delay = 500
@@ -222,6 +220,8 @@ class ZeroboxConnector(rpyc.Service):
 
         self.state = self.STATE_RUNNING
 
+        log.debug("start session (interval: {})".format(interval))
+
     def exposed_stop(self):
         if self.scheduler.is_job_scheduled("camera_on"):
             self.scheduler.remove_job("camera_on")
@@ -234,20 +234,43 @@ class ZeroboxConnector(rpyc.Service):
 
         self.session["end"] = datetime.now()
 
+    def exposed_connect(self, portname):
+        cameras = self.zerobox.get_cameras()
+
+        if portname not in cameras:
+            raise Exception("no camera detected on port {}".format(portname))
+
+        self.zerobox.connect_camera(cameras[portname])
+
+    def exposed_connect_to_all(self):
+        cameras = self.zerobox.get_cameras()
+
+        for portname in cameras.keys():
+            self.exposed_connect(portname)
+
     def exposed_get_session(self):
         return self.session
 
     def exposed_get_status(self, force=False):
         data = {}
-        data["state"] = self.state
+        data["connector_state"] = self.state
         data["zerobox_status"] = self.zerobox.get_status(force_connection=force)
         return data
+
+    def exposed_get_next_invocation(self):
+        return self.scheduler.get_next_invocation("trigger")
+
+    def exposed_detect_cameras(self):
+        return self.zerobox.detect_cameras()
 
     def exposed_get_cameras(self):
         return self.zerobox.get_cameras()
 
-    def exposed_get_usb_controller(self):
+    def exposed_detect_usbDirectController(self):
         self.usbDirectController = UsbDirectController.find_all()
+        return self.usbDirectController
+
+    def exposed_get_usb_controller(self):
         return self.usbDirectController
 
     def exposed_get_total_space(self):

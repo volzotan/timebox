@@ -211,7 +211,7 @@ class Gui():
             self.clock = RTC()
             self.log.info("clock found")
         except Exception as e:
-            self.log.warn("no clock found")
+            self.log.warning("no clock found")
 
         self.data                            = {}
         self.data["cameras"]                 = {}
@@ -469,10 +469,10 @@ class Gui():
         cam0 = None
         cam1 = None
 
-        if len(self.data["cameras"].items()) > 0:
-            cam0 = list(self.data["cameras"].values())[0]
-        if len(self.data["cameras"].items()) > 1:
-            cam1 =  list(self.data["cameras"].values())[1]
+        if len(self.data["zerobox_status"]["cameras"].items()) > 0:
+            cam0 = list(self.data["zerobox_status"]["cameras"].values())[0]
+        if len(self.data["zerobox_status"]["cameras"].items()) > 1:
+            cam1 =  list(self.data["zerobox_status"]["cameras"].values())[1]
 
         if cam0 is not None:
             if cam0["state"] == CameraConnector.STATE_CONNECTED:
@@ -870,7 +870,7 @@ class Gui():
 
                 if self.zeroboxConnector is not None:
                     self.status = {**self.status, **self.zeroboxConnector.root.get_status()}
-                    if self.status["state"] == self.zeroboxConnector.root.STATE_RUNNING:
+                    if self.status["connector_state"] == self.zeroboxConnector.root.STATE_RUNNING:
                         self.session = self._get_session()
                         self.state = STATE_RUNNING
 
@@ -1099,6 +1099,10 @@ class Gui():
 
 
         elif self.state == STATE_RUNNING:
+            if "update_status" in triggered_jobs:
+                if self.zeroboxConnector is not None:
+                    self.data["next_invocation"] = obtain(self.zeroboxConnector.root.get_next_invocation())
+
             if self.invalidate:
                 with canvas(self.device) as draw:
                     self.draw_running(draw)
@@ -1148,8 +1152,6 @@ class Gui():
                     self.data["message"] = report
 
                     self.state = STATE_IDLE
-                    # display report
-                    # took 123 photos in 1h23min 
 
                 else:
                     raise Exception("illegal menu selected state: {}".format(self.menu_selected))

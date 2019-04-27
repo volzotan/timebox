@@ -71,6 +71,7 @@ class CameraConnector(object):
         self.image_directory = None
 
         self.exposure_mode = None
+        self.serialnumber = None
 
         self.state = self.STATE_INITIALIZED
 
@@ -89,9 +90,10 @@ class CameraConnector(object):
         gp.check_result(error)
 
         self.camera = camera
+        self.serialnumber = self._get_serialnumber()
 
         # create image (sub-)directory
-        self.image_directory = os.path.join(self.image_base_directory, "cam_" + self.get_serialnumber())
+        self.image_directory = os.path.join(self.image_base_directory, "cam_" + self.serialnumber)
         try:
             os.makedirs(self.image_directory)
         except FileExistsError as e:
@@ -211,7 +213,7 @@ class CameraConnector(object):
         return status
 
 
-    def get_serialnumber(self):
+    def _get_serialnumber(self):
         error, config = gp.gp_camera_get_config(self.camera)
         gp.check_result(error)
 
@@ -268,15 +270,15 @@ class CameraConnector(object):
 
     def list_config(self):
 
-        error, config = gp.gp_camera_get_config(self, camera)
+        error, config = gp.gp_camera_get_config(self, self.camera)
         gp.check_result(error)
 
-        error, config_list = gp.gp_camera_list_config(self, camera, context)
+        error, config_list = gp.gp_camera_list_config(self, self.camera, self.context)
         gp.check_result(error)
 
         for item in config_list:
             try:
-                print("{0:25s} | {1}".format(item[0], _get_config_value(config, str(item[0]))))
+                print("{0:25s} | {1}".format(item[0], self._get_config_value(config, str(item[0]))))
 
             except gp.GPhoto2Error as e:
                 print(e)
@@ -311,7 +313,6 @@ class Zerobox(object):
 
         self.status = {}
         self.status["cameras"] = {}
-        self.status["captures"] = []
 
         self.cameras = {}
         self.connectors = {}
@@ -612,7 +613,7 @@ class Zerobox(object):
             self.log.error("Could not connect camera: {}".format(e))
             self.status["cameras"][portname]["error"] = "unknown error"
             self.status["cameras"][portname]["state"] = None
-            raise Exception("Could not open camera connection. Unknown exception.")
+            raise Exception("Could not open camera connection. Unknown exception.", e)
 
         self.connectors[portname] = conn
 
@@ -646,8 +647,6 @@ class Zerobox(object):
         else:
             conn.set_exposure_compensation(self.config["EXPOSURE_1"])
             conn.capture_and_download(filename)
-
-            self.status["captures"].append([datetime.datetime.now()])
 
             trigger_second_exposure = True
             if self.config["SECONDEXPOSURE_THRESHOLD"] is not None:
