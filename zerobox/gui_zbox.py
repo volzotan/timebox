@@ -26,6 +26,11 @@ import PIL.ImageOps
 from zeroboxScheduler import Scheduler
 from devices import RTC
 from zerobox import CameraConnector
+from zeroboxConnector import ZeroboxConnector
+
+
+import threading
+
 
 COLOR0 = "black"
 COLOR1 = "white"
@@ -140,6 +145,8 @@ class Gui():
         self.usbController = None
         self.clock = None
 
+        self.loop_lock = threading.Lock()
+
 
     def _init_log(self):
 
@@ -184,7 +191,10 @@ class Gui():
         # Find a zeroboxConnector
 
         try:
-            self.zeroboxConnector = rpyc.connect("localhost", 18861)
+            self.zeroboxConnector = rpyc.connect("localhost", 18861, config={
+            "allow_public_attrs": True,
+            "allow_pickle": True
+        })
         except ConnectionRefusedError as e:
             self.log.error("zeroboxConnector not available")
 
@@ -203,7 +213,7 @@ class Gui():
         # setup the Scheduler
 
         self.scheduler = Scheduler()
-        self.scheduler.add_job("update_status", 500)
+        self.scheduler.add_job("update_status", 1000)
         self.scheduler.add_job("force_update_status", 2000)
 
         self.clock = None
@@ -218,14 +228,18 @@ class Gui():
         self.data["message"]                 = "..."
         self.data["total_space"]             = None
         self.data["free_space"]              = None
+        self.data["images_in_memory"]        = None
         self.data["last_image_brightness"]   = None
 
         if self.zeroboxConnector is not None:
-            self.data["total_space"] = self.zeroboxConnector.root.get_total_space()
-            self.data["free_space"] = self.zeroboxConnector.root.get_free_space()
+            self.data["total_space"] = obtain(self.zeroboxConnector.root.get_total_space())
+            self.data["free_space"] = obtain(self.zeroboxConnector.root.get_free_space())
+            self.data["images_in_memory"] = obtain(self.zeroboxConnector.root.get_images_in_memory())
 
 
     def button_callback(self, button):
+        self.log.info("key event")
+
         if not self.pyg:
             if button == BTN_L:
                 self.keyEvents.append("l")
@@ -244,10 +258,13 @@ class Gui():
             if button == BTN_3:
                 self.keyEvents.append("3")
 
+        self.loop()
+        self.log.error(threading.get_ident())
+
 
     def checkAndRestartOnFileChange(self):
         if getmtime(__file__) != self.own_mtime:
-            print("file changed. restart...")
+            self.log.info("file changed. restart...")
             self.cleanup()
             time.sleep(0.5)
             os.execv(sys.executable, ['python3'] + sys.argv)
@@ -259,10 +276,12 @@ class Gui():
 
     def invalidate(self):
         self.isInvalid = True
+        self.log.debug("IN_validate")
 
 
     def validate(self):
         self.isInvalid = False
+        self.log.debug("___validate")
 
 
     def _apertureToStr(self, value):
@@ -345,8 +364,6 @@ class Gui():
             else: 
                 inc = 10**(dec-pos-1)
 
-            print(inc) 
-
             if op > 0:
                 new = value + inc
                 if not "max" in item or new <= item["max"]:
@@ -398,12 +415,11 @@ class Gui():
                     controller.turn_on(False)
 
             for result in results:
-                print(result)
+                self.log.info(result)
 
 
     def _get_session(self):
-        data = self.zeroboxConnector.root.get_session()
-        return obtain(data)
+        return obtain(self.zeroboxConnector.root.get_session())
 
 
     def getKeyEvents(self):
@@ -761,7 +777,7 @@ class Gui():
 
             # self.text(draw, [50, 30], value%100)
         else:
-            print("unknown config item type: {}".format(item[type]))
+            self.log.error("unknown config item type: {}".format(item[type]))
 
 
     def draw_running_menu(self, draw, menu, selected):
@@ -803,18 +819,18 @@ class Gui():
                     #     # probably the camera is capturing right now. Do not try to get the status
                     #     force = False
 
-                status = self.zeroboxConnector.root.get_status(force=force)
+                status = obtain(self.zeroboxConnector.root.get_status(force=force))
                 if len(status) > 0:
                     self.data = {**self.data, **dict(status)}
                     # self.data["message"] = None
 
 
-                prev_trigger_results = self.zeroboxConnector.root.check_trigger_result()
-                if None in prev_trigger_results:
-                    # previous trigger has not finished yet
-                    pass
-                else:
-                    self._process_trigger_results(prev_trigger_results)
+                # prev_trigger_results = self.zeroboxConnector.root.check_trigger_result()
+                # if None in prev_trigger_results:
+                #     # previous trigger has not finished yet
+                #     pass
+                # else:
+                #     self._process_trigger_results(prev_trigger_results)
 
             else:
                 self.data["message"] = "connector not found"
@@ -828,6 +844,9 @@ class Gui():
         #         (self.time_end - self.time_start).seconds, short=True))
 
     def loop(self):
+
+        self.log.error(threading.get_ident())
+        self.loop_lock.acquire()
 
         triggered_jobs = self.scheduler.run_schedule()
         self.process_jobs(triggered_jobs)
@@ -851,7 +870,7 @@ class Gui():
                 screen["logo"] = logo
                 screen["devicename"] = "undefined"
                 now = datetime.now()
-                screen["version"] = now.strftime("%d.%m.%y")
+                screen["version"] = now.strftime("%d.%m.%y") # TODO: get last modified date of this file
 
                 screen["total_space"] = None
                 screen["free_space"] = None
@@ -869,8 +888,8 @@ class Gui():
                 self.state = STATE_MENU
 
                 if self.zeroboxConnector is not None:
-                    self.status = {**self.status, **self.zeroboxConnector.root.get_status()}
-                    if self.status["connector_state"] == self.zeroboxConnector.root.STATE_RUNNING:
+                    self.status = {**self.status, **obtain(self.zeroboxConnector.root.get_status())}
+                    if self.status["connector_state"] == ZeroboxConnector.STATE_RUNNING:
                         self.session = self._get_session()
                         self.state = STATE_RUNNING
 
@@ -881,8 +900,28 @@ class Gui():
 
             if "force_update_status" in triggered_jobs:
                 if self.zeroboxConnector is not None:
-                    self.cameras = self.zeroboxConnector.root.detect_cameras()
+                    self.cameras = obtain(self.zeroboxConnector.root.detect_cameras())
                     self.data["message"] = "cam: {} | controller: {}".format(len(self.cameras), len(self.usbController))
+
+            for e in self.getKeyEvents():
+                if "l" == e:
+                    self.menu_selected = (self.menu_selected - 1) % 3
+                    self.invalidate()
+                if "r" == e:
+                    self.menu_selected = (self.menu_selected + 1) % 3
+                    self.invalidate()
+                if "3" == e:
+                    if self.menu_selected == 0:
+                        self.state = STATE_CONFIG
+                    elif self.menu_selected == 1:
+                        self.state = STATE_PRE_RUN
+                    elif self.menu_selected == 2:
+                        self.state = STATE_SHUTDOWN
+                    else:
+                        raise Exception("illegal menu selected state: {}".format(self.menu_selected))
+                    self.menu_selected = 0
+                    self.invalidate()
+                    break
 
             if self.isInvalid:
 
@@ -903,7 +942,7 @@ class Gui():
 
                 menu["images_in_memory"] = None
                 if self.zeroboxConnector is not None:
-                    menu["images_in_memory"] = len(self.zeroboxConnector.root.get_images_in_memory())
+                    menu["images_in_memory"] = len(self.data["images_in_memory"])
 
                 with canvas(self.device) as draw:
                     self.draw_menu(draw, menu)
@@ -912,83 +951,69 @@ class Gui():
                 # device.hide()
                 # device.show()
 
-            k = self.getKeyEvents()
-            if "l" in k:
-                self.menu_selected = (self.menu_selected - 1) % 3
-                self.invalidate()
-            if "r" in k:
-                self.menu_selected = (self.menu_selected + 1) % 3
-                self.invalidate()
-            if "3" in k:
-                if self.menu_selected == 0:
-                    self.state = STATE_CONFIG
-                elif self.menu_selected == 1:
-                    self.state = STATE_PRE_RUN
-                elif self.menu_selected == 2:
-                    self.state = STATE_SHUTDOWN
-                else:
-                    raise Exception("illegal menu selected state: {}".format(self.menu_selected))
-
-                self.menu_selected = 0
-                self.invalidate()
-
-
         elif self.state == STATE_CONFIG:
-            # draw_dialog(draw, "abort capture?", ["no", "yes"])
 
-            # menu = menu_fix + ["-"] + _configToList(config)
-            menu = self._configToList(self.config)
-            menu.append("-")
-            menu.append("camera on")
-            menu.append("camera off")
-            menu.append("reset to default config")
+            keys = self.getKeyEvents()
+
+            menu = None
+            if keys is not None or self.isInvalid:
+
+                menu = self._configToList(self.config)
+                menu.append("-")
+                menu.append("camera on")
+                menu.append("camera off")
+                menu.append("reset to default config")
+
+            for e in keys:
+
+                if "u" == e:
+                    self.menu_selected = (self.menu_selected - 1) % len(menu)
+                    self.invalidate()
+                if "d" == e:
+                    self.menu_selected = (self.menu_selected + 1) % len(menu)
+                    self.invalidate()
+                if "3" == e:
+                    length_configitems = len(self._configToList(self.config))
+                    if self.menu_selected < length_configitems:
+                        self.selectedConfigItem = self.config[self._configToList(self.config)[self.menu_selected]["name"]]
+                        self.configItemValue = self.selectedConfigItem["value"]
+                        self.configItemPos = 0
+                        self.state = STATE_CONFIG_ITEM
+                    else:
+                        option = self.menu_selected - length_configitems
+                        if option == 0:
+                            pass # separator
+                        elif option == 1:
+                            # camera on
+                            for c in self.usbController:
+                                c.turn_on(True)
+                        elif option == 2:
+                            # camera off
+                            for c in self.usbController:
+                                c.turn_on(False)
+                        elif option == 3:
+                            # reset to default config
+                            with open(CONFIG_FILE_DEFAULT, "r") as stream:
+                                try:
+                                    self.config = yaml.load(stream)
+                                except yaml.YAMLError as exc:
+                                    print(exc)
+                            self._write_config_to_file(self.config)
+                        else:
+                            raise Exception("illegal menu option: {}".format(option))
+                    self.invalidate()
+                    break
+                if "1" == e:
+                    self.state = STATE_MENU
+                    self.menu_selected = 0
+                    self.invalidate()
+                    break
 
             if self.isInvalid:
+
                 with canvas(self.device) as draw:
                     self.draw_config(draw, menu, self.menu_selected)
                 self.validate()
-
-            k = self.getKeyEvents()
-            if "u" in k:
-                self.menu_selected = (self.menu_selected - 1) % len(menu)
-                self.invalidate()
-            if "d" in k:
-                self.menu_selected = (self.menu_selected + 1) % len(menu)
-                self.invalidate()
-            if "3" in k:
-                length_configitems = len(self._configToList(self.config))
-                if self.menu_selected < length_configitems:
-                    self.selectedConfigItem = self.config[self._configToList(self.config)[self.menu_selected]["name"]]
-                    self.configItemValue = self.selectedConfigItem["value"]
-                    self.configItemPos = 0
-                    self.state = STATE_CONFIG_ITEM
-                    self.invalidate()
-                else:
-                    option = self.menu_selected - length_configitems
-                    if option == 0:
-                        pass # separator
-                    elif option == 1:
-                        # camera on
-                        for c in self.usbController:
-                            c.turn_on(True)
-                    elif option == 2:
-                        # camera off
-                        for c in self.usbController:
-                            c.turn_on(False)
-                    elif option == 3:
-                        # reset to default config
-                        with open(CONFIG_FILE_DEFAULT, "r") as stream:
-                            try:
-                                self.config = yaml.load(stream)
-                            except yaml.YAMLError as exc:
-                                print(exc)
-                        self._write_config_to_file(self.config)
-                    else:
-                        raise Exception("illegal menu option: {}".format(option))
-            if "1" in k:
-                self.state = STATE_MENU
-                self.menu_selected = 0
-                self.invalidate()
 
 
         elif self.state == STATE_CONFIG_ITEM:
@@ -1182,12 +1207,19 @@ class Gui():
         else:
             raise Exception("illegal state: {}".format(self.state))
 
-        self.checkAndRestartOnFileChange()
+        # self.checkAndRestartOnFileChange()
+
+        self.loop_lock.release()
 
 
 if __name__ == "__main__":
     g = Gui()
     g.init()
+
+    SLEEP_DURATION = 0.1
+
+    if g.pyg is not None:
+        SLEEP_DURATION = 0.1
     while True:
         g.loop()
-        time.sleep(0.1)
+        time.sleep(SLEEP_DURATION)

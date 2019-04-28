@@ -148,6 +148,12 @@ class ZeroboxConnector(rpyc.Service):
         #     self.zerobox.trigger_camera(portname)
 
 
+    def _is_trigger_active(self):
+        if len(self.capture_results) > 0:
+            return True
+        else:
+            return False
+
     def exposed_check_trigger_result(self):
 
         results = []
@@ -157,7 +163,8 @@ class ZeroboxConnector(rpyc.Service):
                 # r = result.get() # get blocks
                 r = result.get(timeout=0.1) #s
                 results.append(r)
-                print("took {0:.2f}ms".format((datetime.now() - t).microseconds / 1000))
+                diff = (datetime.now() - t)
+                self.log.info("trigger took {}".format(diff.total_seconds()))
             except multiprocessing.context.TimeoutError as e:
                 #log.warn("timeout while waiting for result")
                 results.append(None)
@@ -185,22 +192,40 @@ class ZeroboxConnector(rpyc.Service):
                     controller.turn_on(True)
 
             if "camera_off" in jobs:
+
+                # triggering active?
+
                 for controller in self.usbDirectController:
                     controller.turn_on(False)
 
             if "trigger" in jobs:
-                if not self.session["persistentcamera"]:
-                    self.exposed_connect_to_all()
+                if not self._is_trigger_active():
+                    if not self.session["persistentcamera"]:
+                        self.exposed_connect_to_all()
 
-                self.exposed_trigger()
+                    self.exposed_trigger()
+                else:
+                    self.log.warning("previous trigger still active! ignoring trigger event")
+
+            # check finished triggers
 
             results = self.exposed_check_trigger_result()
 
             if len(results) > 0 and None not in results:
-                print(results)
+                self.session["images"].append(results)
+                self.capture_results = []
+                self.capture_timer = []
 
-                # TODO
-                # if done?
+                # camera off?
+                # TODO: ignores post_wait
+                if not self.session["persistentcamera"]:
+                    for controller in self.usbDirectController:
+                        controller.turn_on(False)
+
+                # session done?
+                if len(self.session["images"]) >= self.session["iterations"]:
+                    self.log.info("image count equals iterations. ending session.")
+                    self.exposed_stop()
 
         else:
             self.log.warning("illegal state: {}".format(self.state))
@@ -272,6 +297,9 @@ class ZeroboxConnector(rpyc.Service):
         self.log.info(FORMAT.format("usbDirectController", len(self.usbDirectController)))
 
     def exposed_stop(self):
+
+        self.log.info("session stop")
+
         if self.scheduler.is_job_scheduled("camera_on"):
             self.scheduler.remove_job("camera_on")
 
@@ -282,6 +310,12 @@ class ZeroboxConnector(rpyc.Service):
             self.scheduler.remove_job("camera_off")
 
         self.session["end"] = datetime.now()
+        self.state = self.STATE_IDLE
+
+        print("images:")
+        print(self.session["images"])
+
+
 
     def exposed_connect(self, pname):
         portname = obtain(pname)

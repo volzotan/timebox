@@ -29,9 +29,9 @@ CONFIG = {
     "IMAGE_DIR"                 : "RAW",
     "FILE_EXTENSION"            : ".arw",
 
-    "SERIAL_PORT"               : "/dev/ttyAMA0",
-    "SERIAL_BAUDRATE"           : 9600,
-    "SERIAL_TIMEOUT"            : 1, # in sec
+    # "SERIAL_PORT"               : "/dev/ttyAMA0",
+    # "SERIAL_BAUDRATE"           : 9600,
+    # "SERIAL_TIMEOUT"            : 1, # in sec
 
     "AUTOFOCUS_ENABLED"         : False,
     "AUTOFOCUS_DURATION"        : 2,
