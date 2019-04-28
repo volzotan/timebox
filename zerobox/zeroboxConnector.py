@@ -6,10 +6,15 @@ from devices import UsbDirectController
 
 import rpyc
 from rpyc.utils.server import ThreadedServer
+from rpyc.utils.classic import obtain
 
-import logging as log
+import logging
+import traceback
+
+
 from datetime import datetime, timedelta
 import time
+import os
 import sys
 import yaml
 
@@ -62,6 +67,30 @@ class ZeroboxConnector(rpyc.Service):
         except FileNotFoundError as e:
             print("no config file found")
 
+        # init logging
+        # create logger
+        self.log = logging.getLogger()
+        self.log.setLevel(logging.DEBUG)
+
+        # create formatter
+        formatter = logging.Formatter(self.config["log"]["format"])
+
+        # console handler and set level to debug
+        # consoleHandler = logging.StreamHandler()
+        # consoleHandler.setLevel(self.config["log"]["level"])
+        # consoleHandler.setFormatter(formatter)
+        # self.log.addHandler(consoleHandler)
+
+        # fileHandlerDebug = logging.FileHandler(os.path.join(".", "gui.log"), mode="a",
+        #                                        encoding="UTF-8")  # TODO: do not use current dir for logging
+        # fileHandlerDebug.setLevel(logging.DEBUG)
+        # fileHandlerDebug.setFormatter(formatter)
+        # self.log.addHandler(fileHandlerDebug)
+
+        # print config
+
+        self.exposed_print_config()
+
 
     def close(self):
         if self.pool is not None:
@@ -70,6 +99,21 @@ class ZeroboxConnector(rpyc.Service):
 
         if self.zerobox is not None:
             self.zerobox.close()
+
+    def exposed_print_config(self):
+
+        FORMAT = "  {:<24}: {}"
+
+        self.log.debug(" ")
+        self.log.debug("CONFIGURATION CONNECTOR:")
+
+        for key, value in self.config.items():
+            self.log.debug(FORMAT.format(key, self.config[key]))
+
+        self.log.debug(" ")
+
+        if self.zerobox is not None:
+            self.zerobox.print_config()
 
 
     def on_connect(self, conn):
@@ -86,7 +130,7 @@ class ZeroboxConnector(rpyc.Service):
 
     def exposed_trigger(self):
 
-        log.debug("trigger")
+        self.log.debug("trigger")
 
         self.capture_results = []
         self.capture_timer = []
@@ -145,6 +189,9 @@ class ZeroboxConnector(rpyc.Service):
                     controller.turn_on(False)
 
             if "trigger" in jobs:
+                if not self.session["persistentcamera"]:
+                    self.exposed_connect_to_all()
+
                 self.exposed_trigger()
 
             results = self.exposed_check_trigger_result()
@@ -156,14 +203,9 @@ class ZeroboxConnector(rpyc.Service):
                 # if done?
 
         else:
-            log.warning("illegal state: {}".format(self.state))
+            self.log.warning("illegal state: {}".format(self.state))
 
-    def exposed_load_config(self, connector_config):
-        config_copy = {}
-        for key in connector_config:
-            config_copy[key] = connector_config[key]
-
-        self.config = {**self.config, **config_copy}
+    def _load_zerobox_config(self):
 
         zeroboxConfig = {}
         zeroboxConfig["AUTOFOCUS_ENABLED"] = self.config["autofocus"]["value"]
@@ -177,11 +219,12 @@ class ZeroboxConnector(rpyc.Service):
 
         self.zerobox.load_config(zeroboxConfig)
 
-    # def exposed_load_zerobox_config(self, config):
-    #     config_copy = {}
-    #     for key in config:
-    #         config_copy[key] = config[key]
-    #     return self.zerobox.load_config(config_copy)
+    def exposed_load_config(self, connector_config):
+        self.config = {**self.config, **obtain(connector_config)}
+        self._load_zerobox_config()
+
+    def exposed_get_config(self):
+        return self.config
 
     def findUsbController(self):
         pass
@@ -198,6 +241,7 @@ class ZeroboxConnector(rpyc.Service):
             if "type" in self.config[key]:
                 self.session[key] = self.config[key]["value"]
 
+        self._load_zerobox_config()
         self.exposed_detect_usbDirectController()
         self.exposed_detect_cameras()
 
@@ -220,7 +264,12 @@ class ZeroboxConnector(rpyc.Service):
 
         self.state = self.STATE_RUNNING
 
-        log.debug("start session (interval: {})".format(interval))
+        FORMAT = "  {:<24}: {}"
+
+        self.log.info("start session")
+        self.log.info(FORMAT.format("interval", interval))
+        self.log.info(FORMAT.format("cameras", len(self.zerobox.get_cameras())))
+        self.log.info(FORMAT.format("usbDirectController", len(self.usbDirectController)))
 
     def exposed_stop(self):
         if self.scheduler.is_job_scheduled("camera_on"):
@@ -234,7 +283,8 @@ class ZeroboxConnector(rpyc.Service):
 
         self.session["end"] = datetime.now()
 
-    def exposed_connect(self, portname):
+    def exposed_connect(self, pname):
+        portname = obtain(pname)
         cameras = self.zerobox.get_cameras()
 
         if portname not in cameras:
@@ -324,12 +374,13 @@ class Ztimer():
 
 if __name__ == "__main__":
 
-    timer = Ztimer(0.1)
+    timer = Ztimer(0.5)
     timer_thread = Thread(target = timer.run)
     timer_thread.start()
 
     try:
         # allow_public_attrs is necessary to access data in passed dicts
+        # allow_pickle is required for obtain() to avoid netref proxy objects
         t = ThreadedServer(ZeroboxConnector(), port=18861, protocol_config={
             "allow_public_attrs": True,
             "allow_pickle": True
@@ -337,8 +388,4 @@ if __name__ == "__main__":
         t.start()
     except Exception as e:
         print(e)
-
-    # c = ZeroboxConnector()
-    # c.zerobox.connectors = {"narf": "barf"}
-    # c.exposed_trigger()
-    # c.exposed_check_trigger_result()
+        traceback.print_exc()

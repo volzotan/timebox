@@ -370,7 +370,7 @@ class Zerobox(object):
         # self.config = {**self.config, **config}
 
         # no simple merging of config dicts since 
-        # we want to know if we're accidentaly adding 
+        # we want to know if we're accidentally adding
         # a second and not overwriting a default config item
 
         for key, value in config.items():
@@ -417,7 +417,7 @@ class Zerobox(object):
         FORMAT = "  {:<24}: {}"
 
         self.log.debug(" ")
-        self.log.debug("CONFIGURATION:")
+        self.log.debug("CONFIGURATION ZEROBOX:")
 
         for key, value in self.config.items():
             self.log.debug(FORMAT.format(key, self.config[key]))

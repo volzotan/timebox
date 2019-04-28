@@ -1,33 +1,19 @@
 import rpyc
-
+from rpyc.utils.classic import obtain
 import time
-import multiprocessing
 
 c = rpyc.connect("localhost", 18861)
-# print(c.root.detect())
-# print(c.root.get_status())
-# print(c.root.connect())
-# print(c.root.get_status())
-# print(c.root.connect())
-# print(c.root.disconnect_cameras())
-# print(c.root.get_status())
 
-# print(c.root.detect_cameras())
-# cameras = c.root.get_cameras()
-# for cam in cameras:
-#     c.root.connect(cam)
-# prev_trigger_results = c.root.check_trigger_result()
-# print("prev: " + str(prev_trigger_results))
-# c.root.trigger()
-# print("timer: " + str(c.root.capture_timer))
-# for i in range(0, 15):
-#     print(c.root.check_trigger_result())
-#     time.sleep(0.25)
+try:
+    c.root.start()
 
-# c.root.disconnect_all_cameras()
+    config = obtain(c.root.get_config())
+    config["se_use_threshold"]["value"] = False
+    c.root.load_config(config)
 
+    time.sleep(2)
 
-c.root.start()
-print(c.root.get_status())
-time.sleep(3)
-c.root.stop()
+except Exception as e:
+    print(e)
+finally:
+    c.root.stop()
