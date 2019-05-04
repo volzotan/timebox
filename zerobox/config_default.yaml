@@ -12,18 +12,20 @@ iterations:
     value: 100 
 
 
-persistentcamera:
+intervalcamera:
     type: boolean
     value: True
 
-pc_pre_wait:
+ic_pre_wait:
     type: float
+    parent: "intervalcamera"
     min: 0
     max: 30
     value: 5
 
-pc_post_wait:
+ic_post_wait:
     type: float
+    parent: "intervalcamera"
     min: 0
     max: 30
     value: 5
@@ -31,26 +33,30 @@ pc_post_wait:
 
 secondexposure:
     type: boolean
-    value: True
+    value: False
 
 se_use_threshold:
     type: boolean
+    parent: "secondexposure"
     value: True
 
 se_threshold:
     type: float
+    parent: "secondexposure"
     min: 0
     max: 20
     value: 10.3
 
 se_expcompensation_1:
     type: float
+    parent: "secondexposure"
     min: -10
     max: 10
     value: 1
 
 se_expcompensation_2:
     type: float
+    parent: "secondexposure"
     min: -10
     max: 10
     value: -5

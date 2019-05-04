@@ -3,6 +3,7 @@ import os
 import sys
 import subprocess
 import datetime
+import time
 import math
 import shutil
 import numpy as np
@@ -312,10 +313,10 @@ class Zerobox(object):
         self.config = CONFIG
 
         self.status = {}
-        self.status["cameras"] = {}
+        self.status["cameras"] = {} # info about connected cameras
 
-        self.cameras = {}
-        self.connectors = {}
+        self.cameras = {} # detected cameras
+        self.connectors = {} # connected cameras
 
         # expand directories
 
@@ -414,7 +415,7 @@ class Zerobox(object):
 
     def print_config(self):
 
-        FORMAT = "  {:<24}: {}"
+        FORMAT = "  {:<26}: {}"
 
         self.log.debug(" ")
         self.log.debug("CONFIGURATION ZEROBOX:")

@@ -82,7 +82,11 @@ class Gui():
             self.platform = PLATFORM_OSX
 
         if self.platform == PLATFORM_PI:
-            self.device = sh1106(spi(), rotate=2)
+            try:
+                self.device = sh1106(spi(), rotate=2)
+            except luma.core.error.DeviceNotFoundError as e:
+                print("SPI not enabled!")
+                raise e
 
             import RPi.GPIO as GPIO
 
@@ -259,7 +263,6 @@ class Gui():
                 self.keyEvents.append("3")
 
         self.loop()
-        self.log.error(threading.get_ident())
 
 
     def checkAndRestartOnFileChange(self):
@@ -410,7 +413,7 @@ class Gui():
             self.images_taken += 1
 
             # switch off all cameras after capture
-            if self.config["persistentcamera"]["value"]:
+            if self.config["intervalcamera"]["value"]:
                 for controller in self.usbController:
                     controller.turn_on(False)
 
@@ -845,7 +848,6 @@ class Gui():
 
     def loop(self):
 
-        self.log.error(threading.get_ident())
         self.loop_lock.acquire()
 
         triggered_jobs = self.scheduler.run_schedule()
@@ -1101,7 +1103,7 @@ class Gui():
             # self.images_taken = 0
             #
             # interval = self.config["interval"]["value"]*1000
-            # if self.config["persistentcamera"]["value"]:
+            # if self.config["intervalcamera"]["value"]:
             #     self.scheduler.add_job("trigger", interval)
             # else:
             #     self.scheduler.add_job("camera_on", interval)

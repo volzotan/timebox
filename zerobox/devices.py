@@ -3,6 +3,7 @@ import serial
 from datetime import datetime
 import time
 import os
+import subprocess
 import re
 import serial.tools.list_ports
 import logging as log
@@ -12,7 +13,78 @@ try:
 except ImportError as e:
     print("importing smbus failed. Not a raspberry pi platform, i2c will not be available.")
 
-class UsbDirectController(object):
+
+class UsbController(object):
+
+    def __init__(self):
+        pass
+
+    def turn_on(self, turn_on):
+        pass
+
+    @staticmethod
+    def find_all():
+        controller = []
+
+        controller = controller + UsbHubController.find_all()
+        controller = controller + UsbDirectController.find_all()
+
+        return controller
+
+
+class UsbHubController(UsbController):
+
+    CMD = "uhubctl -l {} -a {} -p {}"
+
+    def __init__(self, port):
+        self.port = port
+
+    @staticmethod
+    def find_all():
+        controller = []
+
+        hubs = []
+        ports = []
+
+        hub = None
+        
+        try: 
+            output = subprocess.check_output(["uhubctl"])
+            for line in str(output).split("\\n"):
+                # print("{}: {}".format("-", line))
+
+                if line.startswith(" "):
+                    items = line.split(" ")
+                    if len(items) >= 5:
+                        if "Sony" in line:
+                            hubs.append(hub)
+                            ports.append(items[3][:-1])
+                else:
+                    if len(line) > 1:
+                        hub = line.split(" ")[4]
+                    else:
+                        hub = None
+        except subprocess.CalledProcessError as e:
+            log.error(e)
+
+        for i in range(len(hubs)):
+            # print("{} : {}".format(hubs[i], ports[i]))
+            controller.append(UsbHubController((hubs[i], ports[i])))
+
+        return controller
+
+    def turn_on(self, turn_on):
+        param = "off"
+        if turn_on == True:
+            param = "on"
+
+        subprocess.call(self.CMD.format(self.port[0], param, self.port[1]), shell=True)
+
+    def __repr__(self):
+        return "UsbHubController at {}:{}".format(self.port[0], self.port[1])
+
+
+class UsbDirectController(UsbController):
 
     CMD_STATUS  = "status"
     CMD_ON      = "on"
@@ -28,9 +100,13 @@ class UsbDirectController(object):
     # def close(self):
     #     pass
 
+    def __repr__(self):
+        return "UsbDirectController at {}".format(self.port)
+
     @staticmethod
     def find_all():
         controller = []
+        
         all_ports = list(serial.tools.list_ports.comports())
         for port in all_ports:
             if "arduino" in port[1].lower():
@@ -42,11 +118,6 @@ class UsbDirectController(object):
                     pass
 
         return controller
-
-
-    def __repr__(self):
-        return "UsbDirectController at {}".format(self.port)
-
 
     def turn_on(self, turn_on):
         try:
