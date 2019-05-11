@@ -7,7 +7,7 @@ from luma.core.interface.serial import i2c, spi
 from luma.emulator.device import pygame, capture
 
 from luma.core.render import canvas
-from luma.oled.device import sh1106
+from luma.oled.device import sh1106, ssd1306
 
 import os
 from os.path import getmtime
@@ -28,9 +28,7 @@ from devices import RTC
 from zerobox import CameraConnector
 from zeroboxConnector import ZeroboxConnector
 
-
 import threading
-
 
 COLOR0 = "black"
 COLOR1 = "white"
@@ -38,14 +36,26 @@ COLOR1 = "white"
 CONFIG_FILE_DEFAULT = "config_default.yaml"
 CONFIG_FILE_USER = "config.yaml"
 
-BTN_1 = 21
-BTN_2 = 20
-BTN_3 = 16
-BTN_L = 5
-BTN_R = 26
-BTN_U = 6
-BTN_D = 19
-BTN_C = 13
+ADAFRUIT_HAT_BUTTONS = {
+     5: "1",
+     6: "3",
+    27: "L",
+    23: "R",
+    17: "U",
+    22: "D",
+     4: "C"
+}
+
+WAVESHARE_HAT_BUTTONS = {
+    21: "1",
+    20: "2",
+    16: "3",
+     5: "L",
+    26: "R",
+     6: "U",
+    19: "D",
+    13: "C"
+}
 
 STATE_INIT          = 0
 STATE_LOGO          = 1
@@ -72,6 +82,7 @@ class Gui():
 
         self.keyEvents = []
 
+        self.keyMapping = None
         self.device = None
         self.pyg = None
         self.platform = PLATFORM_UNKNOWN
@@ -82,35 +93,52 @@ class Gui():
             self.platform = PLATFORM_OSX
 
         if self.platform == PLATFORM_PI:
+
+            # if the Adafruit OLED bonnet is connected,
+            # the SSD1306 display will be available 
+            # on i2c port 1 at address 3C
+            
+            # if the Waveshare OLED HAT is connected,
+            # the SH1106 display will be available via SPI
+
+            adafruit_bonnet = False
+
+            import smbus
+            bus = smbus.SMBus(1) # 1 indicates /dev/i2c-1
+
             try:
-                self.device = sh1106(spi(), rotate=2)
-            except luma.core.error.DeviceNotFoundError as e:
-                print("SPI not enabled!")
-                raise e
+                bus.read_byte(0x3C)
+                adafruit_bonnet = True
+            except: 
+                adafruit_bonnet = False    
+
+            if adafruit_bonnet:
+                try:
+                    self.device = ssd1306(i2c(), rotate=2)
+                    self.keyMapping = ADAFRUIT_HAT_BUTTONS
+                except luma.core.error.DeviceNotFoundError as e:
+                    print("I2C not enabled!")
+                    raise e
+            else:
+                try:
+                    self.device = sh1106(spi(), rotate=2)
+                    self.keyMapping = WAVESHARE_HAT_BUTTONS
+                except luma.core.error.DeviceNotFoundError as e:
+                    print("SPI not enabled!")
+                    raise e
+
 
             import RPi.GPIO as GPIO
 
             GPIO.setmode(GPIO.BCM)
 
-            GPIO.setup(BTN_1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(BTN_2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(BTN_3, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(BTN_L, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(BTN_R, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(BTN_U, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(BTN_D, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(BTN_C, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            for button in self.keyMapping.keys():
+                GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
             time.sleep(0.3)
 
-            GPIO.add_event_detect(BTN_1, GPIO.RISING, callback=self.button_callback)
-            GPIO.add_event_detect(BTN_2, GPIO.RISING, callback=self.button_callback)
-            GPIO.add_event_detect(BTN_3, GPIO.RISING, callback=self.button_callback)
-            GPIO.add_event_detect(BTN_L, GPIO.RISING, callback=self.button_callback)
-            GPIO.add_event_detect(BTN_R, GPIO.RISING, callback=self.button_callback)
-            GPIO.add_event_detect(BTN_U, GPIO.RISING, callback=self.button_callback)
-            GPIO.add_event_detect(BTN_D, GPIO.RISING, callback=self.button_callback)
-            GPIO.add_event_detect(BTN_C, GPIO.RISING, callback=self.button_callback)
+            for button in self.keyMapping.keys():
+                GPIO.add_event_detect(button, GPIO.RISING, callback=self.button_callback)
 
         else:
             self.device = pygame(width=128, height=64, mode="1", transform="scale2x", scale=2)
@@ -245,22 +273,10 @@ class Gui():
         self.log.info("key event")
 
         if not self.pyg:
-            if button == BTN_L:
-                self.keyEvents.append("l")
-            if button == BTN_R:
-                self.keyEvents.append("r")
-            if button == BTN_U:
-                self.keyEvents.append("u")
-            if button == BTN_D:
-                self.keyEvents.append("d")
-            if button == BTN_C:
-                self.keyEvents.append("c")
-            if button == BTN_1:
-                self.keyEvents.append("1")
-            if button == BTN_2:
-                self.keyEvents.append("2")
-            if button == BTN_3:
-                self.keyEvents.append("3")
+            if button in self.keyMapping:
+                self.keyEvents.append(self.keyMapping[button])
+            else:
+                self.log.warning("key not found in keyMapping: {}".format(button))
 
         self.loop()
 
@@ -434,15 +450,15 @@ class Gui():
             for event in events:
                 if event.type == self.pyg.KEYDOWN:
                     if event.key == self.pyg.K_LEFT:
-                        keys.append("l")
+                        keys.append("L")
                     if event.key == self.pyg.K_RIGHT:
-                        keys.append("r")
+                        keys.append("R")
                     if event.key == self.pyg.K_UP:
-                        keys.append("u")
+                        keys.append("U")
                     if event.key == self.pyg.K_DOWN:
-                        keys.append("d")
+                        keys.append("D")
                     if event.key == self.pyg.K_RETURN:
-                        keys.append("c")
+                        keys.append("C")
                     if event.key == self.pyg.K_q:
                         keys.append("1")
                     if event.key == self.pyg.K_a:
@@ -906,10 +922,10 @@ class Gui():
                     self.data["message"] = "cam: {} | controller: {}".format(len(self.cameras), len(self.usbController))
 
             for e in self.getKeyEvents():
-                if "l" == e:
+                if "L" == e:
                     self.menu_selected = (self.menu_selected - 1) % 3
                     self.invalidate()
-                if "r" == e:
+                if "R" == e:
                     self.menu_selected = (self.menu_selected + 1) % 3
                     self.invalidate()
                 if "3" == e:
@@ -1027,13 +1043,13 @@ class Gui():
             item = self.selectedConfigItem
 
             k = self.getKeyEvents()
-            if "u" in k:
+            if "U" in k:
                 self.configItemValue = self._changeConfigItem(self.selectedConfigItem, self.configItemValue, self.configItemPos, 1)
                 self.invalidate()
-            if "d" in k:
+            if "D" in k:
                 self.configItemValue = self._changeConfigItem(self.selectedConfigItem, self.configItemValue, self.configItemPos, -1)
                 self.invalidate()
-            if "l" in k:
+            if "L" in k:
                 if self.configItemPos > 0:
                     self.configItemPos -= 1
                     if item["type"] == "float":
@@ -1044,7 +1060,7 @@ class Gui():
                         self.configItemPos -= 1
                         if self.configItemPos == 2 or self.configItemPos == 5:
                             self.configItemPos -= 1
-            if "r" in k:
+            if "R" in k:
                 if item["type"] == "int":
                     print(self.configItemPos)
                     if self.configItemPos < len(str(int(abs(self.configItemValue))))-1:
@@ -1203,6 +1219,8 @@ class Gui():
             with canvas(self.device) as draw:
                 self.draw_info(draw, "shutdown ...")
             time.sleep(1.0)
+            self.device.cleanup() # shut off the display, won't happen by itself for SSD1306
+            time.sleep(0.5)
             subprocess.run(["sudo", "shutdown", "now"])
 
 

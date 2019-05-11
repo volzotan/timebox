@@ -209,6 +209,9 @@ class RTC():
         self._bus = smbus.SMBus(twi)
         self._addr = addr
 
+        # check if device is responding
+        self.read_temperature()
+
 
     def _read_seconds(self):
         return _bcd_to_int(self._bus.read_byte_data(self._addr, self.DS_REG_SECONDS))
