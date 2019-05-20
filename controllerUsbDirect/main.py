@@ -28,13 +28,13 @@ CLEAR = (0, 0, 0)
 
 class UsbController(object):
 
-    TIMER_DLOAD_INT = 0.500
+    TIMER_DLOAD_INT = 1.000
     TIMER_DLOAD_DUR = 0.010
 
     input_buffer = ""
 
     # timer
-    timer_dload = None
+    timer_dload = None # time.monotonic() # dummy load on by default
 
     i2c = busio.I2C(board.SCL, board.SDA)
     ina219 = adafruit_ina219.INA219(i2c)
@@ -59,7 +59,7 @@ class UsbController(object):
 
     def __init__(self):     
 
-        print("INIT")
+        # print("INIT")
 
         # LED status
         self.pixel.fill(GREEN)
@@ -74,11 +74,11 @@ class UsbController(object):
 
         if self.timer_dload is not None and now - self.timer_dload > 0:
             if self.dummy_load.value:
-                print("<")
+                # print("< {}".format(now - self.timer_dload))
                 self.dummy_load.value = False
                 self.timer_dload = self.timer_dload - self.TIMER_DLOAD_DUR + self.TIMER_DLOAD_INT
             else:
-                print(">")
+                # print(">")
                 self.dummy_load.value = True
                 self.timer_dload = self.timer_dload + self.TIMER_DLOAD_DUR
 
@@ -168,7 +168,7 @@ class UsbController(object):
             self.communicate()
             self.event()
             self.read_current()
-            time.sleep(0.1)
+            time.sleep(0.010)
 
 
 if __name__ == "__main__":
