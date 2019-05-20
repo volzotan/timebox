@@ -64,8 +64,11 @@ class UsbHubController(UsbController):
                         hub = line.split(" ")[4]
                     else:
                         hub = None
-        except subprocess.CalledProcessError as e:
-            log.error(e)
+        except FileNotFoundError as fnfe:
+            return []
+        except subprocess.CalledProcessError as cpe:
+            # log.error(cpe)
+            return []
 
         for i in range(len(hubs)):
             # print("{} : {}".format(hubs[i], ports[i]))

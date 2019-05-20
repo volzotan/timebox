@@ -246,8 +246,10 @@ class ZeroboxConnector(rpyc.Service):
                         self.exposed_trigger()
                     except Exception as e:
                         self.log.error("trigger failed: ", e)
+                        self.session["errors"].append(e)
                 else:
                     self.log.warning("previous trigger still active! ignoring trigger event")
+                    self.session["errors"].append(Exception("prev trigger active"))
 
             # check finished triggers
 
@@ -303,6 +305,7 @@ class ZeroboxConnector(rpyc.Service):
         self.session["end"]     = self.session["start"] + timedelta(seconds=(self.config["interval"]["value"] * self.config["iterations"]["value"]))
         self.session["next_invocation"] = None
         self.session["images"]  = []
+        self.session["errors"]  = []
 
         for key in self.config.keys():
             if "type" in self.config[key]:

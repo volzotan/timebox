@@ -6,6 +6,7 @@ import psutil
 from luma.core.interface.serial import i2c, spi
 from luma.emulator.device import pygame, capture
 
+from luma.core.error import DeviceNotFoundError
 from luma.core.render import canvas
 from luma.oled.device import sh1106, ssd1306
 
@@ -39,10 +40,10 @@ CONFIG_FILE_USER = "config.yaml"
 ADAFRUIT_HAT_BUTTONS = {
      5: "1",
      6: "3",
-    27: "L",
-    23: "R",
-    17: "U",
-    22: "D",
+    27: "R",
+    23: "L",
+    17: "D",
+    22: "U",
      4: "C"
 }
 
@@ -87,6 +88,8 @@ class Gui():
         self.pyg = None
         self.platform = PLATFORM_UNKNOWN
 
+        self.display_on = True
+
         if os.uname().nodename == "raspberrypi":
             self.platform = PLATFORM_PI
         else:
@@ -116,14 +119,15 @@ class Gui():
                 try:
                     self.device = ssd1306(i2c(), rotate=2)
                     self.keyMapping = ADAFRUIT_HAT_BUTTONS
-                except luma.core.error.DeviceNotFoundError as e:
+                    self.device.contrast(100)
+                except DeviceNotFoundError as e:
                     print("I2C not enabled!")
                     raise e
             else:
                 try:
                     self.device = sh1106(spi(), rotate=2)
                     self.keyMapping = WAVESHARE_HAT_BUTTONS
-                except luma.core.error.DeviceNotFoundError as e:
+                except DeviceNotFoundError as e:
                     print("SPI not enabled!")
                     raise e
 
@@ -295,12 +299,12 @@ class Gui():
 
     def invalidate(self):
         self.isInvalid = True
-        self.log.debug("IN_validate")
+        # self.log.debug("IN_validate")
 
 
     def validate(self):
         self.isInvalid = False
-        self.log.debug("___validate")
+        # self.log.debug("___validate")
 
 
     def _apertureToStr(self, value):
@@ -600,6 +604,10 @@ class Gui():
         self.text(draw, [45+5, start+16], "FR.SPC")
         self.text(draw, [127,  start+16], "{0:2.2f}GB".format(12.345), rightalign=True)
 
+        # ERROR
+
+        if self.session["errors"] is not None and len(self.session["errors"]) > 0:
+            self.text(draw, [3, start+26], "ERRORS: {}:{}".format(len(self.session["errors"]), str(self.session["errors"][-1])[:19]))
 
         # draw.rectangle([(64, 0), (127, 8)], fill=COLOR0)
         # self.text(draw, [90, -1], "{0:2.2f}GB".format(12.345))
@@ -843,6 +851,8 @@ class Gui():
                     self.data = {**self.data, **dict(status)}
                     # self.data["message"] = None
 
+                self.session = self._get_session()
+
 
                 # prev_trigger_results = self.zeroboxConnector.root.check_trigger_result()
                 # if None in prev_trigger_results:
@@ -980,14 +990,23 @@ class Gui():
                 menu.append("-")
                 menu.append("camera on")
                 menu.append("camera off")
+                menu.append("display on/off")
                 menu.append("reset to default config")
+
+            # wake up if display is off and key is pressed
+            if len(keys) > 0:
+                if not self.display_on:
+                    self.invalidate()
+                    self.device.show()
+                    self.display_on = True
+                    keys = []  # clear keys
 
             for e in keys:
 
-                if "u" == e:
+                if "U" == e:
                     self.menu_selected = (self.menu_selected - 1) % len(menu)
                     self.invalidate()
-                if "d" == e:
+                if "D" == e:
                     self.menu_selected = (self.menu_selected + 1) % len(menu)
                     self.invalidate()
                 if "3" == e:
@@ -1010,6 +1029,19 @@ class Gui():
                             for c in self.usbController:
                                 c.turn_on(False)
                         elif option == 3:
+                            # display on/off
+                            if self.device is not None:
+                                if self.display_on:
+                                    self.device.hide()
+                                    self.device.clear()
+                                    self.display_on = False
+                                else:
+                                    self.invalidate()
+                                    self.device.show()
+                                    self.display_on = True
+                            else:
+                                self.log.error("no display device found")
+                        elif option == 4:
                             # reset to default config
                             with open(CONFIG_FILE_DEFAULT, "r") as stream:
                                 try:
@@ -1135,7 +1167,10 @@ class Gui():
 
             # TODO: check for connected cameras and other prerequisites
 
-            self.zeroboxConnector.root.start()
+            try:
+                self.zeroboxConnector.root.start()
+            except Exception as e:
+                self.log.error("start Exception: ", e)
             self.session = self._get_session()
 
             self.state = STATE_RUNNING
@@ -1167,10 +1202,10 @@ class Gui():
                 self.validate()
 
             k = self.getKeyEvents()
-            if "u" in k:
+            if "U" in k:
                 self.menu_selected = (self.menu_selected - 1) % len(menu)
                 self.invalidate()
-            if "d" in k:
+            if "D" in k:
                 self.menu_selected = (self.menu_selected + 1) % len(menu)
                 self.invalidate()
             if "1" in k:
