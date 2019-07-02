@@ -23,11 +23,25 @@ class UsbController(object):
         pass
 
     @staticmethod
+    def sort_helper(controller):
+        try:
+            if controller.is_data_connection:
+                return +1
+        except Exception as e:
+            pass
+
+        return 0
+
+    @staticmethod
     def find_all():
         controller = []
 
         controller = controller + UsbHubController.find_all()
         controller = controller + UsbDirectController.find_all()
+
+        # sort controller. cameras should always be powered on first and usb connections to cameras second
+
+        controller = sorted(controller, key=UsbController.sort_helper)
 
         return controller
 
@@ -36,8 +50,12 @@ class UsbHubController(UsbController):
 
     CMD = "uhubctl -l {} -a {} -p {}"
 
-    def __init__(self, port):
+    def __init__(self, port, is_data_connection=False):
         self.port = port
+        self.is_data_connection = is_data_connection
+    
+    def __repr__(self):
+        return "UsbHubController at {}:{}".format(self.port[0], self.port[1])
 
     @staticmethod
     def find_all():
@@ -56,9 +74,16 @@ class UsbHubController(UsbController):
                 if line.startswith(" "):
                     items = line.split(" ")
                     if len(items) >= 5:
+
+                        # if the camera not running the device will be recognized as "Sony USB Charger"
+                        # if running the name is "Sony NUMBER"
+
                         if "Sony" in line:
                             hubs.append(hub)
                             ports.append(items[3][:-1])
+
+                            controller.append(UsbHubController((hubs[-1], ports[-1]), is_data_connection=True))
+                            
                 else:
                     if len(line) > 1:
                         hub = line.split(" ")[4]
@@ -70,9 +95,8 @@ class UsbHubController(UsbController):
             # log.error(cpe)
             return []
 
-        for i in range(len(hubs)):
+        # for i in range(len(hubs)):
             # print("{} : {}".format(hubs[i], ports[i]))
-            controller.append(UsbHubController((hubs[i], ports[i])))
 
         return controller
 
@@ -82,9 +106,6 @@ class UsbHubController(UsbController):
             param = "on"
 
         subprocess.call(self.CMD.format(self.port[0], param, self.port[1]), shell=True)
-
-    def __repr__(self):
-        return "UsbHubController at {}:{}".format(self.port[0], self.port[1])
 
 
 class UsbDirectController(UsbController):
@@ -98,10 +119,6 @@ class UsbDirectController(UsbController):
 
     def __init__(self, port):
         self.port = port
-
-
-    # def close(self):
-    #     pass
 
     def __repr__(self):
         return "UsbDirectController at {}".format(self.port)

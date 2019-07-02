@@ -30,8 +30,7 @@ CONFIG_FILE_DEFAULT = "config_default.yaml"
 CONFIG_FILE_USER    = "config.yaml"
 
 # USB_CHIP            = "/sys/devices/platform/soc/3f980000.usb/buspower"
-USB_CHIP            = "/sys/devices/platform/soc/20980000.usb/buspower"
-
+# USB_CHIP            = "/sys/devices/platform/soc/20980000.usb/buspower"
 
 
 def _trigger(zerobox, portname):
@@ -47,11 +46,8 @@ class ZeroboxConnector(rpyc.Service):
 
         self.zerobox = Zerobox()
         self.scheduler = Scheduler()
-        self.usbController = []
 
         self.usbController = self.exposed_detect_usb_controller()
-        for controller in self.usbController:
-            print(controller)
 
         self.pool = ThreadPool(processes=1)
         self.capture_results = []
@@ -96,14 +92,17 @@ class ZeroboxConnector(rpyc.Service):
         # fileHandlerDebug.setFormatter(formatter)
         # self.log.addHandler(fileHandlerDebug)
 
+
         # Pi Zero Maintenance stuff
 
         # Turn off HDMI to save power
         subprocess.call("/usr/bin/tvservice -o", shell=True)
 
-        # print config
-
         self.exposed_print_config()
+
+        self.log.info("found {} UsbController".format(len(self.usbController)))
+        for controller in self.usbController:
+            self.log.info(controller)
 
 
     def close(self):
@@ -146,19 +145,19 @@ class ZeroboxConnector(rpyc.Service):
         print("on_disconnect")
 
 
-    def exposed_usb_switch_on(self, power_on):
-        if power_on:
-            f = open(USB_CHIP, "w")
-            f.write("1")
-            f.close()
-            log.debug("usb enabled")
-        else:
-            f = open(USB_CHIP, "w")
-            f.write("0")
-            f.close()
-            log.debug("usb disabled")
+    # def exposed_usb_switch_on(self, power_on):
+    #     if power_on:
+    #         f = open(USB_CHIP, "w")
+    #         f.write("1")
+    #         f.close()
+    #         log.debug("usb enabled")
+    #     else:
+    #         f = open(USB_CHIP, "w")
+    #         f.write("0")
+    #         f.close()
+    #         log.debug("usb disabled")
 
-        time.sleep(1)
+    #     time.sleep(1)
 
 
     def exposed_ping(self):
@@ -227,19 +226,24 @@ class ZeroboxConnector(rpyc.Service):
         elif self.state == self.STATE_RUNNING:
 
             if "camera_on" in jobs:
-                for controller in self.usbDirectController:
+                for controller in self.usbController:
                     controller.turn_on(True)
 
             if "camera_off" in jobs:
                 if not self._is_trigger_active():
-                    for controller in self.usbDirectController:
+                    for controller in self.usbController:
                         controller.turn_on(False)
                     else:
                         self.log.warning("previous trigger still active! unable to turn off camera")
 
             if "trigger" in jobs:
                 if not self._is_trigger_active():
-                    if not self.session["intervalcamera"]:
+                    if self.session["intervalcamera"]:
+
+                        print(self.zerobox.cameras)
+                        print(self.zerobox.connectors)
+
+                        self.exposed_detect_cameras()
                         self.exposed_connect_to_all()
 
                     try:
@@ -262,9 +266,9 @@ class ZeroboxConnector(rpyc.Service):
 
                 # camera off?
                 # TODO: ignores post_wait
-                if not self.session["intervalcamera"]:
+                if self.session["intervalcamera"]:
                     if not self._is_trigger_active():
-                        for controller in self.usbDirectController:
+                        for controller in self.usbController:
                             controller.turn_on(False)
                         else:
                             self.log.warning("previous trigger still active! unable to turn off camera")
@@ -313,24 +317,30 @@ class ZeroboxConnector(rpyc.Service):
 
         self._load_zerobox_config()
         self.exposed_detect_usb_controller()
-        self.exposed_detect_cameras()
 
-        if self.session["intervalcamera"]:
+        if not self.session["intervalcamera"]:
+            self.exposed_detect_cameras()
             self.exposed_connect_to_all()
+
+        # turn off all devices for a clean start
+        if self.session["intervalcamera"]:
+            self.zerobox.disconnect_all_cameras(clean=True)
+            for controller in self.usbController:
+                controller.turn_on(False)
 
         interval = self.session["interval"]*1000
         delay = 500
-        if self.session["intervalcamera"]:
+        if not self.session["intervalcamera"]:
             self.scheduler.add_job("trigger", interval, delay = delay)
         else:
             self.scheduler.add_job("camera_on", interval,
                                    delay = delay)
             self.scheduler.add_job("trigger", interval,
-                                   delay = delay+float(self.session["pc_pre_wait"])*1000)
+                                   delay = delay+float(self.session["ic_pre_wait"])*1000)
             # max time the camera may be alive. should already be shut down after
             # the trigger event returned, but just as a safeguard
             self.scheduler.add_job("camera_off", interval,
-                                   delay = (delay+30.0+float(self.session["pc_pre_wait"]))*1000)
+                                   delay = delay+(30.0+float(self.session["ic_pre_wait"]))*1000)
 
         self.state = self.STATE_RUNNING
 
@@ -339,7 +349,7 @@ class ZeroboxConnector(rpyc.Service):
         self.log.info("start session")
         self.log.info(FORMAT.format("interval", interval))
         self.log.info(FORMAT.format("cameras", len(self.zerobox.get_cameras())))
-        self.log.info(FORMAT.format("usbDirectController", len(self.usbDirectController)))
+        self.log.info(FORMAT.format("usbController", len(self.usbController)))
 
     def exposed_stop(self):
 
@@ -367,6 +377,10 @@ class ZeroboxConnector(rpyc.Service):
         self.zerobox.connect_camera(cameras[portname])
 
     def exposed_connect_to_all(self):
+
+        # TODO
+        subprocess.call("killall PTPCamera", shell=True)
+
         cameras = self.zerobox.get_cameras()
 
         for portname in cameras.keys():

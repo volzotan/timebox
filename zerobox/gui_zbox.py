@@ -106,10 +106,10 @@ class Gui():
 
             adafruit_bonnet = False
 
-            import smbus
-            bus = smbus.SMBus(1) # 1 indicates /dev/i2c-1
-
             try:
+                import smbus
+                bus = smbus.SMBus(1) # 1 indicates /dev/i2c-1
+
                 bus.read_byte(0x3C)
                 adafruit_bonnet = True
             except: 
@@ -243,8 +243,11 @@ class Gui():
         # Find UsbDirectController
 
         if self.zeroboxConnector is not None:
-            self.usbController = self.zeroboxConnector.root.exposed_get_usb_controller()
+            self.usbController = obtain(self.zeroboxConnector.root.exposed_get_usb_controller())
             self.log.info("found {} usbController".format(len(self.usbController)))
+            for controller in self.usbController:
+                self.log.info("  {}".format(controller))
+
 
         # setup the Scheduler
 
@@ -607,7 +610,7 @@ class Gui():
         # ERROR
 
         if self.session["errors"] is not None and len(self.session["errors"]) > 0:
-            self.text(draw, [3, start+26], "ERRORS: {}:{}".format(len(self.session["errors"]), str(self.session["errors"][-1])[:19]))
+            self.text(draw, [3, start+26], "ERRORS: {} {}".format(len(self.session["errors"]), str(self.session["errors"][-1])[:19]))
 
         # draw.rectangle([(64, 0), (127, 8)], fill=COLOR0)
         # self.text(draw, [90, -1], "{0:2.2f}GB".format(12.345))

@@ -354,9 +354,12 @@ class Zerobox(object):
         self.connectors[portname].close()
 
 
-    def disconnect_all_cameras(self):
+    def disconnect_all_cameras(self, clean=False):
         for portname, connector in self.connectors.items():
             connector.close()
+
+        if clean:
+            self.connectors = {}
 
 
     def get_cameras(self):
