@@ -33,7 +33,7 @@ int picturesTaken   = 0;
 
 // OPTIONS
 
-int programMode     = MODE_ZERO;     // zero or optocoupler?
+int programMode     = MODE_DIRECT;     // zero or optocoupler?
 
 int optInterval     =    -1;         
 int optIterations   =    -1;
@@ -122,6 +122,23 @@ void setup() {
 //  selftest(); delay(100); 
 
   state = STATE_IDLE;
+
+        digitalWrite(PIN_CAM1, HIGH);
+      delay(500); // TODO: Focustime?
+      digitalWrite(PIN_CAM2, HIGH);
+      delay(500);
+      digitalWrite(PIN_CAM1, LOW);
+      delay(500); 
+      digitalWrite(PIN_CAM2, LOW);
+      delay(500);
+              digitalWrite(PIN_CAM1, HIGH);
+      delay(500); // TODO: Focustime?
+      digitalWrite(PIN_CAM2, HIGH);
+      delay(500);
+      digitalWrite(PIN_CAM1, LOW);
+      delay(500); 
+      digitalWrite(PIN_CAM2, LOW);
+      delay(500);
 }
 
 void loop() {
@@ -138,7 +155,7 @@ void loop() {
 
       // programming mode or continue and disable USB?
       for(int i=0; i<10; i++) {
-        if (digitalRead(PIN_BUTTON) == 0) {
+        if (digitalRead(PIN_BUTTON) == 1) {
           state = STATE_IDLE;
           
           DEBUG_PRINT("--> idle");
@@ -214,6 +231,10 @@ void loop() {
       digitalWrite(PIN_CAM1, HIGH);
       delay(100); // TODO: Focustime?
       digitalWrite(PIN_CAM2, HIGH);
+      delay(100);
+      digitalWrite(PIN_CAM1, LOW);
+      delay(100); 
+      digitalWrite(PIN_CAM2, LOW);
       delay(100);
       wait(directUptime);
       state = STATE_DIRECT_OFF;

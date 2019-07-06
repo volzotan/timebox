@@ -148,7 +148,7 @@ void switchCameraOn(boolean switchOn) {
   if (switchOn) {
     digitalWrite(PIN_CAMERA_EN, HIGH);
   } else {
-    digitalWrite(PIN_CAMERA_EN, HIGH);  
+    digitalWrite(PIN_CAMERA_EN, LOW);  
   }
 }
 
@@ -196,16 +196,24 @@ float getLiPoVoltage(int cell) {
 
 float getLiPoVoltageRaw(int cell) {
   switch (cell) {
-    case BATT_DIRECT: // whole battery
+
+    // analog value on pin
+    case BATT_VD_RAW:
+      return analogRead(PIN_BATT_DIRECT);
+      break;
+
+    // voltage for whole battery
+    case BATT_DIRECT:
       return voltageDivider((float) analogRead(PIN_BATT_DIRECT));
       break;
 
-    case BATT_PERCENTAGE_DIRECT: // percentage loaded
+    // percentage battery full
+    case BATT_PERCENTAGE_DIRECT: 
 
       // There is a bug here... (maybe)
     
       if (voltageDivider((float) analogRead(PIN_BATT_DIRECT)) > 1.0) {
-        return (getLiPoVoltage(BATT_DIRECT) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100);
+        return (getLiPoVoltage(BATT_DIRECT) - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100.0);
       } else {
         return -1;  
       }
