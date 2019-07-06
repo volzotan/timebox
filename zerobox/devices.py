@@ -14,7 +14,7 @@ except ImportError as e:
     print("importing smbus failed. Not a raspberry pi platform, i2c will not be available.")
 
 
-class UsbController(object):
+class Controller(object):
 
     def __init__(self):
         pass
@@ -45,8 +45,238 @@ class UsbController(object):
 
         return controller
 
+class SerialController(Controller):
 
-class UsbHubController(UsbController):
+
+    CMD_BATTERY     = "B"
+    CMD_ZERO_ON     = "Z 1"
+    CMD_ZERO_OFF    = "Z 0"
+    CMD_UPTIME      = "T"
+    CMD_ON          = "C 1"
+    CMD_OFF         = "C 0"
+
+    CMD_STATUS      = "S"
+
+    SERIAL_DEVICE = "/dev/serial0"
+    SERIAL_BAUDRATE = 9600
+    SERIAL_TIMEOUT = 1.0
+
+    def __init__(self):
+        self.port = serial.Serial(SERIAL_DEVICE)
+
+    def __repr__(self):
+        return "SerialController at {}".format(self.SERIAL_DEVICE)
+
+    @staticmethod
+    def find_all():
+        potential_controller = SerialController(SerialController.SERIAL_DEVICE)
+
+        try:
+            status = potential_controller.get_status()
+            print(status)
+        except Exception as e:
+            print(e)
+            return []
+
+        return [potential_controller]
+
+    def get_battery_status(self):
+        try:
+            response = self._send_command(self.CMD_BATTERY)
+
+            # TODO: parse response
+
+        except Exception as e:
+            print(e)
+            return None
+
+    def turn_zero_on(self, turn_on):
+        try:
+            if turn_on:
+                self._send_command(self.CMD_ZERO_ON)
+            else:
+                self._send_command(self.CMD_ZERO_OFF)
+        except Exception as e:
+            print(e)
+            return None        
+
+    def get_uptime(self):
+        try:
+            response = self._send_command(self.CMD_UPTIME)
+            return response
+        except Exception as e:
+            print(e)
+            return None
+
+    def turn_on(self, turn_on):
+        try:
+            if turn_on:
+                self._send_command(self.CMD_ON)
+            else:
+                self._send_command(self.CMD_OFF)
+        except Exception as e:
+            print(e)
+            return None
+
+    # def get_status(self):
+    #     try:
+    #         response = self._send_command(self.CMD_STATUS)
+    #         # print(response)
+    #     except Exception as e:
+    #         print(e)
+    #         return None
+
+    def _send_command(self, cmd):
+        response = ""
+        ser = None
+
+        try:
+
+            log.debug("[{}] serial send: {}".format(self, cmd))
+
+            ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
+
+            ser.write(bytearray(cmd, "utf-8"))
+            ser.write(bytearray("\n", "utf-8"))
+
+            response = ser.read(100)
+            response = response.decode("utf-8") 
+
+            # remove every non-alphanumeric / -underscore / -space character
+            response = re.sub("[^a-zA-Z0-9_ ]", '', response)
+
+            log.debug("[{}] serial receive: {}".format(self, response))
+
+            if response is None or len(response) == 0:
+                log.debug("[{}] empty response".format(self))
+                raise Exception("empty response")
+
+            if response.startswith("E"):
+                log.debug("[{}] serial error: {}".format(self, response))
+                raise Exception("serial error: {}".format(response))
+
+            if not response.startswith("K"):
+                log.debug("[{}] serial error, non K response: {}".format(self, response))
+                raise Exception("serial error, non K response: {}".format(response))
+
+            if len(response) > 1:
+                return response[2:]
+
+        except serial.serialutil.SerialException as se:
+            log.error("comm failed, SerialException: {}".format(se))
+            raise se
+
+        except Exception as e:
+            log.error("comm failed, unknown exception: {}".format(e))
+            raise e
+
+        finally:
+            if ser is not None:
+                ser.close()
+
+class UsbDirectController(Controller):
+
+    CMD_STATUS  = "status"
+    CMD_ON      = "on"
+    CMD_OFF     = "off"
+
+    SERIAL_BAUDRATE = 9600
+    SERIAL_TIMEOUT = 1.0
+
+    def __init__(self, port):
+        self.port = port
+
+    def __repr__(self):
+        return "UsbDirectController at {}".format(self.port)
+
+    @staticmethod
+    def find_all():
+        controller = []
+        
+        all_ports = list(serial.tools.list_ports.comports())
+        log.debug("detecting UsbDirectController: found {} ports".format(len(all_ports)))
+        for port in all_ports:
+            print(port[1])
+            if "arduino" in port[1].lower():
+                potential_controller = UsbDirectController(port[0])
+                try:
+                    potential_controller.get_status()
+                    controller.append(potential_controller)
+                except Exception as e:
+                    print(e)
+
+            time.sleep(0.1)
+
+        return controller
+
+    def turn_on(self, turn_on):
+        try:
+            if turn_on:
+                self._send_command(self.CMD_ON)
+            else:
+                self._send_command(self.CMD_OFF)
+        except Exception as e:
+            print(e)
+            return None
+
+    def get_status(self):
+        try:
+            response = self._send_command(self.CMD_STATUS)
+            # print(response)
+        except Exception as e:
+            print(e)
+            return None
+
+    def _send_command(self, cmd):
+        response = ""
+        ser = None
+
+        try:
+
+            log.debug("[{}] serial send: {}".format(self, cmd))
+
+            ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
+
+            ser.write(bytearray(cmd, "utf-8"))
+            ser.write(bytearray("\n", "utf-8"))
+
+            response = ser.read(100)
+            response = response.decode("utf-8") 
+
+            # remove every non-alphanumeric / -underscore / -space character
+            response = re.sub("[^a-zA-Z0-9_ ]", '', response)
+
+            log.debug("[{}] serial receive: {}".format(self, response))
+
+            if response is None or len(response) == 0:
+                log.debug("[{}] empty response".format(self))
+                raise Exception("empty response")
+
+            if response.startswith("E"):
+                log.debug("[{}] serial error: {}".format(self, response))
+                raise Exception("serial error: {}".format(response))
+
+            if not response.startswith("K"):
+                log.debug("[{}] serial error, non K response: {}".format(self, response))
+                raise Exception("serial error, non K response: {}".format(response))
+
+            if len(response) > 1:
+                return response[2:]
+
+        except serial.serialutil.SerialException as se:
+            log.error("comm failed, SerialException: {}".format(se))
+            raise se
+
+        except Exception as e:
+            log.error("comm failed, unknown exception: {}".format(e))
+            raise e
+
+        finally:
+            if ser is not None:
+                ser.close()
+
+
+class UsbHubController(Controller):
 
     CMD = "uhubctl -l {} -a {} -p {}"
 
@@ -106,103 +336,6 @@ class UsbHubController(UsbController):
             param = "on"
 
         subprocess.call(self.CMD.format(self.port[0], param, self.port[1]), shell=True)
-
-
-class UsbDirectController(UsbController):
-
-    CMD_STATUS  = "status"
-    CMD_ON      = "on"
-    CMD_OFF     = "off"
-
-    SERIAL_BAUDRATE = 9600
-    SERIAL_TIMEOUT = 1.0
-
-    def __init__(self, port):
-        self.port = port
-
-    def __repr__(self):
-        return "UsbDirectController at {}".format(self.port)
-
-    @staticmethod
-    def find_all():
-        controller = []
-        
-        all_ports = list(serial.tools.list_ports.comports())
-        for port in all_ports:
-            if "arduino" in port[1].lower():
-                potential_controller = UsbDirectController(port[0])
-                try:
-                    potential_controller.get_status()
-                    controller.append(potential_controller)
-                except Exception as e:
-                    pass
-
-        return controller
-
-    def turn_on(self, turn_on):
-        try:
-            if turn_on:
-                self._send_command(self.CMD_ON)
-            else:
-                self._send_command(self.CMD_OFF)
-        except Exception as e:
-            print(e)
-            return None
-
-
-    def get_status(self):
-        try:
-            response = self._send_command(self.CMD_STATUS)
-            # print(response)
-        except Exception as e:
-            print(e)
-            return None
-
-
-    def _send_command(self, cmd):
-        response = ""
-        ser = None
-
-        try:
-
-            log.debug("serial send: {}".format(cmd))
-
-            ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
-
-            ser.write(bytearray(cmd, "utf-8"))
-            ser.write(bytearray("\n", "utf-8"))
-
-            response = ser.read(100)
-            response = response.decode("utf-8") 
-
-            # remove every non-alphanumeric / -underscore / -space character
-            response = re.sub("[^a-zA-Z0-9_ ]", '', response)
-
-            log.debug("serial receive: {}".format(response))
-
-            if response is None or len(response) == 0:
-                raise Exception("empty response")
-
-            if response.startswith("E"):
-                raise Exception("serial error: {}".format(response))
-
-            if not response.startswith("K"):
-                raise Exception("serial error, non K response: {}".format(response))
-
-            if len(response) > 1:
-                return response[2:]
-
-        except serial.serialutil.SerialException as se:
-            log.error("comm failed, SerialException: {}".format(e))
-            raise e
-
-        except Exception as e:
-            log.error("comm failed, unknown exception: {}".format(e))
-            raise e
-
-        finally:
-            if ser is not None:
-                ser.close()
 
 
 class RTC():

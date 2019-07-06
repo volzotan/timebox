@@ -646,6 +646,7 @@ class Gui():
 
 
     def draw_logo(self, draw, info):
+
         draw.rectangle([(0, 0), (127, 64)], outline=None, fill=COLOR1)
         draw.bitmap((0,0), info["logo"])
 
@@ -661,7 +662,6 @@ class Gui():
             draw.rectangle([(61, 53), (int(61+54*ratio), 55)], outline=None, fill=COLOR0)
 
         draw.rectangle([(56, 38), (56, 59)], outline=None, fill=COLOR1)
-
 
     def draw_menu(self, draw, info):
 
@@ -893,6 +893,8 @@ class Gui():
 
         elif self.state == STATE_LOGO:
             if self.isInvalid:
+
+                self.device.clear()
 
                 screen = {}
                 logo = Image.open("logo.png")
