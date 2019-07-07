@@ -7,7 +7,7 @@ from digitalio import DigitalInOut, Direction, Pull
 from pulseio import PWMOut
 
 import busio
-import adafruit_ina219
+import adafruit_mcp9808
 
 import neopixel
 
@@ -45,17 +45,18 @@ class UsbController(object):
     # ina_current_value = [None] * 100
     # ina_current_index = 0
 
+    i2c = busio.I2C(board.SCL, board.SDA)
+    temp_sensor = adafruit_mcp9808.MCP9808(i2c)
+
     pixel = neopixel.NeoPixel(PIN_LED, 1, auto_write=True) # , brightness=0.1)
 
     button = DigitalInOut(PIN_BUTTON)
     button.direction = Direction.INPUT
     button.pull = Pull.UP
 
-    mosfet = PWMOut(PIN_USB_EN)
-    mosfet.duty_cycle = 0
-    # mosfet = DigitalInOut(PIN_USB_EN)
-    # mosfet.direction = Direction.OUTPUT
-    # mosfet.value = False
+    mosfet = DigitalInOut(PIN_USB_EN)
+    mosfet.direction = Direction.OUTPUT
+    mosfet.value = False
 
     dummy_load = DigitalInOut(PIN_DLOAD)
     dummy_load.direction = Direction.OUTPUT
@@ -132,29 +133,15 @@ class UsbController(object):
                 if self.input_buffer == "ping":
                     print("K")
 
-                elif self.input_buffer == "on slow":
-                    self.dummy_load.value = False
-                    time.sleep(0.1)
-
-                    for i in range(0, 9):
-                        self.mosfet.duty_cycle = int((65535 * i * 0.1))
-                        time.sleep(0.1)
-                        print(self.mosfet.duty_cycle)
-                    self.mosfet.duty_cycle = 65535
-                    # time.sleep(0.1)
-                    # self.pixel.fill(CLEAR)
-                    # self.pixel.show()
-                    print("K")
-
                 elif self.input_buffer == "on":
-                    self.mosfet.duty_cycle = 65535
+                    self.mosfet.value = True
                     time.sleep(0.1)
                     self.pixel.fill(WHITE)
                     self.pixel.show()
                     print("K")
 
                 elif self.input_buffer == "off":
-                    self.mosfet.duty_cycle = 0
+                    self.mosfet.value = False
                     self.pixel.fill(CLEAR)
                     self.pixel.show()
                     print("K")
@@ -177,6 +164,10 @@ class UsbController(object):
                     self.pixel.fill(CLEAR)
                     self.pixel.show()
                     print("K")
+
+                elif self.input_buffer == "temp":
+                    print("K ", sep="")
+                    print(temp_sensor.temperature)
 
                 elif self.input_buffer == "status":
                     print("K ", sep="")

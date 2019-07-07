@@ -178,7 +178,7 @@ class Gui():
 
         self.zeroboxConnector = None
         self.cameras = []
-        self.usbController = None
+        self.controller = None
         self.clock = None
 
         self.loop_lock = threading.Lock()
@@ -243,10 +243,10 @@ class Gui():
         # Find UsbDirectController
 
         if self.zeroboxConnector is not None:
-            self.usbController = obtain(self.zeroboxConnector.root.exposed_get_usb_controller())
-            self.log.info("found {} usbController".format(len(self.usbController)))
-            for controller in self.usbController:
-                self.log.info("  {}".format(controller))
+            self.controller = obtain(self.zeroboxConnector.root.exposed_get_controller())
+            self.log.info("found {} controller".format(len(self.controller)))
+            for c in self.controller:
+                self.log.info("  {}".format(c))
 
 
         # setup the Scheduler
@@ -437,8 +437,8 @@ class Gui():
 
             # switch off all cameras after capture
             if self.config["intervalcamera"]["value"]:
-                for controller in self.usbController:
-                    controller.turn_on(False)
+                for c in self.controller:
+                    c.turn_on(False)
 
             for result in results:
                 self.log.info(result)
@@ -934,7 +934,7 @@ class Gui():
             if "force_update_status" in triggered_jobs:
                 if self.zeroboxConnector is not None:
                     self.cameras = obtain(self.zeroboxConnector.root.detect_cameras())
-                    self.data["message"] = "cam: {} | controller: {}".format(len(self.cameras), len(self.usbController))
+                    self.data["message"] = "cam: {} | controller: {}".format(len(self.cameras), len(self.controller))
 
             for e in self.getKeyEvents():
                 if "L" == e:
@@ -1027,11 +1027,11 @@ class Gui():
                             pass # separator
                         elif option == 1:
                             # camera on
-                            for c in self.usbController:
+                            for c in self.controller:
                                 c.turn_on(True)
                         elif option == 2:
                             # camera off
-                            for c in self.usbController:
+                            for c in self.controller:
                                 c.turn_on(False)
                         elif option == 3:
                             # display on/off
@@ -1225,7 +1225,7 @@ class Gui():
                 elif self.menu_selected == 1:
                     # self.scheduler.remove_job("trigger")
                     # self.zeroboxConnector.root.disconnect_all_cameras()
-                    # for controller in self.usbController:
+                    # for controller in self.controller:
                     #     controller.turn_on(False)
                     self.zeroboxConnector.root.stop()
 

@@ -41,12 +41,11 @@ class Controller(object):
 
         # sort controller. cameras should always be powered on first and usb connections to cameras second
 
-        controller = sorted(controller, key=UsbController.sort_helper)
+        controller = sorted(controller, key=Controller.sort_helper)
 
         return controller
 
 class SerialController(Controller):
-
 
     CMD_BATTERY     = "B"
     CMD_ZERO_ON     = "Z 1"
@@ -179,6 +178,7 @@ class UsbDirectController(Controller):
     CMD_STATUS  = "status"
     CMD_ON      = "on"
     CMD_OFF     = "off"
+    CMD_TEMP    = "temp"
 
     SERIAL_BAUDRATE = 9600
     SERIAL_TIMEOUT = 1.0
@@ -227,12 +227,19 @@ class UsbDirectController(Controller):
             print(e)
             return None
 
+    def get_temperature(self):
+        try:
+            response = self._send_command(self.CMD_TEMP)
+            return response
+        except Exception as e:
+            print(e)
+            return None
+
     def _send_command(self, cmd):
         response = ""
         ser = None
 
         try:
-
             log.debug("[{}] serial send: {}".format(self, cmd))
 
             ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)

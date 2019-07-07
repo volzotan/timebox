@@ -49,14 +49,18 @@ void setup() {
 
   initPins();
 
+  neopixel.begin();
+  #ifdef DEBUG
+    // blink YELLOW, 3x, 1s
+    ledShow(50, 50, 0);
+  #endif
+
   #ifdef DEBUG
     while (!Serial) {
       ;
     }
   #endif
 
-  // neopixel
-  neopixel.begin();
   #ifdef DEBUG
     // blink YELLOW, 3x, 1s
     ledBlink(128, 128, 0, 3, 1000);
@@ -71,7 +75,10 @@ void setup() {
     
     DEBUG_PRINT("stopping!...");
     #ifndef DEBUG
-      state = STATE_STOP;
+
+      // TODO: change that otherwise the LED will be permanent green
+
+      while(true) {}
     #else
       DEBUG_PRINT("stopping aborted (debug mode)");
     #endif

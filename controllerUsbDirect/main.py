@@ -4,6 +4,7 @@ import supervisor
 
 import board
 from digitalio import DigitalInOut, Direction, Pull
+from pulseio import PWMOut
 
 import busio
 import adafruit_ina219
@@ -34,7 +35,7 @@ class UsbController(object):
     input_buffer = ""
 
     # timer
-    timer_dload = None # time.monotonic() # dummy load on by default
+    timer_dload = time.monotonic() # dummy load on by default # None
 
     i2c = busio.I2C(board.SCL, board.SDA)
     ina219 = adafruit_ina219.INA219(i2c)
@@ -44,18 +45,22 @@ class UsbController(object):
     ina_current_value = [None] * 100
     ina_current_index = 0
 
-    pixel = neopixel.NeoPixel(PIN_LED, 1, brightness=0.1, auto_write=True)
+    pixel = neopixel.NeoPixel(PIN_LED, 1, auto_write=True) # , brightness=0.1)
 
     button = DigitalInOut(PIN_BUTTON)
     button.direction = Direction.INPUT
     button.pull = Pull.UP
 
-    mosfet = DigitalInOut(PIN_USB_EN)
-    mosfet.direction = Direction.OUTPUT
-    mosfet.value = False
+    mosfet = PWMOut(PIN_USB_EN)
+    mosfet.duty_cycle = 0
+    # mosfet = DigitalInOut(PIN_USB_EN)
+    # mosfet.direction = Direction.OUTPUT
+    # mosfet.value = False
 
     dummy_load = DigitalInOut(PIN_DLOAD)
     dummy_load.direction = Direction.OUTPUT
+    dummy_load_pixel = False
+    dummy_load_paused = None
 
     def __init__(self):     
 
@@ -75,12 +80,26 @@ class UsbController(object):
         if self.timer_dload is not None and now - self.timer_dload > 0:
             if self.dummy_load.value:
                 # print("< {}".format(now - self.timer_dload))
-                self.dummy_load.value = False
+                if self.dummy_load_pixel:
+                    self.pixel.fill(CLEAR)
+                    self.pixel.show()
+                else:
+                    self.dummy_load.value = False
+
                 self.timer_dload = self.timer_dload - self.TIMER_DLOAD_DUR + self.TIMER_DLOAD_INT
             else:
-                # print(">")
-                self.dummy_load.value = True
-                self.timer_dload = self.timer_dload + self.TIMER_DLOAD_DUR
+
+                if not self.mosfet.duty_cycle > 65535/2:
+
+                    # print(">")
+                    if self.dummy_load_pixel:
+                        self.pixel.fill(WHITE)
+                        self.pixel.show()
+                    else:
+                        self.dummy_load.value = True
+                    self.timer_dload = self.timer_dload + self.TIMER_DLOAD_DUR
+                    if now - self.timer_dload > 0:
+                        self.timer_dload = now + self.TIMER_DLOAD_DUR
 
 
     def read_current(self):
@@ -113,14 +132,41 @@ class UsbController(object):
                 if self.input_buffer == "ping":
                     print("K")
 
+                elif self.input_buffer == "on slow":
+                    self.dummy_load.value = False
+                    time.sleep(0.1)
+
+                    for i in range(0, 9):
+                        self.mosfet.duty_cycle = int((65535 * i * 0.1))
+                        time.sleep(0.1)
+                        print(self.mosfet.duty_cycle)
+                    self.mosfet.duty_cycle = 65535
+                    # time.sleep(0.1)
+                    # self.pixel.fill(CLEAR)
+                    # self.pixel.show()
+                    print("K")
+
                 elif self.input_buffer == "on":
-                    self.mosfet.value = True
-                    self.pixel.fill(WHITE)
-                    self.pixel.show()
+
+                    # voltages = []
+                    # voltages.append(self.ina219.bus_voltage)
+                    # voltages.append(self.ina219.bus_voltage)
+                    # voltages.append(self.ina219.bus_voltage)
+
+                    self.mosfet.duty_cycle = 65535
+                    # time.sleep(0.1)
+                    # self.pixel.fill(WHITE)
+                    # self.pixel.show()
+
+                    # for _ in range(0, 50):
+                    #     voltages.append(self.ina219.bus_voltage)
+
+                    # print(*voltages, sep="\n")
+
                     print("K")
 
                 elif self.input_buffer == "off":
-                    self.mosfet.value = False
+                    self.mosfet.duty_cycle = 0
                     self.pixel.fill(CLEAR)
                     self.pixel.show()
                     print("K")
@@ -144,6 +190,9 @@ class UsbController(object):
                     self.pixel.show()
                     print("K")
 
+                elif self.input_buffer == "temp":
+                    print("K null")
+
                 elif self.input_buffer == "status":
                     print("K ", sep="")
 
@@ -151,13 +200,14 @@ class UsbController(object):
                     print("Shunt Voltage: {} mV".format(self.ina219.shunt_voltage / 1000))
                     print("Load Voltage:  {} V".format(self.ina219.bus_voltage + self.ina219.shunt_voltage))
                     print("Current:       {} mA".format(self.ina219.current))
+                    print("Dummy Load:    {}".format(not self.timer_dload is None))
 
                 elif self.input_buffer == "status v":
                     print("K ", sep="")
                     print(self.ina_current_value)
 
                 else:
-                    print("E unknown command")
+                    print("E unknown command [{}]".format(self.input_buffer))
 
                 self.input_buffer = ""
 
@@ -167,7 +217,7 @@ class UsbController(object):
         while True:
             self.communicate()
             self.event()
-            self.read_current()
+            # self.read_current()
             time.sleep(0.010)
 
 

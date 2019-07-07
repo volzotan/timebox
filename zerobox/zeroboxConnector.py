@@ -2,7 +2,7 @@
 
 from zerobox import Zerobox
 from zeroboxScheduler import Scheduler
-from devices import UsbController
+from devices import Controller
 
 import rpyc
 from rpyc.utils.server import ThreadedServer
@@ -47,7 +47,8 @@ class ZeroboxConnector(rpyc.Service):
         self.zerobox = Zerobox()
         self.scheduler = Scheduler()
 
-        self.usbController = self.exposed_detect_usb_controller()
+        self.controller = []
+        self.controller = self.exposed_detect_controller()
 
         self.pool = ThreadPool(processes=1)
         self.capture_results = []
@@ -100,9 +101,9 @@ class ZeroboxConnector(rpyc.Service):
 
         self.exposed_print_config()
 
-        self.log.info("found {} UsbController".format(len(self.usbController)))
-        for controller in self.usbController:
-            self.log.info(controller)
+        self.log.info("found {} Controller".format(len(self.controller)))
+        for c in self.controller:
+            self.log.info(c)
 
 
     def close(self):
@@ -226,12 +227,12 @@ class ZeroboxConnector(rpyc.Service):
         elif self.state == self.STATE_RUNNING:
 
             if "camera_on" in jobs:
-                for controller in self.usbController:
+                for controller in self.controller:
                     controller.turn_on(True)
 
             if "camera_off" in jobs:
                 if not self._is_trigger_active():
-                    for controller in self.usbController:
+                    for controller in self.controller:
                         controller.turn_on(False)
                     else:
                         self.log.warning("previous trigger still active! unable to turn off camera")
@@ -268,8 +269,8 @@ class ZeroboxConnector(rpyc.Service):
                 # TODO: ignores post_wait
                 if self.session["intervalcamera"]:
                     if not self._is_trigger_active():
-                        for controller in self.usbController:
-                            controller.turn_on(False)
+                        for c in self.controller:
+                            c.turn_on(False)
                         else:
                             self.log.warning("previous trigger still active! unable to turn off camera")
 
@@ -316,7 +317,7 @@ class ZeroboxConnector(rpyc.Service):
                 self.session[key] = self.config[key]["value"]
 
         self._load_zerobox_config()
-        self.exposed_detect_usb_controller()
+        self.exposed_detect_controller()
 
         if not self.session["intervalcamera"]:
             self.exposed_detect_cameras()
@@ -325,8 +326,8 @@ class ZeroboxConnector(rpyc.Service):
         # turn off all devices for a clean start
         if self.session["intervalcamera"]:
             self.zerobox.disconnect_all_cameras(clean=True)
-            for controller in self.usbController:
-                controller.turn_on(False)
+            for c in self.controller:
+                c.turn_on(False)
 
         interval = self.session["interval"]*1000
         delay = 500
@@ -349,7 +350,7 @@ class ZeroboxConnector(rpyc.Service):
         self.log.info("start session")
         self.log.info(FORMAT.format("interval", interval))
         self.log.info(FORMAT.format("cameras", len(self.zerobox.get_cameras())))
-        self.log.info(FORMAT.format("usbController", len(self.usbController)))
+        self.log.info(FORMAT.format("controller", len(self.controller)))
 
     def exposed_stop(self):
 
@@ -404,12 +405,12 @@ class ZeroboxConnector(rpyc.Service):
     def exposed_get_cameras(self):
         return self.zerobox.get_cameras()
 
-    def exposed_detect_usb_controller(self):
-        self.usbController = UsbController.find_all()
-        return self.usbController
+    def exposed_detect_controller(self):
+        self.controller = Controller.find_all()
+        return self.controller
 
-    def exposed_get_usb_controller(self):
-        return self.usbController
+    def exposed_get_controller(self):
+        return self.controller
 
     def exposed_get_total_space(self):
         return self.zerobox.get_total_space()
