@@ -269,6 +269,9 @@ class Gui():
         self.data["free_space"]              = None
         self.data["images_in_memory"]        = None
         self.data["last_image_brightness"]   = None
+        self.data["temperature"]             = None
+        self.data["battery_status"]          = None
+        self.data["network_status"]          = None
 
         if self.zeroboxConnector is not None:
             self.data["total_space"] = obtain(self.zeroboxConnector.root.get_total_space())
@@ -681,7 +684,8 @@ class Gui():
         self.text(draw, [ 2, 20], "RUNTIME    :")
         self.text(draw, [ 2, 26], "2ND EXP    :")
         self.text(draw, [ 2, 32], "TEMP       :")
-        self.text(draw, [ 2, 38], "IMG IN MEM :")
+        self.text(draw, [ 2, 38], "NETWORK    :")
+        self.text(draw, [ 2, 44], "IMG IN MEM :")
         # self.text(draw, [ 2, 38], "FREE SPACE :")
 
         self.text(draw, [54, 8], self.config["iterations"]["value"])
@@ -693,18 +697,47 @@ class Gui():
         self.text(draw, [54, 26], text_se)
 
         temp_str = "---"
-        if info["temperature"] is not None:
-            temp_str = "{0:.2f} C".format(info["temperature"])
-        if info["temperature_cpu"] is not None:
-            temp_str = "{0:.2f} C (CPU)".format(info["temperature_cpu"])
-        if info["temperature"] is not None and info["temperature_cpu"] is not None:
-            temp_str =  "{0:.2f} | {1:.2f} CPU".format(info["temperature"], info["temperature_cpu"])
+
+        # if info["temperature"] is not None:
+        #     temp_str = "{0:.2f} C".format(info["temperature"])
+        # if info["temperature_cpu"] is not None:
+        #     temp_str = "{0:.2f} C (CPU)".format(info["temperature_cpu"])
+        # if info["temperature"] is not None and info["temperature_cpu"] is not None:
+        #     temp_str =  "{0:.2f} | {1:.2f} CPU".format(info["temperature"], info["temperature_cpu"])
+        # if info["temperature_controller"] is not None:
+        #     temp_str = "{0:.2f} C (CTRL)".format(info["temperature_controller"])
+
+        if len(info["temperature"]) > 0:
+            # TODO: currently looking only on the first value
+            if info["temperature"][0][1] == "cpu":
+                temp_str = "{0:.2f} C (CPU)".format(info["temperature"][0][0])
+            if info["temperature"][0][1] == "controller":
+                temp_str = "{0:.2f} C (CTRL)".format(info["temperature"][0][0])
+
         self.text(draw, [54, 32], temp_str)
-        
+
+        if info["battery_status"] is not None:
+            self.text(draw, [108, 8], "{:.1f}%".format(info["battery_status"]))    
+
+        if info["network_status"] is not None:
+            self.text(draw, [54, 38], "{:.18}".format(info["network_status"]["ssid"]))            
+
         images_in_memory = "?"
         if info["images_in_memory"] is not None:
             images_in_memory = str(info["images_in_memory"])
-        self.text(draw, [54, 38], images_in_memory) # max: 99999
+        self.text(draw, [54, 44], images_in_memory) # max: 99999
+
+        free_space = "?"
+        if info["free_space"] is not None:
+            free_space = "{0:.2f}".format(info["free_space"]/1024.0**3)
+        self.text(draw, [126, 44], free_space, rightalign=True)
+
+        if info["free_space"] is not None and info["total_space"] is not None:
+            ratio = info["free_space"] / info["total_space"]
+            self.rect(draw, [(75, 44), (100, 48)])
+            if ratio < 0.99:
+                self.rect(draw, [(75+1+23*ratio, 44+1), (100-1, 48-1)], invert=True)
+
 
         currentTime = datetime.now()
         self.rect(draw, [(127-20, 0), (127, 6)])
@@ -713,28 +746,18 @@ class Gui():
         self.rect(draw, [(0, 0), (127-22, 6)])
         self.text(draw, [2, 1], info["message"], invert=True)
 
-        free_space = "?"
-        if info["free_space"] is not None:
-            free_space = "{0:.2f}".format(info["free_space"]/1024.0**3)
-        self.text(draw, [126, 38], free_space, rightalign=True)
 
-        if info["free_space"] is not None and info["total_space"] is not None:
-            ratio = info["free_space"] / info["total_space"]
-            self.rect(draw, [(75, 38), (100, 42)])
-            if ratio < 0.99:
-                self.rect(draw, [(75+1+23*ratio, 38+1), (100-1, 42-1)], invert=True)
+        self.rect(draw, [(0, 51+2), (42-2, 63)], invert=not selectedSettings)
+        self.rect(draw, [(42+2, 51+2), (127-42-2, 63)], invert=not selectedStart)
+        self.rect(draw, [(127-40, 51+2), (127, 63)], invert=not selectedShutdown)
 
-        self.rect(draw, [(0, 45+2), (42-2, 63)], invert=not selectedSettings)
-        self.rect(draw, [(42+2, 45+2), (127-42-2, 63)], invert=not selectedStart)
-        self.rect(draw, [(127-40, 45+2), (127, 63)], invert=not selectedShutdown)
+        self.rect(draw, [(0, 51), (127, 51)])
+        self.rect(draw, [(42, 51), (42, 63)])
+        self.rect(draw, [(127-42, 51), (127-42, 63)])
 
-        self.rect(draw, [(0, 45), (127, 45)])
-        self.rect(draw, [(42, 45), (42, 63)])
-        self.rect(draw, [(127-42, 45), (127-42, 63)])
-
-        self.text(draw, [ 4, 53], "SETTINGS", invert=selectedSettings)
-        self.text(draw, [55, 53], "START", invert=selectedStart)
-        self.text(draw, [92, 53], "SHUTDOWN", invert=selectedShutdown)
+        self.text(draw, [ 4, 56], "SETTINGS", invert=selectedSettings)
+        self.text(draw, [55, 56], "START", invert=selectedStart)
+        self.text(draw, [92, 56], "SHUTDOWN", invert=selectedShutdown)
 
 
     def draw_config(self, draw, menu, selected_index):
@@ -854,6 +877,15 @@ class Gui():
                     self.data = {**self.data, **dict(status)}
                     # self.data["message"] = None
 
+                temperature = obtain(self.zeroboxConnector.root.get_temperature(force=force))
+                self.data["temperature"] = temperature
+
+                battery_status = obtain(self.zeroboxConnector.root.get_battery_status(force=force))
+                self.data["battery_status"] = battery_status
+
+                network_status = obtain(self.zeroboxConnector.root.get_network_status(force=force))
+                self.data["network_status"] = network_status
+
                 self.session = self._get_session()
 
 
@@ -894,7 +926,7 @@ class Gui():
         elif self.state == STATE_LOGO:
             if self.isInvalid:
 
-                self.device.clear()
+                # self.device.clear()
 
                 screen = {}
                 logo = Image.open("logo.png")
@@ -962,13 +994,24 @@ class Gui():
 
                 menu["message"] = self.data["message"]
 
-                menu["temperature"] = None
-                menu["temperature_cpu"] = None
-                if self.clock is not None:
-                    menu["temperature"] = self.clock.read_temperature()
-                if self.platform == PLATFORM_PI:
-                    temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
-                    menu["temperature_cpu"] = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
+                # menu["temperature"] = None
+                # menu["temperature_cpu"] = None
+                # menu["temperature_controller"] = None
+                # if self.clock is not None:
+                #     menu["temperature"] = self.clock.read_temperature()
+                # if self.platform == PLATFORM_PI:
+                #     temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
+                #     menu["temperature_cpu"] = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
+                # for c in self.controller:
+                #     temp = c.get_temperature()
+                #     if temp is not None:
+                #         print(temp)
+                #         menu["temperature_controller"] = temp
+                #         # TODO: only uses the last controllers temp value
+
+                menu["temperature"] = self.data["temperature"]
+                menu["battery_status"] = self.data["battery_status"]
+                menu["network_status"] = self.data["network_status"]
 
                 menu["total_space"] = self.data["total_space"]
                 menu["free_space"] = self.data["free_space"]
@@ -996,6 +1039,8 @@ class Gui():
                 menu.append("camera on")
                 menu.append("camera off")
                 menu.append("display on/off")
+                menu.append("wifi on")
+                menu.append("wifi off")
                 menu.append("reset to default config")
 
             # wake up if display is off and key is pressed
@@ -1047,6 +1092,14 @@ class Gui():
                             else:
                                 self.log.error("no display device found")
                         elif option == 4:
+                            # wifi on
+                            if self.zeroboxConnector is not None:
+                                self.zeroboxConnector.root.set_network_state("wlan0", True)
+                        elif option == 5:
+                            # wifi off
+                            if self.zeroboxConnector is not None:
+                                self.zeroboxConnector.root.set_network_state("wlan0", False)
+                        elif option == 6:
                             # reset to default config
                             with open(CONFIG_FILE_DEFAULT, "r") as stream:
                                 try:

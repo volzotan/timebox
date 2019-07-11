@@ -1,4 +1,5 @@
 import serial
+import hid
 
 from datetime import datetime
 import time
@@ -22,6 +23,12 @@ class Controller(object):
     def turn_on(self, turn_on):
         pass
 
+    def get_temperature(self):
+        pass
+
+    def get_battery_status(self):
+        pass
+
     @staticmethod
     def sort_helper(controller):
         try:
@@ -36,6 +43,8 @@ class Controller(object):
     def find_all():
         controller = []
 
+        controller = controller + YKushXSController.find_all()
+        controller = controller + SerialController.find_all()
         controller = controller + UsbHubController.find_all()
         controller = controller + UsbDirectController.find_all()
 
@@ -45,8 +54,70 @@ class Controller(object):
 
         return controller
 
+class YKushXSController(Controller):
+
+    CMD_ON          = 0x11
+    CMD_OFF         = 0x01
+    CMD_PORT_STATUS = 0x21
+
+    VENDOR_ID       = 1240
+    PRODUCT_ID      = 61645
+
+    def __init__(self, serialnumber):
+        self.serialnumber = serialnumber
+
+    def __repr__(self):
+        return "YKushXSController id: {}".format(self.serialnumber)
+
+    @staticmethod
+    def find_all():
+        controller = []    
+
+        for d in hid.enumerate():
+            if d["vendor_id"] == YKushXSController.VENDOR_ID and d["product_id"] == YKushXSController.PRODUCT_ID:
+               
+                if d["serial_number"] is None:
+                    # one reason for that may be that root rights are required to open
+                    # the HID device. create a udev rule for that to enable non-root access 
+                    log.debug("YKushXSController: serial number missing. access rights?")
+
+                controller.append(YKushXSController(d["serial_number"]))
+
+        return controller
+
+    def turn_on(self, turn_on):
+        if turn_on:
+            self._send_command(self.CMD_ON)
+        else:
+            self._send_command(self.CMD_OFF)
+
+    def _send_command(self, cmd):
+        h = hid.device()
+
+        if self.serialnumber is not None and len(self.serialnumber) > 0:
+            h.open(self.VENDOR_ID, self.PRODUCT_ID, self.serialnumber)
+        else:
+            h.open(self.VENDOR_ID, self.PRODUCT_ID)
+
+        h.set_nonblocking(1)
+
+        h.write([0, cmd] + [0] * 63)
+        time.sleep(0.05)
+
+        response = []
+        while True:
+            d = h.read(64)
+            if d:
+                response.append(d)
+            else:
+                break
+
+        h.close()
+        return response
+
 class SerialController(Controller):
 
+    CMD_PING        = "K"
     CMD_BATTERY     = "B"
     CMD_ZERO_ON     = "Z 1"
     CMD_ZERO_OFF    = "Z 0"
@@ -60,34 +131,68 @@ class SerialController(Controller):
     SERIAL_BAUDRATE = 9600
     SERIAL_TIMEOUT = 1.0
 
-    def __init__(self):
-        self.port = serial.Serial(SERIAL_DEVICE)
+    port = None
+
+    def __init__(self, portname=SERIAL_DEVICE):
+        self.port = portname
 
     def __repr__(self):
-        return "SerialController at {}".format(self.SERIAL_DEVICE)
+        return "SerialController at {}".format(self.port) #self.SERIAL_DEVICE)
 
     @staticmethod
     def find_all():
-        potential_controller = SerialController(SerialController.SERIAL_DEVICE)
 
+        controller = []
+        
         try:
-            status = potential_controller.get_status()
-            print(status)
+            default_controller = SerialController(SerialController.SERIAL_DEVICE)
+            default_controller.ping()
+            controller.append(default_controller)
         except Exception as e:
             print(e)
-            return []
+            log.debug(e)
 
-        return [potential_controller]
+        # scan other ports in case the serialController is connected as a usb device for debugging
+
+        all_ports = list(serial.tools.list_ports.comports())
+        log.debug("detecting SerialController: found {} ports".format(len(all_ports)))
+        for port in all_ports:
+            print(port[1])
+            if "leonardo" in port[1].lower():
+                try:
+                    potential_controller = SerialController(portname=port[0])
+                    potential_controller.ping()
+                    controller.append(potential_controller)
+                except Exception as e:
+                    print(e)
+
+            time.sleep(0.1)
+
+        return controller
+
+    def ping(self):
+        try:
+            response = self._send_command(self.CMD_PING)
+        except Exception as e:
+            print(e)
+            raise e
 
     def get_battery_status(self):
         try:
             response = self._send_command(self.CMD_BATTERY)
 
-            # TODO: parse response
+            if len(response) < 2:
+                raise Exception("response too short [{}]".format(response))
+
+            response = response.split(" ")
+
+            if len(response) != 4:
+                raise Exception("response in unexpected format [{}]".format(response))
+
+            return float(response[3])
 
         except Exception as e:
-            print(e)
-            return None
+            log.debug(e)
 
     def turn_zero_on(self, turn_on):
         try:
@@ -96,16 +201,14 @@ class SerialController(Controller):
             else:
                 self._send_command(self.CMD_ZERO_OFF)
         except Exception as e:
-            print(e)
-            return None        
+            log.debug(e)
 
     def get_uptime(self):
         try:
             response = self._send_command(self.CMD_UPTIME)
             return response
         except Exception as e:
-            print(e)
-            return None
+            log.debug(e)
 
     def turn_on(self, turn_on):
         try:
@@ -114,8 +217,7 @@ class SerialController(Controller):
             else:
                 self._send_command(self.CMD_OFF)
         except Exception as e:
-            print(e)
-            return None
+            log.debug(e)
 
     # def get_status(self):
     #     try:
@@ -141,8 +243,8 @@ class SerialController(Controller):
             response = ser.read(100)
             response = response.decode("utf-8") 
 
-            # remove every non-alphanumeric / -underscore / -space character
-            response = re.sub("[^a-zA-Z0-9_ ]", '', response)
+            # remove every non-alphanumeric / non-underscore / non-space / non-decimalpoint character
+            response = re.sub("[^a-zA-Z0-9_ .]", '', response)
 
             log.debug("[{}] serial receive: {}".format(self, response))
 
@@ -175,6 +277,7 @@ class SerialController(Controller):
 
 class UsbDirectController(Controller):
 
+    CMD_PING    = "knock"
     CMD_STATUS  = "status"
     CMD_ON      = "on"
     CMD_OFF     = "off"
@@ -197,7 +300,7 @@ class UsbDirectController(Controller):
         log.debug("detecting UsbDirectController: found {} ports".format(len(all_ports)))
         for port in all_ports:
             print(port[1])
-            if "arduino" in port[1].lower():
+            if "zero" in port[1].lower():
                 potential_controller = UsbDirectController(port[0])
                 try:
                     potential_controller.get_status()
@@ -208,6 +311,13 @@ class UsbDirectController(Controller):
             time.sleep(0.1)
 
         return controller
+
+    def ping(self):
+        try:
+            self._send_command(self.CMD_PING)
+        except Exception as e:
+            print(e)
+            raise e
 
     def turn_on(self, turn_on):
         try:
@@ -230,7 +340,14 @@ class UsbDirectController(Controller):
     def get_temperature(self):
         try:
             response = self._send_command(self.CMD_TEMP)
-            return response
+
+            if response is None: # error
+                return None
+
+            if response is "null": # controller has no sensor
+                return None
+
+            return float(response)
         except Exception as e:
             print(e)
             return None
@@ -250,8 +367,8 @@ class UsbDirectController(Controller):
             response = ser.read(100)
             response = response.decode("utf-8") 
 
-            # remove every non-alphanumeric / -underscore / -space character
-            response = re.sub("[^a-zA-Z0-9_ ]", '', response)
+            # remove every non-alphanumeric / non-underscore / non-space / non-decimalpoint character
+            response = re.sub("[^a-zA-Z0-9_ .]", '', response)
 
             log.debug("[{}] serial receive: {}".format(self, response))
 

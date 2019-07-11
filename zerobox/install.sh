@@ -51,6 +51,9 @@ sudo apt-get install -y python3-pygame
 sudo pip3 install luma.oled
 sudo pip3 install luma.emulator
 
+# ykush
+sudo pip3 install hidapi
+
 
 # oh-my-zsh
 # wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O ohmyzsh.sh && sh ohmyzsh.sh

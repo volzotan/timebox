@@ -11,7 +11,6 @@ from rpyc.utils.classic import obtain
 import logging
 import traceback
 
-
 from datetime import datetime, timedelta
 import time
 import os
@@ -55,6 +54,9 @@ class ZeroboxConnector(rpyc.Service):
         self.capture_timer = []
 
         self.config = {}
+        self.temperature_data = []
+        self.battery_data = []
+        self.network_status = None
 
         self.state = self.STATE_IDLE
 
@@ -395,6 +397,66 @@ class ZeroboxConnector(rpyc.Service):
         data["connector_state"] = self.state
         data["zerobox_status"] = self.zerobox.get_status(force_connection=force)
         return data
+
+    def exposed_get_battery_status(self, force=False):
+        if force:
+            data = None
+
+            for c in self.controller:
+                perc = c.get_battery_status()
+                if perc is not None:
+                    data = perc
+
+            self.battery_data = data
+
+        return self.battery_data
+
+    def exposed_set_network_state(self, interfacename, enable):
+        mode = "down"
+
+        if enable:
+            mode = "up"
+
+        try: 
+            ssid = subprocess.check_output(["sudo", "ifconfig", interfacename, mode])
+        except Exception as e:
+            self.log.debug(e)
+
+    def exposed_get_network_status(self, force=False):
+        if force:
+            self.network_status = None
+            data = {}
+
+            try: 
+                ssid = subprocess.check_output(["iwgetid", "-r"])
+                if ssid is not None:
+                    data["ssid"] = ssid.decode("utf-8")[:-1]
+                    data["interface"] = "wlan0"
+                    self.network_status = data
+            except Exception as e:
+                self.log.debug(e)
+
+        return self.network_status
+
+    def exposed_get_temperature(self, force=False):
+        if force:
+            data = []
+
+            try: 
+                temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
+                temp = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
+                data.append([temp, "cpu"])
+            except Exception as e:
+                pass
+
+            for c in self.controller:
+                temp = c.get_temperature()
+                if temp is not None:
+                    data.append([temp, "controller"])
+
+            self.temperature_data = data
+
+        return self.temperature_data
 
     def exposed_get_next_invocation(self):
         return self.scheduler.get_next_invocation("trigger")

@@ -1,0 +1,1 @@
+copy to /etc/udev/rules.d/50-ykush.rules to allow access to ykushxs devices without root
