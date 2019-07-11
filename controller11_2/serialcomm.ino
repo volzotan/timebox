@@ -1,5 +1,7 @@
 /* Commandlist
  *  
+ *  P  ---  Ping
+ *
  *  B  ---  Battery
  *  -1.00 -1.00 8.00 80
  *  cell1 cell2 direct percentage
@@ -97,6 +99,10 @@ void executeCommand(CommunicationInterface ser) {
   
   switch(ser.serialCommand) {
     
+    case 'K': // Ping / Knock
+      ser.port->println("K");    
+      break;
+
     case 'B': // Battery Health
       ser.port->print("K ");
       ser.port->print(getLiPoVoltage(BATT_CELL_1)); 

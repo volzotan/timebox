@@ -11,7 +11,7 @@ ISR(WDT_vect) {
   Sleepy::watchdogEvent();
 }
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x) Serial.print("["); Serial.print(millis()/1000); Serial.print("] "); Serial.println (x)
@@ -75,10 +75,7 @@ void setup() {
     
     DEBUG_PRINT("stopping!...");
     #ifndef DEBUG
-
-      // TODO: change that otherwise the LED will be permanent green
-
-      while(true) {}
+      stopAndShutdown();
     #else
       DEBUG_PRINT("stopping aborted (debug mode)");
     #endif
@@ -90,9 +87,22 @@ void setup() {
   DEBUG_PRINT(getLiPoVoltage(BATT_DIRECT));
   DEBUG_PRINT("Battery percentage:");
   DEBUG_PRINT(getLiPoVoltage(BATT_PERCENTAGE_DIRECT));
+
+  delay(1000);
+
+  switchZeroOn(true);
 }
 
 void loop() {    
   serialEvent();  
   ledLoop();
+}
+
+void stopAndShutdown() {
+  ledShow(0, 0, 0);
+  switchZeroOn(false);
+
+  while(true) {
+    wait(1.0);
+  }
 }

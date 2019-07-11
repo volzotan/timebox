@@ -129,7 +129,7 @@ class UsbController(object):
                     print("E buffer length exceeded")
             else:
 
-                if self.input_buffer == "ping":
+                if self.input_buffer == "knock":
                     print("K")
 
                 elif self.input_buffer == "on slow":

@@ -35,7 +35,7 @@ class UsbController(object):
     input_buffer = ""
 
     # timer
-    timer_dload = time.monotonic() # dummy load on by default # None
+    timer_dload = None #time.monotonic() # dummy load on by default # None
 
     # i2c = busio.I2C(board.SCL, board.SDA)
     # ina219 = adafruit_ina219.INA219(i2c)
@@ -80,7 +80,7 @@ class UsbController(object):
 
         if self.timer_dload is not None and now - self.timer_dload > 0:
             if self.dummy_load.value:
-                print("< {}".format(now - self.timer_dload))
+                # print("< {}".format(now - self.timer_dload))
                 if self.dummy_load_pixel:
                     self.pixel.fill(CLEAR)
                     self.pixel.show()
@@ -90,9 +90,8 @@ class UsbController(object):
                 self.timer_dload = self.timer_dload - self.TIMER_DLOAD_DUR + self.TIMER_DLOAD_INT
             else:
 
-                if not self.mosfet.duty_cycle > 65535/2:
-
-                    print(">")
+                if not self.mosfet.value:
+                    # print(">")
                     if self.dummy_load_pixel:
                         self.pixel.fill(WHITE)
                         self.pixel.show()
@@ -130,7 +129,7 @@ class UsbController(object):
                     print("E buffer length exceeded")
             else:
 
-                if self.input_buffer == "ping":
+                if self.input_buffer == "knock":
                     print("K")
 
                 elif self.input_buffer == "on":
@@ -167,20 +166,14 @@ class UsbController(object):
 
                 elif self.input_buffer == "temp":
                     print("K ", sep="")
-                    print(temp_sensor.temperature)
+                    print(self.temp_sensor.temperature)
 
                 elif self.input_buffer == "status":
-                    print("K ", sep="")
+                    print("K null")
 
-                    print("Bus Voltage:   {} V".format(self.ina219.bus_voltage))
-                    print("Shunt Voltage: {} mV".format(self.ina219.shunt_voltage / 1000))
-                    print("Load Voltage:  {} V".format(self.ina219.bus_voltage + self.ina219.shunt_voltage))
-                    print("Current:       {} mA".format(self.ina219.current))
-                    print("Dummy Load:    {}".format(not self.timer_dload is None))
-
-                elif self.input_buffer == "status v":
-                    print("K ", sep="")
-                    print(self.ina_current_value)
+                # elif self.input_buffer == "status v":
+                #     print("K ", sep="")
+                #     print(self.ina_current_value)
 
                 else:
                     print("E unknown command")

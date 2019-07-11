@@ -162,14 +162,14 @@ boolean checkBattHealth() {
     c0 = getLiPoVoltage(BATT_DIRECT);
 
     if (c0 < 1.0) {
-      DEBUG_PRINT(F("Batt Health: not connected"));
+      DEBUG_PRINT("Batt Health: not connected");
       delay(100);
       // whatever. probably USB powered.
       return true;
     }
 
     if (c0 > 1.0 && c0 < LIPO_CELL_MIN*2) {
-      DEBUG_PRINT(F("Battery voltage below threshold!"));
+      DEBUG_PRINT("Battery voltage below threshold!");
       DEBUG_PRINT(String(c0));
       
       delay(100);
