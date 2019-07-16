@@ -707,7 +707,7 @@ class Gui():
         # if info["temperature_controller"] is not None:
         #     temp_str = "{0:.2f} C (CTRL)".format(info["temperature_controller"])
 
-        if len(info["temperature"]) > 0:
+        if info["temperature"] is not None and len(info["temperature"]) > 0:
             # TODO: currently looking only on the first value
             if info["temperature"][0][1] == "cpu":
                 temp_str = "{0:.2f} C (CPU)".format(info["temperature"][0][0])
@@ -859,6 +859,16 @@ class Gui():
         else:
             self.text(draw, [3, offset], msg)
 
+    def _wake_up_on_keypress(self, keys):
+        # wake up if display is off and key is pressed
+        if len(keys) > 0:
+            if not self.display_on:
+                self.invalidate()
+                self.device.show()
+                self.display_on = True
+                keys = [] # clear keys
+
+        return keys
 
     def process_jobs(self, jobs):
 
@@ -1043,13 +1053,7 @@ class Gui():
                 menu.append("wifi off")
                 menu.append("reset to default config")
 
-            # wake up if display is off and key is pressed
-            if len(keys) > 0:
-                if not self.display_on:
-                    self.invalidate()
-                    self.device.show()
-                    self.display_on = True
-                    keys = []  # clear keys
+            keys = self._wake_up_on_keypress(keys)
 
             for e in keys:
 
@@ -1259,7 +1263,7 @@ class Gui():
 
         elif self.state == STATE_RUNNING_MENU:
 
-            menu = ["back", "stop"]
+            menu = ["display off", "back", "stop"]
 
             if self.isInvalid:
                 with canvas(self.device) as draw:
@@ -1267,6 +1271,9 @@ class Gui():
                 self.validate()
 
             k = self.getKeyEvents()
+
+            k = self._wake_up_on_keypress(k)
+
             if "U" in k:
                 self.menu_selected = (self.menu_selected - 1) % len(menu)
                 self.invalidate()
@@ -1278,11 +1285,25 @@ class Gui():
                 self.state = STATE_RUNNING
                 self.invalidate()
             if "3" in k:
+                # display off
                 if self.menu_selected == 0:
+                    if self.device is not None:
+                        if self.display_on:
+                            self.device.hide()
+                            self.device.clear()
+                            self.display_on = False
+                        else:
+                            self.invalidate()
+                            self.device.show()
+                            self.display_on = True
+
+                # back
+                elif self.menu_selected == 1:
                     self.menu_selected = 0
                     self.state = STATE_RUNNING
 
-                elif self.menu_selected == 1:
+                # stop
+                elif self.menu_selected == 2:
                     # self.scheduler.remove_job("trigger")
                     # self.zeroboxConnector.root.disconnect_all_cameras()
                     # for controller in self.controller:
