@@ -517,7 +517,7 @@ class Gui():
         if len(self.data["zerobox_status"]["cameras"].items()) > 0:
             cam0 = list(self.data["zerobox_status"]["cameras"].values())[0]
         if len(self.data["zerobox_status"]["cameras"].items()) > 1:
-            cam1 =  list(self.data["zerobox_status"]["cameras"].values())[1]
+            cam1 = list(self.data["zerobox_status"]["cameras"].values())[1]
 
         if cam0 is not None:
             if cam0["state"] == CameraConnector.STATE_CONNECTED:
@@ -1228,9 +1228,16 @@ class Gui():
             try:
                 self.zeroboxConnector.root.start()
             except Exception as e:
-                self.log.error("start Exception: ", e)
-            self.session = self._get_session()
+                self.log.error("start Exception: {}".format(e))
 
+            # get status since the zerobox may have detected new cameras or discarded old ones
+            status = obtain(self.zeroboxConnector.root.get_status(force=False))
+            if len(status) > 0:
+                self.data = {**self.data, **dict(status)}
+
+            print(self.data["zerobox_status"]["cameras"])
+
+            self.session = self._get_session()
             self.state = STATE_RUNNING
 
 

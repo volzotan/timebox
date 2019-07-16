@@ -13,7 +13,7 @@ sudo systemctl disable triggerhappy.service
 
 # install basic stuff
 
-sudo apt-get update
+sudo apt-get update --allow-releaseinfo-change
 sudo apt-get upgrade -y
 sudo apt-get install -y git rsync zsh picocom
 
@@ -53,6 +53,8 @@ sudo pip3 install luma.emulator
 
 # ykush
 sudo pip3 install hidapi
+
+sudo cp /home/pi/zerobox/udev/50-ykush.rules /etc/udev/rules.d/
 
 
 # oh-my-zsh

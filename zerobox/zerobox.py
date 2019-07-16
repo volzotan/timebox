@@ -582,6 +582,7 @@ class Zerobox(object):
         # option 2: throw away all previously known cameras
 
         self.cameras = {}
+        self.status["cameras"] = {}
 
         for camera in cameras:
             camera_obj = camera[0]
