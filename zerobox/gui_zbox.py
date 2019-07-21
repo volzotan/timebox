@@ -339,7 +339,7 @@ class Gui():
             if hours > 0:
                 val += "{}H ".format(hours)
             if minutes > 0:
-                val += "{}MIN ".format(hours)
+                val += "{}MIN ".format(minutes)
 
             val += "{}S".format(seconds)
             return val
