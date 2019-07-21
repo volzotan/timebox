@@ -12,7 +12,8 @@ import logging as log
 try:
     import smbus
 except ImportError as e:
-    print("importing smbus failed. Not a raspberry pi platform, i2c will not be available.")
+    pass
+    # print("importing smbus failed. Not a raspberry pi platform, i2c will not be available.")
 
 
 class Controller(object):

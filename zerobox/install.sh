@@ -53,14 +53,10 @@ sudo pip3 install luma.emulator
 
 # ykush
 sudo pip3 install hidapi
-
 sudo cp /home/pi/zerobox/udev/50-ykush.rules /etc/udev/rules.d/
 
-
-# oh-my-zsh
-# wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O ohmyzsh.sh && sh ohmyzsh.sh
-# sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
-# chsh -s /bin/zsh
+# create symlink for the zerobox CLI
+sudo ln -s /home/pi/zerobox/cli.py /usr/local/bin/zerobox 
 
 # set up the systemd services
 sudo cp /home/pi/zerobox/*.service /etc/systemd/system/
@@ -70,6 +66,10 @@ sudo systemctl enable zerobox_gui
 sudo systemctl start zerobox
 sudo systemctl start zerobox_gui
 
+# oh-my-zsh
+# wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O ohmyzsh.sh && sh ohmyzsh.sh
+# sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
+# chsh -s /bin/zsh
+
 # TODO: 
 #   enable i2c / SPI
-#   install libgphoto2

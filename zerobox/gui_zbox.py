@@ -1098,11 +1098,11 @@ class Gui():
                         elif option == 4:
                             # wifi on
                             if self.zeroboxConnector is not None:
-                                self.zeroboxConnector.root.set_network_state("wlan0", True)
+                                self.zeroboxConnector.root.set_network_status("wlan0", True)
                         elif option == 5:
                             # wifi off
                             if self.zeroboxConnector is not None:
-                                self.zeroboxConnector.root.set_network_state("wlan0", False)
+                                self.zeroboxConnector.root.set_network_status("wlan0", False)
                         elif option == 6:
                             # reset to default config
                             with open(CONFIG_FILE_DEFAULT, "r") as stream:
@@ -1233,6 +1233,10 @@ class Gui():
                 self.zeroboxConnector.root.start()
             except Exception as e:
                 self.log.error("start Exception: {}".format(e))
+
+                self.data["message"] = "exc. during start"
+                self.state = STATE_IDLE
+                return
 
             # get status since the zerobox may have detected new cameras or discarded old ones
             status = obtain(self.zeroboxConnector.root.get_status(force=False))
