@@ -2,7 +2,7 @@
 
 from zerobox import Zerobox
 from zeroboxScheduler import Scheduler
-from devices import Controller
+from devices import Controller, YKushXSController
 
 import rpyc
 from rpyc.utils.server import ThreadedServer
@@ -55,7 +55,7 @@ class ZeroboxConnector(rpyc.Service):
 
         self.config = {}
         self.temperature_data = []
-        self.battery_data = []
+        self.battery_data = None
         self.network_status = None
 
         self.state = self.STATE_IDLE
@@ -106,7 +106,6 @@ class ZeroboxConnector(rpyc.Service):
         self.log.info("found {} Controller".format(len(self.controller)))
         for c in self.controller:
             self.log.info(c)
-
 
     def close(self):
         if self.pool is not None:
@@ -177,7 +176,7 @@ class ZeroboxConnector(rpyc.Service):
 
         cameraconnectors = self.zerobox.get_connectors()
         if len(cameraconnectors.items()) == 0:
-            raise Exception("no connected camera found. trigger failed.")
+            raise NoConnectedCameraException("trigger failed.")
 
         for portname, cameraconnector in cameraconnectors.items():
             arguments.append((self.zerobox, portname))
@@ -229,34 +228,49 @@ class ZeroboxConnector(rpyc.Service):
         elif self.state == self.STATE_RUNNING:
 
             if "camera_on" in jobs:
+                self.log.debug(">>> job running: CAMERA ON")
+                self.log.debug("    {}".format(self.scheduler.print_next_job()))
+                for controller in self.controller:
+                    # turn everything on except the data connections
+                    if controller.is_data_connection:
+                        continue
+                    controller.turn_on(True)
+
+            if "usb_on" in jobs:
+                self.log.debug(">>> job running: USB ON")
+                self.log.debug("    {}".format(self.scheduler.print_next_job()))
                 for controller in self.controller:
                     controller.turn_on(True)
 
-            if "camera_off" in jobs:
-                if not self._is_trigger_active():
-                    for controller in self.controller:
-                        controller.turn_on(False)
-                    else:
-                        self.log.warning("previous trigger still active! unable to turn off camera")
-
             if "trigger" in jobs:
+                self.log.debug(">>> job running: TRIGGER")
+                self.log.debug("    {}".format(self.scheduler.print_next_job()))
                 if not self._is_trigger_active():
                     if self.session["intervalcamera"]:
-
-                        print(self.zerobox.cameras)
-                        print(self.zerobox.connectors)
-
                         self.exposed_detect_cameras()
                         self.exposed_connect_to_all()
 
+                        # TODO: add small delay here?
                     try:
                         self.exposed_trigger()
+                    except NoConnectedCameraException as nocamexc:
+                        self.log.error("trigger failed: {}".format("no camera connected"))
+                        self.session["errors"].append(nocamexc)
                     except Exception as e:
-                        self.log.error("trigger failed: ", e)
+                        self.log.error("trigger failed: {}".format(e))
                         self.session["errors"].append(e)
                 else:
                     self.log.warning("previous trigger still active! ignoring trigger event")
                     self.session["errors"].append(Exception("prev trigger active"))
+
+            if "camera_off" in jobs:
+                self.log.debug(">>> job running: CAMERA OFF")
+                self.log.debug("    {}".format(self.scheduler.print_next_job()))
+                if not self._is_trigger_active():
+                    for controller in self.controller:
+                        controller.turn_on(False)
+                else:
+                    self.log.warning("previous trigger still active! unable to turn off camera")
 
             # check finished triggers
 
@@ -271,10 +285,16 @@ class ZeroboxConnector(rpyc.Service):
                 # TODO: ignores post_wait
                 if self.session["intervalcamera"]:
                     if not self._is_trigger_active():
+                        
+                        self.log.debug("executing post trigger camera shutdown")
+
+                        # TODO: zerobox needs to forget the camera
+                        self.zerobox.disconnect_all_cameras()
+
                         for c in self.controller:
                             c.turn_on(False)
-                        else:
-                            self.log.warning("previous trigger still active! unable to turn off camera")
+                    else:
+                        self.log.warning("previous trigger still active! unable to turn off camera")
 
                 # session done?
                 if len(self.session["images"]) >= self.session["iterations"]:
@@ -329,7 +349,7 @@ class ZeroboxConnector(rpyc.Service):
         if self.session["intervalcamera"]:
             self.zerobox.disconnect_all_cameras(clean=True)
             for c in self.controller:
-                c.turn_on(False)
+                c.turn_on(False)    
 
         interval = self.session["interval"]*1000
         delay = 500
@@ -338,6 +358,8 @@ class ZeroboxConnector(rpyc.Service):
         else:
             self.scheduler.add_job("camera_on", interval,
                                    delay = delay)
+            self.scheduler.add_job("usb_on", interval,
+                                   delay = delay+float(self.session["ic_pre_wait"])*1000-4000)
             self.scheduler.add_job("trigger", interval,
                                    delay = delay+float(self.session["ic_pre_wait"])*1000)
             # max time the camera may be alive. should already be shut down after
@@ -370,6 +392,11 @@ class ZeroboxConnector(rpyc.Service):
         self.session["end"] = datetime.now()
         self.state = self.STATE_IDLE
 
+    def exposed_turn_off_everything(self):
+        self.exposed_detect_controller()
+        for c in self.controller:
+            c.turn_on(False)
+
     def exposed_connect(self, _portname):
         portname = obtain(_portname)
         cameras = self.zerobox.get_cameras()
@@ -394,24 +421,36 @@ class ZeroboxConnector(rpyc.Service):
 
     def exposed_get_status(self, force=False):
         data = {}
+        
         data["connector_state"] = self.state
+
         data["zerobox_status"] = self.zerobox.get_status(force_connection=force)
-        return data
 
-    def exposed_get_battery_status(self, force=False):
         if force:
-            data = None
+            self.temperature_data = []
+            try: 
+                temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
+                temp = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
+                self.temperature_data.append([temp, "cpu"])
+            except Exception as e:
+                pass
+            for c in self.controller:
+                temp = c.get_temperature()
+                if temp is not None:    
+                    self.temperature_data.append([temp, "controller"])
+        data["temperature"] = self.temperature_data
 
+        if force:
+            self.battery_data = None
             for c in self.controller:
                 perc = c.get_battery_status()
                 if perc is not None:
-                    data = perc
+                    self.battery_data = perc
+        data["battery"] = self.battery_data
 
-            self.battery_data = data
+        return data
 
-        return self.battery_data
-
-    def exposed_set_network_state(self, interfacename, enable):
+    def exposed_set_network_status(self, interfacename, enable):
         mode = "down"
 
         if enable:
@@ -438,26 +477,6 @@ class ZeroboxConnector(rpyc.Service):
 
         return self.network_status
 
-    def exposed_get_temperature(self, force=False):
-        if force:
-            data = []
-
-            try: 
-                temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
-                temp = float(temp_str[temp_str.index("=")+1:temp_str.index("'")])
-                data.append([temp, "cpu"])
-            except Exception as e:
-                pass
-
-            for c in self.controller:
-                temp = c.get_temperature()
-                if temp is not None:
-                    data.append([temp, "controller"])
-
-            self.temperature_data = data
-
-        return self.temperature_data
-
     def exposed_get_next_invocation(self):
         return self.scheduler.get_next_invocation("trigger")
 
@@ -483,6 +502,9 @@ class ZeroboxConnector(rpyc.Service):
     def exposed_get_images_in_memory(self):
         return self.zerobox.get_images_in_memory()
 
+
+class NoConnectedCameraException(Exception):
+    pass
 
 
 class Ztimer():

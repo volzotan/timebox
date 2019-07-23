@@ -57,6 +57,16 @@ class Scheduler(object):
         return None
 
 
+    def print_next_job(self):
+
+        jobs_sorted = sorted(self.jobs, key = lambda i: i["next_invocation"]) 
+
+        for job in jobs_sorted:
+            delta = job["next_invocation"] - datetime.now()
+            if delta.total_seconds() > 0:
+                return "next job: {} in {:.2f}s".format(job["job_object"], delta.total_seconds())
+
+
     def run_schedule(self):
         triggered_jobs = []
 

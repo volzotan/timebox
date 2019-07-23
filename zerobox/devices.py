@@ -18,6 +18,8 @@ except ImportError as e:
 
 class Controller(object):
 
+    is_data_connection = False
+
     def __init__(self):
         pass
 
@@ -32,12 +34,8 @@ class Controller(object):
 
     @staticmethod
     def sort_helper(controller):
-        try:
-            if controller.is_data_connection:
-                return +1
-        except Exception as e:
-            pass
-
+        if controller.is_data_connection:
+            return +1
         return 0
 
     @staticmethod
@@ -46,7 +44,7 @@ class Controller(object):
 
         controller = controller + YKushXSController.find_all()
         controller = controller + SerialController.find_all()
-        controller = controller + UsbHubController.find_all()
+        # controller = controller + UsbHubController.find_all()
         controller = controller + UsbDirectController.find_all()
 
         # sort controller. cameras should always be powered on first and usb connections to cameras second
@@ -66,6 +64,7 @@ class YKushXSController(Controller):
 
     def __init__(self, serialnumber):
         self.serialnumber = serialnumber
+        self.is_data_connection = True
 
     def __repr__(self):
         return "YKushXSController id: {}".format(self.serialnumber)
@@ -158,7 +157,6 @@ class SerialController(Controller):
         all_ports = list(serial.tools.list_ports.comports())
         log.debug("detecting SerialController: found {} ports".format(len(all_ports)))
         for port in all_ports:
-            print(port[1])
             if "leonardo" in port[1].lower():
                 try:
                     potential_controller = SerialController(portname=port[0])
@@ -300,7 +298,6 @@ class UsbDirectController(Controller):
         all_ports = list(serial.tools.list_ports.comports())
         log.debug("detecting UsbDirectController: found {} ports".format(len(all_ports)))
         for port in all_ports:
-            print(port[1])
             if "zero" in port[1].lower():
                 potential_controller = UsbDirectController(port[0])
                 try:

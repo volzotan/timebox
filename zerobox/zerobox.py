@@ -574,7 +574,6 @@ class Zerobox(object):
         else:
             self.log.debug("{} cameras detected".format(len(cameras)))
 
-
         # if a camera is disconnected and connected again, it may be the
         # same camera but is listed at a different portname 
 

@@ -29,6 +29,7 @@ sudo apt-get install -y libjpeg-dev
 sudo apt-get install -y libopenjp2-7
 sudo apt-get install -y libtiff5
 sudo apt-get install -y libgphoto2-dev
+sudo apt-get install -y gphoto2
 sudo apt-get install -y python3-smbus
 sudo apt-get install -y python3-yaml
 sudo apt-get install -y python3-numpy

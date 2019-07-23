@@ -887,17 +887,21 @@ class Gui():
                     self.data = {**self.data, **dict(status)}
                     # self.data["message"] = None
 
-                temperature = obtain(self.zeroboxConnector.root.get_temperature(force=force))
-                self.data["temperature"] = temperature
-
-                battery_status = obtain(self.zeroboxConnector.root.get_battery_status(force=force))
-                self.data["battery_status"] = battery_status
-
                 network_status = obtain(self.zeroboxConnector.root.get_network_status(force=force))
                 self.data["network_status"] = network_status
 
                 self.session = self._get_session()
 
+                if status is not None:
+                    if status["connector_state"] == ZeroboxConnector.STATE_RUNNING and self.state == STATE_LOGO:
+                        self.log.debug("external state: already running")
+                        self.state = STATE_RUNNING
+                        self.invalidate()
+
+                    if status["connector_state"] == ZeroboxConnector.STATE_IDLE and self.state == STATE_RUNNING:
+                        self.log.debug("external state: running cancelled")
+                        self.state = STATE_MENU
+                        self.invalidate()
 
                 # prev_trigger_results = self.zeroboxConnector.root.check_trigger_result()
                 # if None in prev_trigger_results:
@@ -1020,7 +1024,7 @@ class Gui():
                 #         # TODO: only uses the last controllers temp value
 
                 menu["temperature"] = self.data["temperature"]
-                menu["battery_status"] = self.data["battery_status"]
+                menu["battery_status"] = self.data["battery"]
                 menu["network_status"] = self.data["network_status"]
 
                 menu["total_space"] = self.data["total_space"]
