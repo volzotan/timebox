@@ -18,11 +18,14 @@ parser.add_argument("action",
                     choices=[
                         "start", 
                         "stop", 
-                        "off", 
+                        "controller_on", 
+                        "controller_off", 
                         "info", 
                         "log",
-                        "enable_service",
+                        "start_service",
+                        "stop_service",
                         "restart_service",
+                        "enable_service",
                         "disable_service"
                     ],
                     help="what to do...")
@@ -38,12 +41,17 @@ def _systemctl_service(keyword):
     print(output)
 
 def _connect():
-    c = rpyc.connect("localhost", 18861, config={
-        "allow_public_attrs": True,
-        "allow_pickle": True
-    })
+    try:
+        c = rpyc.connect("localhost", 18861, config={
+            "allow_public_attrs": True,
+            "allow_pickle": True
+        })
 
-    return c.root
+        return c.root
+    except Exception as e:
+        print(e)
+        print("connecting failed. exit...")
+        sys.exit(10)
 
 if args.action == "start":
     try:
@@ -81,7 +89,16 @@ elif args.action == "stop":
     except Exception as e:
         raise e
 
-elif args.action == "off":
+elif args.action == "controller_on":
+    try:
+        conn = _connect()
+        conn.turn_on_everything(True)
+
+        print("all controllers turned on.")
+    except Exception as e:
+        raise e
+
+elif args.action == "controller_off":
     try:
         conn = _connect()
         status = conn.get_status(force=True)
@@ -89,7 +106,7 @@ elif args.action == "off":
             print("not idle. abort.")
             sys.exit(3)
 
-        conn.turn_off_everything()
+        conn.turn_on_everything(False)
 
         print("all controllers turned off.")
     except Exception as e:
@@ -104,10 +121,17 @@ elif args.action == "log":
     except Exception as e:
         raise e
 
-elif args.action == "enable_service":
+elif args.action == "start_service":
     try:
         print("")
-        _systemctl_service("enable")
+        _systemctl_service("start")
+    except Exception as e:
+        raise e
+
+elif args.action == "stop_service":
+    try:
+        print("")
+        _systemctl_service("stop")
     except Exception as e:
         raise e
 
@@ -115,6 +139,14 @@ elif args.action == "restart_service":
     try:
         print("")
         _systemctl_service("restart")
+    except Exception as e:
+        raise e
+
+elif args.action == "enable_service":
+    try:
+        print("")
+        _systemctl_service("enable")
+        _systemctl_service("start")
     except Exception as e:
         raise e
 
