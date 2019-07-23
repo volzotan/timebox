@@ -67,6 +67,9 @@ class CameraConnector(object):
 
     def __init__(self, port, image_base_directory):
         self.port = port
+        
+        self.log = logging.getLogger()
+        self.log.setLevel(logging.DEBUG)
 
         self.image_base_directory = image_base_directory
         self.image_directory = None
@@ -146,27 +149,39 @@ class CameraConnector(object):
 
 
     def set_autofocus(self, enabled):
+        try:
+            self.state = self.STATE_BUSY
 
-        value = "Manual"
-        if enabled:
-            value = "Automatic"
+            value = "Manual"
+            if enabled:
+                value = "Automatic"
 
-        error, config = gp.gp_camera_get_config(self.camera)
-        gp.check_result(error)
+            error, config = gp.gp_camera_get_config(self.camera)
+            gp.check_result(error)
 
-        self._set_config_value(config, "focusmode", value)
+            self._set_config_value(config, "focusmode", value)
+        except Exception as e:
+            raise e
+        finally:
+            self.state = self.STATE_CONNECTED
 
 
     def run_autofocus(self, active):
+        try:
+            self.state = self.STATE_BUSY
 
-        value = 0
-        if active:
-            value = 1
+            value = 0
+            if active:
+                value = 1
 
-        error, config = gp.gp_camera_get_config(self.camera)
-        gp.check_result(error)
+            error, config = gp.gp_camera_get_config(self.camera)
+            gp.check_result(error)
 
-        self._set_config_value(self.camera, config, "autofocus", value)
+            self._set_config_value(config, "autofocus", value)
+        except Exception as e:
+            raise e
+        finally:
+            self.state = self.STATE_CONNECTED
 
 
     def set_exposure_compensation(self, compensation):
@@ -233,13 +248,22 @@ class CameraConnector(object):
             error, file_path = gp.gp_camera_capture(self.camera, gp.GP_CAPTURE_IMAGE)
             gp.check_result(error)
 
-            # print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+            self.log.debug("camera capture done. file path: {0}/{1}".format(file_path.folder, file_path.name))
 
             error, camera_file = gp.gp_camera_file_get(self.camera, file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
             gp.check_result(error)
 
+            self.log.debug("camera file get done")
+
+            time.sleep(0.1)
+
+            # file save will throw a "You need to specify a folder starting with /store_xxxxxxxxx/"-error
+            # if there is not enough disk space to transfer the file
+            
             error = gp.gp_file_save(camera_file, os.path.join(*filename))
             gp.check_result(error)
+
+            self.log.debug("camera save done")
         except Exception as e:
             raise e
         finally:
@@ -641,10 +665,13 @@ class Zerobox(object):
             raise Exception("Camera busy")
 
         if self.config["AUTOFOCUS_ENABLED"]:
-            self.focus_camera
+            # TODO: set busy
+            self.focus_camera(portname)
 
         filename = self._acquire_filename(conn.get_image_directory())
         filename2 = None
+
+        self.log.debug("acquired filename: {} {}".format(*filename))
 
         if not self.config["SECONDEXPOSURE_ENABLED"]:
             conn.capture_and_download(filename)

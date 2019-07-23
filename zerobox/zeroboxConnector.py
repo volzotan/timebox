@@ -5,7 +5,7 @@ from zeroboxScheduler import Scheduler
 from devices import Controller, YKushXSController
 
 import rpyc
-from rpyc.utils.server import ThreadedServer
+from rpyc.utils.server import ThreadedServer, ThreadPoolServer
 from rpyc.utils.classic import obtain
 
 import logging
@@ -208,18 +208,24 @@ class ZeroboxConnector(rpyc.Service):
                 self.log.info("trigger took {0:.2f}s".format(diff.total_seconds()))
             except multiprocessing.context.TimeoutError as e:
                 results.append(None)
-
+            except Exception as e:
+                self.log.error("Error during triggering: {}".format(e))
+                raise e
+            
         return results
 
 
     def exposed_disconnect_all_cameras(self):
-        self.zerobox.disconnect_all_cameras()
+        self.zerobox.disconnect_all_cameras(clean=True)
 
 
     # -------
 
 
     def exposed_loop(self):
+
+        self.log.debug("loop")
+
         jobs = self.scheduler.run_schedule()
 
         if self.state == self.STATE_IDLE:
@@ -274,32 +280,42 @@ class ZeroboxConnector(rpyc.Service):
 
             # check finished triggers
 
-            results = self.exposed_check_trigger_result()
+            try:
+                results = self.exposed_check_trigger_result()
 
-            if len(results) > 0 and None not in results:
-                self.session["images"].append(results)
+                if len(results) > 0 and None not in results:
+                    self.session["images"].append(results)
+                    self.capture_results = []
+                    self.capture_timer = []
+
+                    # camera off?
+                    # TODO: ignores post_wait
+                    if self.session["intervalcamera"]:
+                        if not self._is_trigger_active():
+                            
+                            self.log.debug("executing post trigger camera shutdown")
+
+                            # TODO: zerobox needs to forget the camera
+                            self.zerobox.disconnect_all_cameras(clean=True)
+
+                            for c in self.controller:
+                                c.turn_on(False)
+                        else:
+                            self.log.warning("previous trigger still active! unable to turn off camera")
+
+                    # session done?
+                    if len(self.session["images"]) >= self.session["iterations"]:
+                        self.log.info("image count equals iterations. ending session.")
+                        self.exposed_stop()
+
+            except Exception as e:
+                self.log.error("error occured during triggering. reset everything...")
                 self.capture_results = []
                 self.capture_timer = []
-
-                # camera off?
-                # TODO: ignores post_wait
-                if self.session["intervalcamera"]:
-                    if not self._is_trigger_active():
-                        
-                        self.log.debug("executing post trigger camera shutdown")
-
-                        # TODO: zerobox needs to forget the camera
-                        self.zerobox.disconnect_all_cameras()
-
-                        for c in self.controller:
-                            c.turn_on(False)
-                    else:
-                        self.log.warning("previous trigger still active! unable to turn off camera")
-
-                # session done?
-                if len(self.session["images"]) >= self.session["iterations"]:
-                    self.log.info("image count equals iterations. ending session.")
-                    self.exposed_stop()
+                if self.session["intervalcamera"]: 
+                    self.zerobox.disconnect_all_cameras(clean=True)
+                    for c in self.controller:
+                        c.turn_on(False)
 
         else:
             self.log.warning("illegal state: {}".format(self.state))
@@ -392,10 +408,10 @@ class ZeroboxConnector(rpyc.Service):
         self.session["end"] = datetime.now()
         self.state = self.STATE_IDLE
 
-    def exposed_turn_off_everything(self):
+    def exposed_turn_on_everything(self, turn_on):
         self.exposed_detect_controller()
         for c in self.controller:
-            c.turn_on(False)
+            c.turn_on(turn_on)
 
     def exposed_connect(self, _portname):
         portname = obtain(_portname)
@@ -554,10 +570,23 @@ if __name__ == "__main__":
     try:
         # allow_public_attrs is necessary to access data in passed dicts
         # allow_pickle is required for obtain() to avoid netref proxy objects
-        t = ThreadedServer(ZeroboxConnector(), port=18861, protocol_config={
-            "allow_public_attrs": True,
-            "allow_pickle": True
+
+        # t = ThreadedServer(ZeroboxConnector(), 
+        #     port=18861, 
+        #     protocol_config={
+        #         "allow_public_attrs": True,
+        #         "allow_pickle": True
+        # })
+
+        t = ThreadPoolServer(ZeroboxConnector(), 
+            port=18861, 
+            nbThreads=1,
+            requestBatchSize=1,
+            protocol_config={
+                "allow_public_attrs": True,
+                "allow_pickle": True
         })
+
         t.start()
     except Exception as e:
         print(e)
