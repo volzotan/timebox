@@ -5,7 +5,7 @@ from zeroboxScheduler import Scheduler
 from devices import Controller, YKushXSController
 
 import rpyc
-from rpyc.utils.server import ThreadedServer, ThreadPoolServer
+from rpyc.utils.server import Server, ThreadedServer, ThreadPoolServer
 from rpyc.utils.classic import obtain
 
 import logging
@@ -527,38 +527,43 @@ class Ztimer():
 
     def __init__(self, interval):
         self.interval = interval
+        
+        self.log = logging.getLogger()
+        self.log.setLevel(logging.DEBUG)
 
     def run(self):
 
         zeroboxConnector = None
 
         try:
-            print("start")
+            self.log.debug("start")
             time.sleep(1.0)
-            print("go")
+            self.log.debug("go")
             zeroboxConnector = rpyc.connect("localhost", 18861)
         except ConnectionRefusedError as e:
-            print("zeroboxConnector not available. retry...")
+            self.log.debug("zeroboxConnector not available. retry...")
             for i in range(10):
                 time.sleep(0.2)
                 try:
                     zeroboxConnector = rpyc.connect("localhost", 18861)
                     break
                 except ConnectionRefusedError as e:
-                    pass
+                    self.log.debug("connection refused. retry...")
 
             if zeroboxConnector is None:
-                print("zeroboxConnector not available. failed.")
+                self.log.error("zeroboxConnector not available. failed.")
                 sys.exit(-1)
 
-        try:
-            while True:
+        while True:
+            try:
                 zeroboxConnector.root.loop()
                 time.sleep(self.interval)
-        except KeyboardInterrupt as e:
-            print("Keyboard Interrupt. Exiting...")
-        except Exception as e:
-            print("Unknown Exception: {}".format(e))
+            except KeyboardInterrupt as e:
+                self.log.info("Keyboard Interrupt. Exiting...")
+                sys.exit(0)
+            except Exception as e:
+                self.log.error("Unknown Exception: {}".format(e))
+                sys.exit(1)
 
 
 if __name__ == "__main__":
@@ -570,6 +575,13 @@ if __name__ == "__main__":
     try:
         # allow_public_attrs is necessary to access data in passed dicts
         # allow_pickle is required for obtain() to avoid netref proxy objects
+
+        # t = Server(ZeroboxConnector(), 
+        #     port=18861, 
+        #     protocol_config={
+        #         "allow_public_attrs": True,
+        #         "allow_pickle": True
+        # })
 
         # t = ThreadedServer(ZeroboxConnector(), 
         #     port=18861, 

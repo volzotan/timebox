@@ -27,7 +27,7 @@ import PIL.ImageOps
 from zeroboxScheduler import Scheduler
 from devices import RTC
 from zerobox import CameraConnector
-from zeroboxConnector import ZeroboxConnector
+from zeroboxConnector import ZeroboxConnector, NoConnectedCameraException
 
 import threading
 
@@ -75,6 +75,8 @@ PLATFORM_UNKNOWN    = 0
 PLATFORM_PI         = 1
 PLATFORM_OSX        = 2
 
+SCREENSAVER_TIME    = 30 # seconds
+
 class Gui():
 
     def __init__(self):
@@ -89,6 +91,34 @@ class Gui():
         self.platform = PLATFORM_UNKNOWN
 
         self.display_on = True
+        self.last_button_input = datetime.now()
+
+        # state
+
+        self.state               = STATE_INIT
+        self.isInvalid           = True
+
+        self.menu_selected       = 0
+
+        self.selectedConfigItem  = None
+        self.configItemValue     = None
+        self.configItemPos       = 0 # Pointer to change digits of a configItems value
+
+        # ----
+
+        self.config = {}
+        self.status = {}
+        self.session = {}
+
+        self.zeroboxConnector = None
+        self.cameras = []
+        self.controller = None
+        self.clock = None
+
+        self.loop_lock = threading.Lock()
+
+
+        self.init()
 
         if os.uname().nodename == "raspberrypi":
             self.platform = PLATFORM_PI
@@ -159,30 +189,6 @@ class Gui():
         # font = ImageFont.truetype("ves-4x5.ttf", 5)
         # FONT_CHARACTER_WIDTH = 4
 
-        # state
-
-        self.state               = STATE_INIT
-        self.isInvalid           = True
-
-        self.menu_selected       = 0
-
-        self.selectedConfigItem  = None
-        self.configItemValue     = None
-        self.configItemPos       = 0 # Pointer to change digits of a configItems value
-
-        # ----
-
-        self.config = {}
-        self.status = {}
-        self.session = {}
-
-        self.zeroboxConnector = None
-        self.cameras = []
-        self.controller = None
-        self.clock = None
-
-        self.loop_lock = threading.Lock()
-
 
     def _init_log(self):
 
@@ -203,6 +209,9 @@ class Gui():
         fileHandlerDebug.setLevel(logging.DEBUG)
         fileHandlerDebug.setFormatter(formatter)
         self.log.addHandler(fileHandlerDebug)
+
+        # suppress debug messages from the display library / PIL
+        logging.getLogger("PIL").setLevel(logging.WARNING)
 
 
     def init(self):
@@ -252,8 +261,8 @@ class Gui():
         # setup the Scheduler
 
         self.scheduler = Scheduler()
-        self.scheduler.add_job("update_status", 1000)
-        self.scheduler.add_job("force_update_status", 2000)
+        self.scheduler.add_job("update_status", 2000)
+        self.scheduler.add_job("force_update_status", 5000)
 
         self.clock = None
         try:
@@ -478,6 +487,15 @@ class Gui():
 
         keys = self.keyEvents + keys
         self.keyEvents = []
+
+        if len(keys) > 0:
+            self.last_button_input = datetime.now()
+            if not self.display_on:
+                self.device.show()
+                self.display_on = True
+                self.invalidate()
+                return []
+
         return keys
 
 
@@ -859,20 +877,14 @@ class Gui():
         else:
             self.text(draw, [3, offset], msg)
 
-    def _wake_up_on_keypress(self, keys):
-        # wake up if display is off and key is pressed
-        if len(keys) > 0:
-            if not self.display_on:
-                self.invalidate()
-                self.device.show()
-                self.display_on = True
-                keys = [] # clear keys
-
-        return keys
-
     def process_jobs(self, jobs):
 
         if "update_status" in jobs or "force_update_status" in jobs:
+
+            if (datetime.now() - self.last_button_input).total_seconds() > SCREENSAVER_TIME and self.display_on:
+                self.log.debug("screensaver started")
+                self.device.hide()
+                self.display_on = False
 
             if self.zeroboxConnector is not None:
                 force = False
@@ -1038,9 +1050,6 @@ class Gui():
                     self.draw_menu(draw, menu)
                 self.validate()
 
-                # device.hide()
-                # device.show()
-
         elif self.state == STATE_CONFIG:
 
             keys = self.getKeyEvents()
@@ -1056,8 +1065,6 @@ class Gui():
                 menu.append("wifi on")
                 menu.append("wifi off")
                 menu.append("reset to default config")
-
-            keys = self._wake_up_on_keypress(keys)
 
             for e in keys:
 
@@ -1280,8 +1287,6 @@ class Gui():
 
             k = self.getKeyEvents()
 
-            k = self._wake_up_on_keypress(k)
-
             if "U" in k:
                 self.menu_selected = (self.menu_selected - 1) % len(menu)
                 self.invalidate()
@@ -1363,7 +1368,6 @@ class Gui():
 
 if __name__ == "__main__":
     g = Gui()
-    g.init()
 
     SLEEP_DURATION = 0.1
 
