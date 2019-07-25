@@ -117,7 +117,6 @@ class Gui():
 
         self.loop_lock = threading.Lock()
 
-
         self.init()
 
         if os.uname().nodename == "raspberrypi":
@@ -944,7 +943,7 @@ class Gui():
             self.invalidate()
 
         if self.state == STATE_INIT:
-            print("init")
+            self.log.debug("init")
             self.invalidate()
             self.state = STATE_LOGO
 
@@ -1014,7 +1013,7 @@ class Gui():
                     self.invalidate()
                     break
 
-            if self.isInvalid:
+            if self.state == STATE_MENU and self.isInvalid:
 
                 menu = {}
 
@@ -1147,6 +1146,8 @@ class Gui():
 
             item = self.selectedConfigItem
 
+            print(self.configItemPos)
+
             k = self.getKeyEvents()
             if "U" in k:
                 self.configItemValue = self._changeConfigItem(self.selectedConfigItem, self.configItemValue, self.configItemPos, 1)
@@ -1160,9 +1161,7 @@ class Gui():
                     if item["type"] == "float":
                         if self.configItemPos == len(str(int(abs(self.configItemValue)))):
                             self.configItemPos -= 1
-                elif item["type"] == "time":
-                    if self.configItemPos > 0:
-                        self.configItemPos -= 1
+                    elif item["type"] == "time":
                         if self.configItemPos == 2 or self.configItemPos == 5:
                             self.configItemPos -= 1
             if "R" in k:
@@ -1177,7 +1176,7 @@ class Gui():
                         if self.configItemPos == len(str(int(abs(self.configItemValue)))):
                             self.configItemPos += 1
                 elif item["type"] == "time":
-                    if self.configItemPos < 10:
+                    if self.configItemPos < 7:
                         self.configItemPos += 1
                         if self.configItemPos == 2 or self.configItemPos == 5:
                             self.configItemPos += 1
