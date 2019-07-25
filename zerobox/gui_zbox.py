@@ -1166,11 +1166,9 @@ class Gui():
                             self.configItemPos -= 1
             if "R" in k:
                 if item["type"] == "int":
-                    print(self.configItemPos)
                     if self.configItemPos < len(str(int(abs(self.configItemValue))))-1:
                         self.configItemPos += 1
                 if item["type"] == "float":
-                    print("{0:.2f}".format(abs(self.configItemValue)))
                     if self.configItemPos < len("{0:.2f}".format(abs(self.configItemValue)))-1:
                         self.configItemPos += 1
                         if self.configItemPos == len(str(int(abs(self.configItemValue)))):
@@ -1252,8 +1250,6 @@ class Gui():
             status = obtain(self.zeroboxConnector.root.get_status(force=False))
             if len(status) > 0:
                 self.data = {**self.data, **dict(status)}
-
-            print(self.data["zerobox_status"]["cameras"])
 
             self.session = self._get_session()
             self.state = STATE_RUNNING

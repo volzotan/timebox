@@ -196,6 +196,18 @@ class ZeroboxConnector(rpyc.Service):
         else:
             return False
 
+    def _get_max_trigger_age(self):
+        if len(self.capture_results) == 0:
+            return None
+
+        result_ages = []
+
+        for result, t in zip(self.capture_results, self.capture_timer):
+            diff = (datetime.now() - t).total_seconds()
+            result_ages.append(diff)
+
+        return max(result_ages)
+
     def exposed_check_trigger_result(self):
 
         results = []
@@ -272,11 +284,18 @@ class ZeroboxConnector(rpyc.Service):
             if "camera_off" in jobs:
                 self.log.debug(">>> job running: CAMERA OFF")
                 self.log.debug("    {}".format(self.scheduler.print_next_job()))
+
                 if not self._is_trigger_active():
                     for controller in self.controller:
                         controller.turn_on(False)
                 else:
-                    self.log.warning("previous trigger still active! unable to turn off camera")
+                    trigger_age = self._get_max_trigger_age()
+                    if trigger_age < 100:
+                        self.log.warning("previous trigger still active! unable to turn off camera")
+                    else:
+                        self.log.error("previous trigger active for {:.2f}! force camera off".format(trigger_age))
+                        for controller in self.controller:
+                            controller.turn_on(False)
 
             # check finished triggers
 
@@ -543,7 +562,7 @@ class Ztimer():
         except ConnectionRefusedError as e:
             self.log.debug("zeroboxConnector not available. retry...")
             for i in range(10):
-                time.sleep(0.2)
+                time.sleep(1.0)
                 try:
                     zeroboxConnector = rpyc.connect("localhost", 18861)
                     break
@@ -563,7 +582,9 @@ class Ztimer():
                 sys.exit(0)
             except Exception as e:
                 self.log.error("Unknown Exception: {}".format(e))
-                sys.exit(1)
+                traceback.print_exc()
+                
+                # ignore and continue
 
 
 if __name__ == "__main__":

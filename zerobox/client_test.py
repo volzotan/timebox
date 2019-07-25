@@ -12,10 +12,10 @@ try:
     c.root.start()
 
     config = obtain(c.root.get_config())
-    config["secondexposure"]["value"] = True
-    config["se_use_threshold"]["value"] = False
-    config["interval"]["value"] = 13 # 30
-    config["iterations"]["value"] = 2
+    # config["secondexposure"]["value"] = True
+    # config["se_use_threshold"]["value"] = False
+    # config["interval"]["value"] = 13 # 30
+    # config["iterations"]["value"] = 2
 
     # config["intervalcamera"]["value"] = True
 
