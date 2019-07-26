@@ -760,7 +760,7 @@ if __name__ == "__main__":
     # usbController = UsbDirectController("/dev/tty.usbmodem14201")
     # print(usbController.get_status())
 
-    print(z.get_images_in_memory())
+    # print(z.get_images_in_memory())
 
     z.close()
 

@@ -278,7 +278,7 @@ class Gui():
         self.data["images_in_memory"]        = None
         self.data["last_image_brightness"]   = None
         self.data["temperature"]             = None
-        self.data["battery_status"]          = None
+        self.data["battery"]                 = None
         self.data["network_status"]          = None
 
         if self.zeroboxConnector is not None:
@@ -990,7 +990,7 @@ class Gui():
 
             if "force_update_status" in triggered_jobs:
                 if self.zeroboxConnector is not None:
-                    self.cameras = obtain(self.zeroboxConnector.root.detect_cameras())
+                    # self.cameras = obtain(self.zeroboxConnector.root.detect_cameras())
                     self.data["message"] = "cam: {} | controller: {}".format(len(self.cameras), len(self.controller))
 
             for e in self.getKeyEvents():

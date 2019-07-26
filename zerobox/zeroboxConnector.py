@@ -17,6 +17,7 @@ import os
 import subprocess
 import sys
 import yaml
+import psutil
 
 import multiprocessing
 from multiprocessing.pool import ThreadPool
@@ -455,10 +456,10 @@ class ZeroboxConnector(rpyc.Service):
         return self.session
 
     def exposed_get_status(self, force=False):
-        data = {}
-        
-        data["connector_state"] = self.state
+        self.exposed_log_process_memory()
 
+        data = {}
+        data["connector_state"] = self.state
         data["zerobox_status"] = self.zerobox.get_status(force_connection=force)
 
         if force:
@@ -537,6 +538,24 @@ class ZeroboxConnector(rpyc.Service):
     def exposed_get_images_in_memory(self):
         return self.zerobox.get_images_in_memory()
 
+    def exposed_log_process_memory(self):
+
+        self.log.debug("MEMORY: {}".format(psutil.virtual_memory()._asdict()["percent"]))
+
+        # try: 
+        #     pid = os.getpid()
+        #     data = subprocess.check_output(["cat", "/proc/{}/status".format(pid)])
+
+        #     hashed_data = {}
+        #     for line in data:
+        #         splits = line.split(" ")
+        #         hashed_data[splits[0]] = splits[1]
+
+        #     print(hashed_data)
+
+        # except Exception as e:
+        #     self.log.debug(e)
+
 
 class NoConnectedCameraException(Exception):
     pass
@@ -588,6 +607,8 @@ class Ztimer():
 
 
 if __name__ == "__main__":
+
+
 
     timer = Ztimer(0.5)
     timer_thread = Thread(target = timer.run)
