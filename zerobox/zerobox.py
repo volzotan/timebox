@@ -34,6 +34,8 @@ CONFIG = {
     # "SERIAL_BAUDRATE"           : 9600,
     # "SERIAL_TIMEOUT"            : 1, # in sec
 
+    "COMMANDLINE_MODE"          : True,
+
     "AUTOFOCUS_ENABLED"         : False,
     "AUTOFOCUS_DURATION"        : 2,
 
@@ -64,7 +66,6 @@ class CameraConnector(object):
     STATE_ERROR             = 4
     STATE_UNKNOWN           = 5
 
-
     def __init__(self, port, image_base_directory):
         self.port = port
         
@@ -79,6 +80,74 @@ class CameraConnector(object):
 
         self.state = self.STATE_INITIALIZED
 
+    def open():
+        pass
+
+    def close():
+        pass
+
+    def get_state(self):
+        return self.state
+
+    def get_image_directory(self):
+        return self.image_directory
+
+    def set_autofocus(self, enabled):
+        pass
+
+    def run_autofocus(self, active):
+        pass
+
+    def set_exposure_compensation(self, compensation):
+        pass
+
+    def set_exposure_manual(self, shutter, aperture, iso):
+        pass
+
+    def get_exposure_status(self):
+        pass
+
+    def _get_serialnumber(self):
+        pass
+
+    def capture_and_download(self, filename):
+        pass
+
+    def _get_config_value(self, config, name):
+        pass
+
+    def _set_config_value(self, config, name, value):
+        pass
+
+    def list_config(self):
+        pass
+
+
+class CameraConnectorCli(CameraConnector):
+
+    def __init__(self, port, image_base_directory):
+        pass
+
+        # gphoto2 --auto-detect
+        # gphoto2 --capture-image-and-download --port=usb:029,009
+        # gphoto2 --list-cameras
+        # gphoto2 --list-config
+
+        # gphoto2 --get-config /main/capturesettings/focusmode
+        # gphoto2 --get-config /main/capturesettings/exposurecompensation
+        # gphoto2 --set-config-value /main/capturesettings/exposurecompensation=-5
+        # gphoto2 --set-config-value /main/capturesettings/focusmode=Manual
+        # gphoto2 --set-config-value /main/capturesettings/focusmode=0
+        # gphoto2 --get-config /main/capturesettings/shutterspeed
+        # gphoto2 --get-config /main/capturesettings/f-number
+        # gphoto2 --set-config-value /main/actions/autofocus=0
+        # gphoto2 --set-config-value /main/actions/autofocus=1
+
+
+class CameraConnectorSwig(CameraConnector):
+
+    def __init__(self, port, image_base_directory):
+        super().__init__()
 
     def open(self):
         self.context = gp.gp_context_new()
@@ -119,10 +188,6 @@ class CameraConnector(object):
         self.camera = None
 
         self.state = self.STATE_CLOSED
-
-
-    def get_state(self):
-        return self.state
 
 
     # def check(self):
@@ -259,7 +324,7 @@ class CameraConnector(object):
 
             # file save will throw a "You need to specify a folder starting with /store_xxxxxxxxx/"-error
             # if there is not enough disk space to transfer the file
-            
+
             error = gp.gp_file_save(camera_file, os.path.join(*filename))
             gp.check_result(error)
 
@@ -334,13 +399,13 @@ class CameraConnector(object):
 class Zerobox(object):
 
     def __init__(self):
-        self.config = CONFIG
+        self.config             = CONFIG
 
-        self.status = {}
-        self.status["cameras"] = {} # info about connected cameras
+        self.status             = {}
+        self.status["cameras"]  = {} # info about connected cameras
 
-        self.cameras = {} # detected cameras
-        self.connectors = {} # connected cameras
+        self.cameras            = {} # detected cameras
+        self.connectors         = {} # connected cameras
 
         # expand directories
 
@@ -558,6 +623,33 @@ class Zerobox(object):
 
         return shutter_repr + aperture_repr + iso_repr
 
+    def _gphoto(self, cmd, **kwargs):
+        try:
+            args = ["gphoto2"]
+            args.append("--{}".format(cmd))
+
+            for kwarg in kwargs:
+                args.append(kwarg)
+
+            print(args)
+            output = subprocess.check_output(args)
+            output = output.decode("UTF-8")
+            output = output.split("\n")
+            return output
+        except Exception as e:
+            raise e
+
+    def _cli_auto_detect(self):
+        output = self._gphoto("auto-detect")
+        
+        print(output)
+
+        cameras = []
+        for i in range(2, len(output)):
+            if len(output[i]) > 0:
+                cameras.append(output[i])
+
+        return cameras
 
     def _detect_cameras(self):
 
@@ -565,22 +657,25 @@ class Zerobox(object):
         # logging.basicConfig(format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
         # gp.check_result(gp.use_python_logging())
 
-        self.context = gp.gp_context_new()
+        if self.config["COMMANDLINE_MODE"]:
+            cameras = self._cli_auto_detect()
+        else:
+            self.context = gp.gp_context_new()
 
-        error, self.port_info_list = gp.gp_port_info_list_new()
-        gp.check_result(error)
+            error, self.port_info_list = gp.gp_port_info_list_new()
+            gp.check_result(error)
 
-        error = gp.gp_port_info_list_load(self.port_info_list)
-        gp.check_result(error)
+            error = gp.gp_port_info_list_load(self.port_info_list)
+            gp.check_result(error)
 
-        error, abilities_list = gp.gp_abilities_list_new()
-        gp.check_result(error)
+            error, abilities_list = gp.gp_abilities_list_new()
+            gp.check_result(error)
 
-        error = gp.gp_abilities_list_load(abilities_list)
-        gp.check_result(error)
+            error = gp.gp_abilities_list_load(abilities_list)
+            gp.check_result(error)
 
-        error, cameras = gp.gp_abilities_list_detect(abilities_list, self.port_info_list)
-        gp.check_result(error)
+            error, cameras = gp.gp_abilities_list_detect(abilities_list, self.port_info_list)
+            gp.check_result(error)
 
         return cameras
 
@@ -623,8 +718,14 @@ class Zerobox(object):
 
 
     def connect_camera(self, camera):
-        port = self._lookup_port(self.port_info_list, camera)
-        conn = CameraConnector(port, self.config["IMAGE_DIR"])
+
+        conn = None
+
+        if self.config["COMMANDLINE_MODE"]:
+            conn = CameraConnectorCli(None, self.config["IMAGE_DIR"])
+        else:
+            port = self._lookup_port(self.port_info_list, camera)
+            conn = CameraConnectorSwig(port, self.config["IMAGE_DIR"])
 
         portname = camera[1]
         if portname not in self.status["cameras"]:
@@ -665,7 +766,6 @@ class Zerobox(object):
             raise Exception("Camera busy")
 
         if self.config["AUTOFOCUS_ENABLED"]:
-            # TODO: set busy
             self.focus_camera(portname)
 
         filename = self._acquire_filename(conn.get_image_directory())
@@ -762,7 +862,9 @@ if __name__ == "__main__":
 
     # print(z.get_images_in_memory())
 
-    z.close()
+    # z.close()
+
+    z.detect_cameras()
 
         
         
