@@ -3,6 +3,7 @@
 import argparse
 import sys
 import subprocess
+from datetime import datetime
 
 import rpyc
 from rpyc.utils.classic import obtain
@@ -161,7 +162,7 @@ elif args.action == "disable_service":
 elif args.action == "info":
     try:
         conn = _connect()
-        status = conn.get_status(force=True)
+        status = conn.get_status()  #force=True)
         temperatures = status["temperature"]
         battery = status["battery"]
         network = conn.get_network_status(force=True)
@@ -204,8 +205,17 @@ elif args.action == "info":
 
         if status["connector_state"] == ZeroboxConnector.STATE_RUNNING:
             print("-" * 83)
-            print(DATA_STRING.format(label="session", data="active for 1h 23min 45s"))   
-            session = conn.get_session()
+
+            session = obtain(conn.get_session())
+
+            diff = (datetime.now() - session["start"]).total_seconds()
+            total_time = (session["end"] - session["start"]).total_seconds()
+
+            hours = diff / 3600
+            minutes = (diff / 60) % 60
+            seconds = diff % 60
+
+            print(DATA_STRING.format(label="session", data="active for {}h {}min {}s [{:.1f}%]".format(int(hours), int(minutes), int(seconds), (diff/total_time)*100.0)))   
             for key in session.keys():
                 if key == "errors" or key == "images":
                     print(DATA_STRING2.format(label=key, data=len(session[key])))  

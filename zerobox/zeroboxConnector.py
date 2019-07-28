@@ -610,8 +610,6 @@ class Ztimer():
 
 if __name__ == "__main__":
 
-
-
     timer = Ztimer(0.5)
     timer_thread = Thread(target = timer.run)
     timer_thread.start()

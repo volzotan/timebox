@@ -57,13 +57,11 @@ def _gphoto(cmd, *args): #, **kwargs):
         arguments = ["gphoto2"]
         arguments.append("--{}".format(cmd))
 
-        # for kwarg in kwargs:
-        #     arguments.append(kwarg)
-
         for arg in args:
             arguments.append(arg)
 
         print(arguments)
+
         output = subprocess.check_output(arguments)
         output = output.decode("UTF-8")
         output = output.split("\n")
@@ -201,16 +199,23 @@ class CameraConnectorCli(CameraConnector):
         mode = 0
         if active:
             mode = 1
-        
-        _gphoto("set-config-value", "/main/actions/autofocus={}".format(mode))
 
         if active:
             self.state = self.STATE_BUSY
-        else:
+        
+        _gphoto("set-config-value", "/main/actions/autofocus={}".format(mode))
+
+        if not active:
             self.state = self.STATE_CONNECTED
 
     def set_exposure_compensation(self, compensation):
-        self._set_config_value("/main/capturesettings/exposurecompensation", compensation)
+        try:
+            self.state = self.STATE_BUSY
+            self._set_config_value("/main/capturesettings/exposurecompensation", compensation)
+        except Exception as e:
+            raise e
+        finally:
+            self.state = self.STATE_CONNECTED
 
     def set_exposure_manual(self, shutter, aperture, iso):
         pass
@@ -240,9 +245,11 @@ class CameraConnectorCli(CameraConnector):
         return status
 
     def capture_and_download(self, filename):
+        self.state = self.STATE_BUSY
         try:
             _gphoto("capture-image-and-download")
             shutil.move("capt0000.arw", os.path.join(*filename))
+            self.log.debug("camera save done: {}".format(filename[1]))
         except Exception as e:
             raise e
         finally:
@@ -431,7 +438,7 @@ class CameraConnectorSwig(CameraConnector):
             error = gp.gp_file_save(camera_file, os.path.join(*filename))
             gp.check_result(error)
 
-            self.log.debug("camera save done")
+            self.log.debug("camera save done: {}".format(filename[1]))
         except Exception as e:
             raise e
         finally:
@@ -922,6 +929,8 @@ class Zerobox(object):
                     self.log.warn("camera {} busy. getting status aborted".format(portname))
                     data["cameras"][portname]["state"] = connector.get_state()
                     continue
+                else:
+                    self.log.debug(connector.get_state())
 
                 try:
                     s = connector.get_exposure_status()

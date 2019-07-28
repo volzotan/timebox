@@ -600,7 +600,12 @@ class Gui():
             # self.text(draw, [29, start+16], "156")
 
             self.text(draw, [1, start+2], "T:")
-            self.text(draw, [30, start+2], "{0:.1f}".format(self.config["se_threshold"]["value"]))
+            threshold_value = ""
+            if self.config["se_use_threshold"]["value"]:
+                threshold_value = "{0:.1f}".format(self.config["se_threshold"]["value"])
+            else:
+                threshold_value = "----"
+            self.text(draw, [30, start+2], threshold_value)
             self.text(draw, [1, start+9], "LAST:")
             last_image_brightness = "?"
             if cam0 is not None and cam0["last_image_brightness"] is not None:
@@ -939,7 +944,11 @@ class Gui():
         self.loop_lock.acquire()
 
         triggered_jobs = self.scheduler.run_schedule()
-        self.process_jobs(triggered_jobs)
+
+        try:
+            self.process_jobs(triggered_jobs)
+        except Exception as e:
+            self.log.error("job raised exception: {}".format(e))
 
         if "update_status" in triggered_jobs:
             self.invalidate()

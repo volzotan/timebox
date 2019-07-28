@@ -77,6 +77,9 @@ class Scheduler(object):
                     job["next_invocation"] = job["next_invocation"] + job["interval"]
                 triggered_jobs.append(job["job_object"])
 
+        # remove duplicates
+        triggered_jobs = list(set(triggered_jobs))
+
         return triggered_jobs
 
 
