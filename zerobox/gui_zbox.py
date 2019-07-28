@@ -324,6 +324,8 @@ class Gui():
     def _apertureToStr(self, value):
         e = 0.1
 
+        value = float(value)
+
         aperture_values = [ "1.0", "1.2", "1.4", "2", 
                             "2.8", "4", "5.6", "8", 
                             "11", "16", "22", "32"]

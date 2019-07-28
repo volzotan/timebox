@@ -36,7 +36,7 @@ CONFIG = {
 
     "COMMANDLINE_MODE"          : True,
 
-    "AUTOFOCUS_ENABLED"         : False,
+    "AUTOFOCUS_ENABLED"         : True,
     "AUTOFOCUS_DURATION"        : 2,
 
     "SECONDEXPOSURE_ENABLED"    : True,
@@ -52,10 +52,31 @@ DEBUG                           = True
 
 # --- --- --- --- --- --- --- --- --- ---
 
+def _gphoto(cmd, *args): #, **kwargs):
+    try:
+        arguments = ["gphoto2"]
+        arguments.append("--{}".format(cmd))
+
+        # for kwarg in kwargs:
+        #     arguments.append(kwarg)
+
+        for arg in args:
+            arguments.append(arg)
+
+        print(arguments)
+        output = subprocess.check_output(arguments)
+        output = output.decode("UTF-8")
+        output = output.split("\n")
+        return output
+    except Exception as e:
+        raise e
+
+# --- --- --- --- --- --- --- --- --- ---
+
 class CameraConnector(object):
 
     MODE_MANUAL             = "M"
-    MODE_APERTURE_PRIORITY  = "M"
+    MODE_APERTURE_PRIORITY  = "A"
     MODE_AUTOMATIC          = "P"
     MODE_UNKNOWN            = "?"
 
@@ -86,6 +107,14 @@ class CameraConnector(object):
     def close():
         pass
 
+    def _create_image_directory(self):
+        # create image (sub-)directory
+        self.image_directory = os.path.join(self.image_base_directory, "cam_" + self.serialnumber)
+        try:
+            os.makedirs(self.image_directory)
+        except FileExistsError as e:
+            pass
+
     def get_state(self):
         return self.state
 
@@ -107,10 +136,10 @@ class CameraConnector(object):
     def get_exposure_status(self):
         pass
 
-    def _get_serialnumber(self):
+    def capture_and_download(self, filename):
         pass
 
-    def capture_and_download(self, filename):
+    def _get_serialnumber(self):
         pass
 
     def _get_config_value(self, config, name):
@@ -124,9 +153,6 @@ class CameraConnector(object):
 
 
 class CameraConnectorCli(CameraConnector):
-
-    def __init__(self, port, image_base_directory):
-        pass
 
         # gphoto2 --auto-detect
         # gphoto2 --capture-image-and-download --port=usb:029,009
@@ -143,11 +169,108 @@ class CameraConnectorCli(CameraConnector):
         # gphoto2 --set-config-value /main/actions/autofocus=0
         # gphoto2 --set-config-value /main/actions/autofocus=1
 
+    def __init__(self, port, image_base_directory):
+        super().__init__(port, image_base_directory)
+
+    def open(self):
+
+        self.serialnumber = self._get_serialnumber()
+        self._create_image_directory()
+
+        status = self.get_exposure_status()
+        if status["expprogram"] == "A":
+            self.exposure_mode = self.MODE_APERTURE_PRIORITY
+        elif status["expprogram"] == "M":
+            self.exposure_mode = self.MODE_MANUAL
+        else:
+            self.exposure_mode = self.MODE_UNKNOWN
+
+        self.state = self.STATE_CONNECTED
+
+    def close(self):
+        self.state = self.STATE_CLOSED
+
+    def set_autofocus(self, enabled):
+        mode = "Manual"
+        if enabled:
+            mode = "Automatic" # TODO: right word?
+  
+        _gphoto("set-config-value", "/main/capturesettings/focusmode={}".format(mode))
+
+    def run_autofocus(self, active):
+        mode = 0
+        if active:
+            mode = 1
+        
+        _gphoto("set-config-value", "/main/actions/autofocus={}".format(mode))
+
+        if active:
+            self.state = self.STATE_BUSY
+        else:
+            self.state = self.STATE_CONNECTED
+
+    def set_exposure_compensation(self, compensation):
+        self._set_config_value("/main/capturesettings/exposurecompensation", compensation)
+
+    def set_exposure_manual(self, shutter, aperture, iso):
+        pass
+
+    def get_exposure_status(self):
+        self.state = self.STATE_BUSY
+        status = {}
+
+        # output = _gphoto("list-all-config")
+
+        try:
+            status["state"]                 = self.state
+
+            status["focusmode"]             = self._get_config_value("focusmode")
+            status["autofocus"]             = self._get_config_value("autofocus")
+            status["expprogram"]            = self._get_config_value("/main/capturesettings/expprogram")
+            status["exposuremetermode"]     = self._get_config_value("/main/capturesettings/exposuremetermode")
+            status["exposurecompensation"]  = self._get_config_value("/main/capturesettings/exposurecompensation")
+            status["shutterspeed"]          = self._get_config_value("/main/capturesettings/shutterspeed")
+            status["aperture"]              = self._get_config_value("/main/capturesettings/f-number")
+            status["iso"]                   = self._get_config_value("/main/imgsettings/iso")
+        except Exception as e:
+            raise e
+        finally:
+            self.state = self.STATE_CONNECTED
+
+        return status
+
+    def capture_and_download(self, filename):
+        try:
+            _gphoto("capture-image-and-download")
+            shutil.move("capt0000.arw", os.path.join(*filename))
+        except Exception as e:
+            raise e
+        finally:
+            self.state = self.STATE_CONNECTED
+
+    def _get_serialnumber(self):
+        data = self._get_config_value("/main/status/serialnumber")
+        return str(data)
+
+    def _get_config_value(self, name):
+        output = _gphoto("get-config", name)
+        data = output[3]
+
+        if data.startswith("Current: "):
+            data = data[len("Current: "):]
+        else:
+            raise Exception("unknown reponse")
+
+        return data
+
+    def _set_config_value(self, name, value):
+        _gphoto("set-config-value", "{}={}".format(name, value))
+
 
 class CameraConnectorSwig(CameraConnector):
 
     def __init__(self, port, image_base_directory):
-        super().__init__()
+        super().__init__(port, image_base_directory)
 
     def open(self):
         self.context = gp.gp_context_new()
@@ -165,12 +288,7 @@ class CameraConnectorSwig(CameraConnector):
         self.camera = camera
         self.serialnumber = self._get_serialnumber()
 
-        # create image (sub-)directory
-        self.image_directory = os.path.join(self.image_base_directory, "cam_" + self.serialnumber)
-        try:
-            os.makedirs(self.image_directory)
-        except FileExistsError as e:
-            pass
+        self._create_image_directory()
 
         status = self.get_exposure_status()
         if status["expprogram"] == "A":
@@ -188,7 +306,6 @@ class CameraConnectorSwig(CameraConnector):
         self.camera = None
 
         self.state = self.STATE_CLOSED
-
 
     # def check(self):
         
@@ -215,8 +332,6 @@ class CameraConnectorSwig(CameraConnector):
 
     def set_autofocus(self, enabled):
         try:
-            self.state = self.STATE_BUSY
-
             value = "Manual"
             if enabled:
                 value = "Automatic"
@@ -228,8 +343,7 @@ class CameraConnectorSwig(CameraConnector):
         except Exception as e:
             raise e
         finally:
-            self.state = self.STATE_CONNECTED
-
+            pass
 
     def run_autofocus(self, active):
         try:
@@ -282,8 +396,8 @@ class CameraConnectorSwig(CameraConnector):
 
         status["state"]                 = self.state
 
-        status["autofocus"]             = self._get_config_value(config, "autofocus")
         status["focusmode"]             = self._get_config_value(config, "focusmode")
+        status["autofocus"]             = self._get_config_value(config, "autofocus")
         status["expprogram"]            = self._get_config_value(config, "expprogram")
         status["exposuremetermode"]     = self._get_config_value(config, "exposuremetermode")
         status["exposurecompensation"]  = self._get_config_value(config, "exposurecompensation")
@@ -292,17 +406,6 @@ class CameraConnectorSwig(CameraConnector):
         status["iso"]                   = self._get_config_value(config, "iso")
 
         return status
-
-
-    def _get_serialnumber(self):
-        error, config = gp.gp_camera_get_config(self.camera)
-        gp.check_result(error)
-
-        return self._get_config_value(config, "serialnumber")
-
-
-    def get_image_directory(self):
-        return self.image_directory
 
 
     def capture_and_download(self, filename):
@@ -333,6 +436,13 @@ class CameraConnectorSwig(CameraConnector):
             raise e
         finally:
             self.state = self.STATE_CONNECTED
+
+
+    def _get_serialnumber(self):
+        error, config = gp.gp_camera_get_config(self.camera)
+        gp.check_result(error)
+
+        return self._get_config_value(config, "serialnumber")
 
 
     def _get_config_value(self, config, name):
@@ -623,31 +733,21 @@ class Zerobox(object):
 
         return shutter_repr + aperture_repr + iso_repr
 
-    def _gphoto(self, cmd, **kwargs):
-        try:
-            args = ["gphoto2"]
-            args.append("--{}".format(cmd))
-
-            for kwarg in kwargs:
-                args.append(kwarg)
-
-            print(args)
-            output = subprocess.check_output(args)
-            output = output.decode("UTF-8")
-            output = output.split("\n")
-            return output
-        except Exception as e:
-            raise e
-
     def _cli_auto_detect(self):
-        output = self._gphoto("auto-detect")
-        
-        print(output)
+        output = _gphoto("auto-detect")
 
         cameras = []
         for i in range(2, len(output)):
             if len(output[i]) > 0:
-                cameras.append(output[i])
+                data = output[i].split(" ")
+                data = [x for x in data if len(x) > 0] # remove multiple whitespaces
+
+                name = ""
+                for word in data[0:-1]: 
+                    name = name + word + " "
+                name = name[:-1] # remove trailing space
+
+                cameras.append([name, data[-1]])
 
         return cameras
 
@@ -747,11 +847,21 @@ class Zerobox(object):
         self.connectors[portname] = conn
 
         self.status["cameras"][portname]["error"] = None
-        self.status["cameras"][portname] = {**self.status["cameras"][portname], **conn.get_exposure_status()}
+
+        exposure_status = {}
+
+        if conn.get_state() != CameraConnector.STATE_BUSY:
+            exposure_status = conn.get_exposure_status()
+
+        self.status["cameras"][portname] = {**self.status["cameras"][portname], **exposure_status}
 
 
     def focus_camera(self, portname):
         conn = self.connectors[portname]
+
+        if conn.get_state() == CameraConnector.STATE_BUSY:
+            raise Exception("Camera busy")
+
         conn.set_autofocus(True)
         conn.run_autofocus(True)
         time.sleep(self.config["AUTOFOCUS_DURATION"])
@@ -865,6 +975,13 @@ if __name__ == "__main__":
     # z.close()
 
     z.detect_cameras()
+    for cam in z.get_cameras():
+        z.connect_camera(cam)
+        z.trigger_camera(cam[1])
+
+    print(z.get_status())
+
+
 
         
         

@@ -538,9 +538,11 @@ class ZeroboxConnector(rpyc.Service):
     def exposed_get_images_in_memory(self):
         return self.zerobox.get_images_in_memory()
 
-    def exposed_log_process_memory(self):
+    def exposed_get_process_memory(self):
+        return psutil.virtual_memory()._asdict()["percent"]
 
-        self.log.debug("MEMORY: {}".format(psutil.virtual_memory()._asdict()["percent"]))
+    def exposed_log_process_memory(self):
+        self.log.debug("MEMORY: {}".format(self.exposed_get_process_memory()))
 
         # try: 
         #     pid = os.getpid()
