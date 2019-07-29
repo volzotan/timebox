@@ -240,22 +240,37 @@ class Gui():
             "allow_pickle": True
         })
         except ConnectionRefusedError as e:
-            self.log.error("zeroboxConnector not available")
+            self.log.debug("zeroboxConnector not available. retry...")
+            for i in range(10):
+                time.sleep(1.0)
+                try:
+                    self.zeroboxConnector = rpyc.connect("localhost", 18861)
+                    break
+                except ConnectionRefusedError as e:
+                    self.log.debug("connection refused. retry...")
+
+            if self.zeroboxConnector is None:
+                self.log.error("zeroboxConnector not available. failed.")
 
         # Find cameras
 
         if self.zeroboxConnector is not None:
-            self.cameras = self.zeroboxConnector.root.detect_cameras()
-            self.log.info("found {} camera(s)".format(len(self.cameras)))
+            try:
+                self.cameras = self.zeroboxConnector.root.detect_cameras()
+                self.log.info("found {} camera(s)".format(len(self.cameras)))
+            except Exception as e:
+                self.log.error("detecting cameras failed: {}".format(e))
 
         # Find UsbDirectController
 
         if self.zeroboxConnector is not None:
-            self.controller = obtain(self.zeroboxConnector.root.exposed_get_controller())
-            self.log.info("found {} controller".format(len(self.controller)))
-            for c in self.controller:
-                self.log.info("  {}".format(c))
-
+            try:
+                self.controller = obtain(self.zeroboxConnector.root.exposed_get_controller())
+                self.log.info("found {} controller".format(len(self.controller)))
+                for c in self.controller:
+                    self.log.info("  {}".format(c))
+            except Exception as e:
+                self.log.error("detecting controller failed: {}".format(e))
 
         # setup the Scheduler
 
@@ -608,12 +623,20 @@ class Gui():
             self.text(draw, [30, start+2], threshold_value)
             self.text(draw, [1, start+9], "LAST:")
             last_image_brightness = "?"
-            if cam0 is not None and cam0["last_image_brightness"] is not None:
+            if not cam0 is None and not cam0["last_image_brightness"] is None:
                 last_image_brightness = "{0:.1f}".format(float(cam0["last_image_brightness"]))
             self.text(draw, [30, start+9], last_image_brightness)
-            self.text(draw, [1, start+16], "101")
+
+            num_secondexposureimages = "?"
+            num_images = "?"
+            if not self.session is None and "images" in self.session:
+                num_images = str(len(self.session["images"]))
+                secs = [x for x in self.session["images"] if len(x[0]) > 1]
+                num_secondexposureimages = str(len(secs))
+
+            self.text(draw, [1, start+16], "{:>4}".format(num_secondexposureimages))
             self.text(draw, [20, start+16], "/")
-            self.text(draw, [30, start+16], "156")
+            self.text(draw, [26, start+16], "{:>5}".format(num_images))
         else: 
             self.text(draw, [5, start+9], "2.EXP OFF")
 
@@ -636,7 +659,7 @@ class Gui():
 
         # ERROR
 
-        if self.session["errors"] is not None and len(self.session["errors"]) > 0:
+        if not self.session["errors"] is None and len(self.session["errors"]) > 0:
             self.text(draw, [3, start+26], "ERRORS: {} {}".format(len(self.session["errors"]), str(self.session["errors"][-1])[:19]))
 
         # draw.rectangle([(64, 0), (127, 8)], fill=COLOR0)

@@ -3,6 +3,7 @@
 from zerobox import Zerobox
 from zeroboxScheduler import Scheduler
 from devices import Controller, YKushXSController
+from webConnector import ServpatConnector
 
 import rpyc
 from rpyc.utils.server import Server, ThreadedServer, ThreadPoolServer
@@ -298,6 +299,12 @@ class ZeroboxConnector(rpyc.Service):
                         for controller in self.controller:
                             controller.turn_on(False)
 
+            if "sync" in jobs:
+                self.log.debug(">>> job running: SYNC")
+                self.log.debug("    {}".format(self.scheduler.print_next_job()))
+
+                self.exposed_sync_status()
+
             # check finished triggers
 
             try:
@@ -330,6 +337,7 @@ class ZeroboxConnector(rpyc.Service):
 
             except Exception as e:
                 self.log.error("error occured during triggering. reset everything...")
+                self.session["errors"].append(e)
                 self.capture_results = []
                 self.capture_timer = []
                 if self.session["intervalcamera"]: 
@@ -403,6 +411,8 @@ class ZeroboxConnector(rpyc.Service):
             self.scheduler.add_job("camera_off", interval,
                                    delay = delay+(30.0+float(self.session["ic_pre_wait"]))*1000)
 
+        self.scheduler.add_job("sync", 5*60*1000)
+
         self.state = self.STATE_RUNNING
 
         FORMAT = "  {:<24}: {}"
@@ -424,6 +434,9 @@ class ZeroboxConnector(rpyc.Service):
 
         if self.scheduler.is_job_scheduled("camera_off"):
             self.scheduler.remove_job("camera_off")
+
+        if self.scheduler.is_job_scheduled("sync"):
+            self.scheduler.remove_job("sync")
 
         self.session["end"] = datetime.now()
         self.state = self.STATE_IDLE
@@ -544,19 +557,46 @@ class ZeroboxConnector(rpyc.Service):
     def exposed_log_process_memory(self):
         self.log.debug("MEMORY: {}".format(self.exposed_get_process_memory()))
 
-        # try: 
-        #     pid = os.getpid()
-        #     data = subprocess.check_output(["cat", "/proc/{}/status".format(pid)])
+    def _get_pi_serial(self):
+        cpuserial = "0000000000000000"
+        try:
+            f = open('/proc/cpuinfo','r')
+            for line in f:
+                if line[0:6]=='Serial':
+                    cpuserial = line[10:26]
+            f.close()
+        except Exception as e:
+            self.log.error("reading serial number failed: {}".format(e))
 
-        #     hashed_data = {}
-        #     for line in data:
-        #         splits = line.split(" ")
-        #         hashed_data[splits[0]] = splits[1]
+        return cpuserial
 
-        #     print(hashed_data)
+    def exposed_sync_status(self):
 
-        # except Exception as e:
-        #     self.log.debug(e)
+        if not self.exposed_get_network_status() is None:
+            self.log.info("cancel sync status. no network connection")
+            raise Exception("no network connection")
+
+        status = self.exposed_get_status()
+
+        payload = {}
+
+        payload["deviceId"] = self._get_pi_serial()
+        payload["deviceName"] = "zerobox"
+
+        payload["numberImagesTaken"] = -1
+        if self.session is not None:
+            payload["numberImagesTaken"] = len(self.session["images"])
+
+        payload["numberImagesSaved"] = self.exposed_get_images_in_memory()
+
+        payload["freeSpaceInternal"] = self.exposed_get_free_space()
+        payload["freeSpaceExternal"] = -1
+        payload["batteryInternal"] = status["battery"]
+        payload["batteryExternal"] = -1
+        payload["stateCharging"] = 0
+
+        servpatConnector = ServpatConnector()
+        servpatConnector.sync_status(payload)
 
 
 class NoConnectedCameraException(Exception):
@@ -625,21 +665,21 @@ if __name__ == "__main__":
         #         "allow_pickle": True
         # })
 
-        # t = ThreadedServer(ZeroboxConnector(), 
-        #     port=18861, 
-        #     protocol_config={
-        #         "allow_public_attrs": True,
-        #         "allow_pickle": True
-        # })
-
-        t = ThreadPoolServer(ZeroboxConnector(), 
+        t = ThreadedServer(ZeroboxConnector(), 
             port=18861, 
-            nbThreads=1,
-            requestBatchSize=1,
             protocol_config={
                 "allow_public_attrs": True,
                 "allow_pickle": True
         })
+
+        # t = ThreadPoolServer(ZeroboxConnector(), 
+        #     port=18861, 
+        #     nbThreads=1,
+        #     requestBatchSize=1,
+        #     protocol_config={
+        #         "allow_public_attrs": True,
+        #         "allow_pickle": True
+        # })
 
         t.start()
     except Exception as e:
