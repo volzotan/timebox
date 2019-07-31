@@ -7,6 +7,7 @@ import os
 import subprocess
 import re
 import serial.tools.list_ports
+from threading import Lock
 import logging as log
 
 try:
@@ -133,6 +134,8 @@ class SerialController(Controller):
 
     port = None
 
+    lock = Lock()
+
     def __init__(self, portname=SERIAL_DEVICE):
         self.port = portname
 
@@ -192,6 +195,7 @@ class SerialController(Controller):
 
         except Exception as e:
             log.debug(e)
+            raise e
 
     def turn_zero_on(self, turn_on):
         try:
@@ -201,6 +205,7 @@ class SerialController(Controller):
                 self._send_command(self.CMD_ZERO_OFF)
         except Exception as e:
             log.debug(e)
+            raise e
 
     def get_uptime(self):
         try:
@@ -208,6 +213,7 @@ class SerialController(Controller):
             return response
         except Exception as e:
             log.debug(e)
+            raise e
 
     def turn_on(self, turn_on):
         try:
@@ -217,6 +223,7 @@ class SerialController(Controller):
                 self._send_command(self.CMD_OFF)
         except Exception as e:
             log.debug(e)
+            raise e
 
     # def get_status(self):
     #     try:
@@ -227,6 +234,12 @@ class SerialController(Controller):
     #         return None
 
     def _send_command(self, cmd):
+
+        lock_acquired = self.lock.acquire(timeout=1)
+
+        if not lock_acquired:
+            raise AccessException("Lock could not be lock_acquired")
+
         response = ""
         ser = None
 
@@ -266,6 +279,10 @@ class SerialController(Controller):
             log.error("comm failed, SerialException: {}".format(se))
             raise se
 
+        except AccessException as ae:
+            log.error("concurrency error: {}".format(ae))
+            raise ae
+
         except Exception as e:
             log.error("comm failed, unknown exception: {}".format(e))
             raise e
@@ -273,6 +290,9 @@ class SerialController(Controller):
         finally:
             if ser is not None:
                 ser.close()
+
+            if lock_acquired:
+                self.lock.release()
 
 class UsbDirectController(Controller):
 
@@ -458,6 +478,10 @@ class UsbHubController(Controller):
             param = "on"
 
         subprocess.call(self.CMD.format(self.port[0], param, self.port[1]), shell=True)
+
+
+class AccessException(Exception):
+    pass
 
 
 class RTC():

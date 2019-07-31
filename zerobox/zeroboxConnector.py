@@ -254,13 +254,22 @@ class ZeroboxConnector(rpyc.Service):
                     # turn everything on except the data connections
                     if controller.is_data_connection:
                         continue
-                    controller.turn_on(True)
+
+                    try:
+                        controller.turn_on(True)
+                    except Exception as e:
+                        self.log.error("controller turn on failed: {}".format(e))
+                        self.session["errors"].append(e)
 
             if "usb_on" in jobs:
                 self.log.debug(">>> job running: USB ON")
                 self.log.debug("    {}".format(self.scheduler.print_next_job()))
                 for controller in self.controller:
-                    controller.turn_on(True)
+                    try:
+                        controller.turn_on(True)
+                    except Exception as e:
+                        self.log.error("controller turn on failed: {}".format(e))
+                        self.session["errors"].append(e)
 
             if "trigger" in jobs:
                 self.log.debug(">>> job running: TRIGGER")
@@ -289,7 +298,11 @@ class ZeroboxConnector(rpyc.Service):
 
                 if not self._is_trigger_active():
                     for controller in self.controller:
-                        controller.turn_on(False)
+                        try:
+                            controller.turn_on(False)
+                        except Exception as e:
+                            self.log.error("controller turn off failed: {}".format(e))
+                            self.session["errors"].append(e)
                 else:
                     trigger_age = self._get_max_trigger_age()
                     if trigger_age < 100:
@@ -297,7 +310,11 @@ class ZeroboxConnector(rpyc.Service):
                     else:
                         self.log.error("previous trigger active for {:.2f}! force camera off".format(trigger_age))
                         for controller in self.controller:
-                            controller.turn_on(False)
+                            try:
+                                controller.turn_on(False)
+                            except Exception as e:
+                                self.log.error("controller turn off failed: {}".format(e))
+                                self.session["errors"].append(e)
 
             if "sync" in jobs:
                 self.log.debug(">>> job running: SYNC")
@@ -343,7 +360,11 @@ class ZeroboxConnector(rpyc.Service):
                 if self.session["intervalcamera"]: 
                     self.zerobox.disconnect_all_cameras(clean=True)
                     for c in self.controller:
-                        c.turn_on(False)
+                        try:
+                            controller.turn_on(False)
+                        except Exception as e:
+                            self.log.error("controller turn off failed: {}".format(e))
+                            self.session["errors"].append(e)
 
         else:
             self.log.warning("illegal state: {}".format(self.state))
@@ -393,7 +414,11 @@ class ZeroboxConnector(rpyc.Service):
         if self.session["intervalcamera"]:
             self.zerobox.disconnect_all_cameras(clean=True)
             for c in self.controller:
-                c.turn_on(False)    
+                try:
+                    controller.turn_on(False)
+                except Exception as e:
+                    self.log.error("controller turn off failed: {}".format(e))
+                    self.session["errors"].append(e)
 
         interval = self.session["interval"]*1000
         delay = 500
@@ -444,7 +469,11 @@ class ZeroboxConnector(rpyc.Service):
     def exposed_turn_on_everything(self, turn_on):
         self.exposed_detect_controller()
         for c in self.controller:
-            c.turn_on(turn_on)
+            try:
+                controller.turn_on(turn_on)
+            except Exception as e:
+                self.log.error("controller turn on/off failed: {}".format(e))
+                self.session["errors"].append(e)
 
     def exposed_connect(self, _portname):
         portname = obtain(_portname)
@@ -469,7 +498,6 @@ class ZeroboxConnector(rpyc.Service):
         return self.session
 
     def exposed_get_status(self, force=False):
-        self.exposed_log_process_memory()
 
         data = {}
         data["connector_state"] = self.state
@@ -484,18 +512,27 @@ class ZeroboxConnector(rpyc.Service):
             except Exception as e:
                 pass
             for c in self.controller:
-                temp = c.get_temperature()
-                if temp is not None:    
-                    self.temperature_data.append([temp, "controller"])
+                try:
+                    temp = c.get_temperature()
+                    if temp is not None:    
+                        self.temperature_data.append([temp, "controller"])
+                except Exception as e:
+                    self.log.warn("controller get temp data failed: {}".format(e))
         data["temperature"] = self.temperature_data
 
         if force:
             self.battery_data = None
             for c in self.controller:
-                perc = c.get_battery_status()
-                if perc is not None:
-                    self.battery_data = perc
+                try:
+                    perc = c.get_battery_status()
+                    if perc is not None:
+                        self.battery_data = perc
+                except Exception as e:
+                    self.log.warn("controller get battery data failed: {}".format(e))
         data["battery"] = self.battery_data
+
+        if force:
+            self.exposed_log_process_memory()
 
         return data
 
@@ -572,7 +609,7 @@ class ZeroboxConnector(rpyc.Service):
 
     def exposed_sync_status(self):
 
-        if not self.exposed_get_network_status() is None:
+        if self.exposed_get_network_status() is None:
             self.log.info("cancel sync status. no network connection")
             raise Exception("no network connection")
 
@@ -619,13 +656,19 @@ class Ztimer():
             self.log.debug("start")
             time.sleep(1.0)
             self.log.debug("go")
-            zeroboxConnector = rpyc.connect("localhost", 18861)
+            zeroboxConnector = rpyc.connect("localhost", 18861, config={
+                "allow_public_attrs": True,
+                "allow_pickle": True
+            })
         except ConnectionRefusedError as e:
             self.log.debug("zeroboxConnector not available. retry...")
             for i in range(10):
                 time.sleep(1.0)
                 try:
-                    zeroboxConnector = rpyc.connect("localhost", 18861)
+                    zeroboxConnector = rpyc.connect("localhost", 18861, config={
+                        "allow_public_attrs": True,
+                        "allow_pickle": True
+                    })
                     break
                 except ConnectionRefusedError as e:
                     self.log.debug("connection refused. retry...")

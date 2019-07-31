@@ -1001,6 +1001,7 @@ class Zerobox(object):
                                     self.log.warn("reconnect failed: {}".format(e))
                 else:
                     self.log.warn("get_status lock not acquired")
+                    # so no data gets updated but old data will be returned
 
             except Exception as e:
                 self.log.error("getting exposure status failed: {}".format(e))

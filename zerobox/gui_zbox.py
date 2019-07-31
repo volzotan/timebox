@@ -244,7 +244,10 @@ class Gui():
             for i in range(10):
                 time.sleep(1.0)
                 try:
-                    self.zeroboxConnector = rpyc.connect("localhost", 18861)
+                    self.zeroboxConnector = rpyc.connect("localhost", 18861, config={
+                        "allow_public_attrs": True,
+                        "allow_pickle": True
+                    })
                     break
                 except ConnectionRefusedError as e:
                     self.log.debug("connection refused. retry...")
@@ -456,20 +459,6 @@ class Gui():
                 value = item["max"]
 
         return value
-
-
-    def _process_trigger_results(self, results):
-
-        if len(results) > 0:
-            self.images_taken += 1
-
-            # switch off all cameras after capture
-            if self.config["intervalcamera"]["value"]:
-                for c in self.controller:
-                    c.turn_on(False)
-
-            for result in results:
-                self.log.info(result)
 
 
     def _get_session(self):
@@ -944,13 +933,6 @@ class Gui():
                         self.state = STATE_MENU
                         self.invalidate()
 
-                # prev_trigger_results = self.zeroboxConnector.root.check_trigger_result()
-                # if None in prev_trigger_results:
-                #     # previous trigger has not finished yet
-                #     pass
-                # else:
-                #     self._process_trigger_results(prev_trigger_results)
-
             else:
                 self.data["message"] = "connector not found"
 
@@ -1121,11 +1103,17 @@ class Gui():
                         elif option == 1:
                             # camera on
                             for c in self.controller:
-                                c.turn_on(True)
+                                try:
+                                    c.turn_on(True)
+                                except Exception as e:
+                                    self.log.error("controller comm failed: {}".format(e))
                         elif option == 2:
                             # camera off
                             for c in self.controller:
-                                c.turn_on(False)
+                                try:
+                                    c.turn_on(False)
+                                except Exception as e:
+                                    self.log.error("controller comm failed: {}".format(e))
                         elif option == 3:
                             # display on/off
                             if self.device is not None:
