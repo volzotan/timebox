@@ -104,6 +104,9 @@ class ZeroboxConnector(rpyc.Service):
         for c in self.controller:
             self.log.info(c)
 
+        self.scheduler.add_job("sync", 5*60*1000, delay=1000)
+        self.scheduler.add_job("maintenance", 5*60*1000, delay=2000)
+
     def close(self):
         if self.pool is not None:
             self.pool.close()
@@ -272,13 +275,13 @@ class ZeroboxConnector(rpyc.Service):
 
             try:
 
-                status = self.exposed_get_status(self)
+                status = self.exposed_get_status()
                 battery_controller = status["battery"]
                 battery_cameras = self.zerobox.get_battery()
 
                 shutdown = False
 
-                if battery_controller < self.config["min_battery"]["value"]:
+                if battery_controller is not None and battery_controller < self.config["min_battery"]["value"]:
                     self.log.info("SHUTDOWN LOW BATTERY! (battery_controller {} < {})"
                         .format(battery_controller, self.config["min_battery"]["value"]))
 
@@ -488,9 +491,6 @@ class ZeroboxConnector(rpyc.Service):
             # the trigger event returned, but just as a safeguard
             self.scheduler.add_job("camera_off", interval,
                                    delay = delay+(30.0+float(self.session["ic_pre_wait"]))*1000)
-
-        self.scheduler.add_job("sync", 5*60*1000, delay=1000)
-        self.scheduler.add_job("maintenance", 5*60*1000, delay=2000)
 
         self.state = self.STATE_RUNNING
 
@@ -741,6 +741,9 @@ class Ztimer():
                 time.sleep(self.interval)
             except KeyboardInterrupt as e:
                 self.log.info("Keyboard Interrupt. Exiting...")
+                sys.exit(0)
+            except EOFError as e:
+                self.log.info("ZeroboxConnector Server closed. Exiting...")
                 sys.exit(0)
             except Exception as e:
                 self.log.error("Unknown Exception: {}".format(e))

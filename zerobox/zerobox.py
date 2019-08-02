@@ -962,7 +962,7 @@ class Zerobox(object):
             status_data = self.status["cameras"][portname]
             
             if "battery" in status_data:
-                battery_data.append(status_data["battery"], "camera")
+                battery_data.append([status_data["battery"], "camera"])
 
         return battery_data
 
