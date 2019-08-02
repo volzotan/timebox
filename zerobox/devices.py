@@ -238,7 +238,7 @@ class SerialController(Controller):
         lock_acquired = self.lock.acquire(timeout=1)
 
         if not lock_acquired:
-            raise AccessException("Lock could not be lock_acquired")
+            raise AccessException("Lock could not be acquired")
 
         response = ""
         ser = None

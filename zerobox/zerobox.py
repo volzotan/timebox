@@ -245,6 +245,7 @@ class CameraConnectorCli(CameraConnector):
             status["shutterspeed"]          = self._get_config_value("/main/capturesettings/shutterspeed")
             status["aperture"]              = self._get_config_value("/main/capturesettings/f-number")
             status["iso"]                   = self._get_config_value("/main/imgsettings/iso")
+            status["battery"]               = self._get_config_value("/main/status/batterylevel")
         except Exception as e:
             raise e
         finally:
@@ -256,6 +257,8 @@ class CameraConnectorCli(CameraConnector):
         try:
             self.state = self.STATE_BUSY
             _gphoto("capture-image-and-download")
+            if not os.path.exists("capt0000.arw"):
+                raise Exception("captured RAW file missing")
             shutil.move("capt0000.arw", os.path.join(*filename))
             self.log.debug("camera save done: {}".format(filename[1]))
         except Exception as e:
@@ -428,6 +431,7 @@ class CameraConnectorSwig(CameraConnector):
         status["shutterspeed"]          = self._get_config_value(config, "shutterspeed")
         status["aperture"]              = self._get_config_value(config, "f-number")
         status["iso"]                   = self._get_config_value(config, "iso")
+        # TODO: get battery
 
         return status
 
@@ -949,6 +953,18 @@ class Zerobox(object):
             self.lock.release()
 
         return taken_images
+
+
+    def get_battery(self):
+        battery_data = []
+
+        for portname in self.status["cameras"].keys():
+            status_data = self.status["cameras"][portname]
+            
+            if "battery" in status_data:
+                battery_data.append(status_data["battery"], "camera")
+
+        return battery_data
 
 
     def get_status(self, force_connection=False):

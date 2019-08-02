@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
 
 import time
-import psutil
+import os
+from os.path import getmtime
+import subprocess
+from datetime import datetime
+import sys
+import yaml
+import logging
+import threading
+import signal
 
 from luma.core.interface.serial import i2c, spi
 from luma.emulator.device import pygame, capture
@@ -10,16 +18,10 @@ from luma.core.error import DeviceNotFoundError
 from luma.core.render import canvas
 from luma.oled.device import sh1106, ssd1306
 
-import os
-from os.path import getmtime
-import subprocess
-from datetime import datetime
-import sys
-import yaml
 import rpyc
 from rpyc.utils.classic import obtain
 
-import logging
+import psutil
 
 from PIL import ImageFont, Image
 import PIL.ImageOps  
@@ -28,8 +30,6 @@ from zeroboxScheduler import Scheduler
 from devices import RTC
 from zerobox import CameraConnector
 from zeroboxConnector import ZeroboxConnector, NoConnectedCameraException
-
-import threading
 
 COLOR0 = "black"
 COLOR1 = "white"
@@ -1366,13 +1366,10 @@ class Gui():
 
 
         elif self.state == STATE_SHUTDOWN:
-
             with canvas(self.device) as draw:
                 self.draw_info(draw, "shutdown ...")
-            time.sleep(1.0)
-            self.device.cleanup() # shut off the display, won't happen by itself for SSD1306
-            time.sleep(0.5)
-            subprocess.run(["sudo", "shutdown", "now"])
+
+            self.zeroboxConnector.root.shutdown()
 
 
         else:
@@ -1383,8 +1380,25 @@ class Gui():
         self.loop_lock.release()
 
 
+    def receiveSignal(self, signalNumber, frame):
+        
+        self.log.info("RECEIVED SHUTDOWN SIGNAL")
+
+        # shut off the display, won't happen by itself for SSD1306
+        if self.device is not None:
+            self.device.cleanup()
+            self.device = None
+
+        sys.exit(0)
+        return
+
+
 if __name__ == "__main__":
+
     g = Gui()
+
+    # systemd sends on stop a SIGTERM and after 90s SIGKILL
+    signal.signal(signal.SIGTERM, g.receiveSignal)
 
     SLEEP_DURATION = 0.1
 

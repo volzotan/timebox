@@ -162,14 +162,14 @@ elif args.action == "disable_service":
 elif args.action == "info":
     try:
         conn = _connect()
-        status = conn.get_status()  #force=True)
+        status = obtain(conn.get_status())  #force=True)
         temperatures = status["temperature"]
         battery = status["battery"]
-        network = conn.get_network_status(force=True)
+        network = obtain(conn.get_network_status(force=True))
 
         total_space = conn.get_total_space() / (1024*1024)
         free_space = conn.get_free_space() / (1024*1024)
-        images_in_memory = conn.get_images_in_memory()
+        images_in_memory = obtain(conn.get_images_in_memory())
         free_ram = conn.get_process_memory()
 
         print("")
@@ -222,6 +222,13 @@ elif args.action == "info":
                     continue
 
                 print(DATA_STRING2.format(label=key, data=str(session[key])))  
+
+            if len(session["errors"]) > 1:
+                print("")
+                print("ERRORS:")
+
+                for err in session["errors"]:
+                    print(err)
 
         print("")
 

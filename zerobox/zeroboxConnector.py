@@ -26,13 +26,8 @@ from multiprocessing.pool import Pool
 
 from threading import Thread
 
-
 CONFIG_FILE_DEFAULT = "config_default.yaml"
 CONFIG_FILE_USER    = "config.yaml"
-
-# USB_CHIP            = "/sys/devices/platform/soc/3f980000.usb/buspower"
-# USB_CHIP            = "/sys/devices/platform/soc/20980000.usb/buspower"
-
 
 def _trigger(zerobox, portname):
     return zerobox.trigger_camera(portname)
@@ -233,6 +228,26 @@ class ZeroboxConnector(rpyc.Service):
         self.zerobox.disconnect_all_cameras(clean=True)
 
 
+    def exposed_shutdown(self, delay=2.0):
+        self.log.info("STARTING SHUTDOWN!")
+
+        self.log.info("shutdown procedure: turning off all controller")
+        for c in self.controller:
+            try:
+                c.turn_on(False)
+            except Exception as e:
+                self.log.error("turning off controller {} failed: {}".format(c, e))
+
+                    
+        self.log.info("shutdown procedure: stopping GUI service")
+        subprocess.run(["sudo", "systemctl", "stop", "zerobox_gui"])
+
+        time.sleep(delay)
+
+        self.log.info("shutdown procedure: shutdown OS")
+        subprocess.run(["sudo", "shutdown", "now"])
+
+
     # -------
 
 
@@ -242,6 +257,50 @@ class ZeroboxConnector(rpyc.Service):
 
         jobs = self.scheduler.run_schedule()
 
+        if "sync" in jobs:
+            self.log.debug(">>> job running: SYNC")
+            self.log.debug("    {}".format(self.scheduler.print_next_job()))
+
+            self.exposed_sync_status()
+
+        if "maintenance" in jobs:
+            self.log.debug(">>> job running: MAINTENANCE")
+            self.log.debug("    {}".format(self.scheduler.print_next_job()))
+
+            # TODO: check batteries and shutdown if too low
+            # ...
+
+            try:
+
+                status = self.exposed_get_status(self)
+                battery_controller = status["battery"]
+                battery_cameras = self.zerobox.get_battery()
+
+                shutdown = False
+
+                if battery_controller < self.config["min_battery"]["value"]:
+                    self.log.info("SHUTDOWN LOW BATTERY! (battery_controller {} < {})"
+                        .format(battery_controller, self.config["min_battery"]["value"]))
+
+                    shutdown = True
+
+                for battery_camera in battery_cameras:
+                    if battery_camera[0] < self.config["min_battery"]["value"]:
+                        self.log.info("SHUTDOWN LOW BATTERY! (battery_camera {} < {})"
+                            .format(battery_camera[0], self.config["min_battery"]["value"]))
+
+                        shutdown = True
+
+                if shutdown:
+
+                    self.exposed_shutdown()
+
+            except Exception as e:
+                self.log.error("maintenance failed: {}".format(e))
+                if self.session is not None:
+                    self.session["errors"].append(e)
+
+
         if self.state == self.STATE_IDLE:
             pass
 
@@ -250,13 +309,13 @@ class ZeroboxConnector(rpyc.Service):
             if "camera_on" in jobs:
                 self.log.debug(">>> job running: CAMERA ON")
                 self.log.debug("    {}".format(self.scheduler.print_next_job()))
-                for controller in self.controller:
+                for c in self.controller:
                     # turn everything on except the data connections
-                    if controller.is_data_connection:
+                    if c.is_data_connection:
                         continue
 
                     try:
-                        controller.turn_on(True)
+                        c.turn_on(True)
                     except Exception as e:
                         self.log.error("controller turn on failed: {}".format(e))
                         self.session["errors"].append(e)
@@ -264,9 +323,9 @@ class ZeroboxConnector(rpyc.Service):
             if "usb_on" in jobs:
                 self.log.debug(">>> job running: USB ON")
                 self.log.debug("    {}".format(self.scheduler.print_next_job()))
-                for controller in self.controller:
+                for c in self.controller:
                     try:
-                        controller.turn_on(True)
+                        c.turn_on(True)
                     except Exception as e:
                         self.log.error("controller turn on failed: {}".format(e))
                         self.session["errors"].append(e)
@@ -297,9 +356,9 @@ class ZeroboxConnector(rpyc.Service):
                 self.log.debug("    {}".format(self.scheduler.print_next_job()))
 
                 if not self._is_trigger_active():
-                    for controller in self.controller:
+                    for c in self.controller:
                         try:
-                            controller.turn_on(False)
+                            c.turn_on(False)
                         except Exception as e:
                             self.log.error("controller turn off failed: {}".format(e))
                             self.session["errors"].append(e)
@@ -309,18 +368,12 @@ class ZeroboxConnector(rpyc.Service):
                         self.log.warning("previous trigger still active! unable to turn off camera")
                     else:
                         self.log.error("previous trigger active for {:.2f}! force camera off".format(trigger_age))
-                        for controller in self.controller:
+                        for c in self.controller:
                             try:
-                                controller.turn_on(False)
+                                c.turn_on(False)
                             except Exception as e:
                                 self.log.error("controller turn off failed: {}".format(e))
                                 self.session["errors"].append(e)
-
-            if "sync" in jobs:
-                self.log.debug(">>> job running: SYNC")
-                self.log.debug("    {}".format(self.scheduler.print_next_job()))
-
-                self.exposed_sync_status()
 
             # check finished triggers
 
@@ -361,7 +414,7 @@ class ZeroboxConnector(rpyc.Service):
                     self.zerobox.disconnect_all_cameras(clean=True)
                     for c in self.controller:
                         try:
-                            controller.turn_on(False)
+                            c.turn_on(False)
                         except Exception as e:
                             self.log.error("controller turn off failed: {}".format(e))
                             self.session["errors"].append(e)
@@ -415,7 +468,7 @@ class ZeroboxConnector(rpyc.Service):
             self.zerobox.disconnect_all_cameras(clean=True)
             for c in self.controller:
                 try:
-                    controller.turn_on(False)
+                    c.turn_on(False)
                 except Exception as e:
                     self.log.error("controller turn off failed: {}".format(e))
                     self.session["errors"].append(e)
@@ -436,7 +489,8 @@ class ZeroboxConnector(rpyc.Service):
             self.scheduler.add_job("camera_off", interval,
                                    delay = delay+(30.0+float(self.session["ic_pre_wait"]))*1000)
 
-        self.scheduler.add_job("sync", 5*60*1000)
+        self.scheduler.add_job("sync", 5*60*1000, delay=1000)
+        self.scheduler.add_job("maintenance", 5*60*1000, delay=2000)
 
         self.state = self.STATE_RUNNING
 
@@ -470,7 +524,7 @@ class ZeroboxConnector(rpyc.Service):
         self.exposed_detect_controller()
         for c in self.controller:
             try:
-                controller.turn_on(turn_on)
+                c.turn_on(turn_on)
             except Exception as e:
                 self.log.error("controller turn on/off failed: {}".format(e))
                 self.session["errors"].append(e)
@@ -620,17 +674,21 @@ class ZeroboxConnector(rpyc.Service):
         payload["deviceId"] = self._get_pi_serial()
         payload["deviceName"] = "zerobox"
 
-        payload["numberImagesTaken"] = -1
+        payload["imagesTaken"] = -1
         if self.session is not None:
-            payload["numberImagesTaken"] = len(self.session["images"])
+            payload["imagesTaken"] = len(self.session["images"])
+        payload["imagesInMemory"] = len(self.exposed_get_images_in_memory())
 
-        payload["numberImagesSaved"] = self.exposed_get_images_in_memory()
-
-        payload["freeSpaceInternal"] = self.exposed_get_free_space()
+        payload["freeSpaceInternal"] = self.exposed_get_free_space() / (1024*1024)
         payload["freeSpaceExternal"] = -1
-        payload["batteryInternal"] = status["battery"]
+
+        payload["batteryInternal"] = -1
+        if status["battery"] is not None:
+            payload["batteryInternal"] = status["battery"]
         payload["batteryExternal"] = -1
-        payload["stateCharging"] = 0
+
+        payload["temperatureDevice"] = -1
+        payload["temperatureBattery"] = -1
 
         servpatConnector = ServpatConnector()
         servpatConnector.sync_status(payload)

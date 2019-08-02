@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import logging
 import yaml
+import random
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -32,19 +33,15 @@ class ServpatConnector(object):
         
         payload = data
 
-        payload["deviceId"] = "123"
-        payload["deviceName"] = "pythonTestClient"
+        payload["statusId"] = random.randint(1, 10001)
         payload["timestamp"] = datetime.now().strftime(self.DATEFORMAT_INPUT) #[:-3]
-        payload["numberImagesTaken"] = 100
-        payload["numberImagesSaved"] = 50
-        payload["freeSpaceInternal"] = 990.0
-        payload["freeSpaceExternal"] = 1000.0
-        payload["batteryInternal"] = 99.0
-        payload["batteryExternal"] = -1
         payload["stateCharging"] = 0
 
+        payload["freeMemoryHeap"] = -1
+        payload["freeMemoryHeapNative"] = -1
+
         try:
-            r = requests.post(self.SERVER_ADDRESS + "/status", auth=self.auth, json=payload)
+            r = requests.post(self.SERVER_ADDRESS + "/status", auth=self.auth, json=[payload])
             r.raise_for_status()
         except Exception as e:
             self.log.error("syncing status failed with code {}: {}".format(r.status_code, e))
