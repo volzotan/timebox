@@ -40,7 +40,6 @@ class ZeroboxConnector(rpyc.Service):
     def __init__(self):
         print("init")
 
-        self.zerobox = Zerobox()
         self.scheduler = Scheduler()
 
         self.controller = []
@@ -72,31 +71,10 @@ class ZeroboxConnector(rpyc.Service):
         except FileNotFoundError as e:
             print("no config file found")
 
-        # init logging
-        # create logger
-        self.log = logging.getLogger()
-        self.log.setLevel(logging.DEBUG)
+        # init logging, create logger
+        self.init_log()
 
-        # create formatter
-        formatter = logging.Formatter(self.config["log"]["format"])
-
-        # console handler and set level to debug
-        # consoleHandler = logging.StreamHandler()
-        # consoleHandler.setLevel(self.config["log"]["level"])
-        # consoleHandler.setFormatter(formatter)
-        # self.log.addHandler(consoleHandler)
-
-        # fileHandlerDebug = logging.FileHandler(os.path.join(".", "gui.log"), mode="a",
-        #                                        encoding="UTF-8")  # TODO: do not use current dir for logging
-        # fileHandlerDebug.setLevel(logging.DEBUG)
-        # fileHandlerDebug.setFormatter(formatter)
-        # self.log.addHandler(fileHandlerDebug)
-
-
-        # Pi Zero Maintenance stuff
-
-        # Turn off HDMI to save power
-        subprocess.call("/usr/bin/tvservice -o", shell=True)
+        self.zerobox = Zerobox(new_config=self._prepare_zerobox_config())
 
         self.exposed_print_config()
 
@@ -104,8 +82,53 @@ class ZeroboxConnector(rpyc.Service):
         for c in self.controller:
             self.log.info(c)
 
+        # Pi Zero Maintenance stuff
+        # Turn off HDMI to save power
+        try:
+            subprocess.call("/usr/bin/tvservice -o", shell=True)
+        except Exception as e:
+            pass
+
         self.scheduler.add_job("sync", 5*60*1000, delay=1000)
         self.scheduler.add_job("maintenance", 5*60*1000, delay=2000)
+
+    def init_log(self):
+
+        if not os.path.exists(self.config["log"]["basedir"]):
+            print("LOG DIR missing. create...")
+            os.makedirs(self.config["log"]["basedir"])
+
+        log_filename_debug = os.path.join(self.config["log"]["basedir"], self.config["log"]["filename_debug"])
+        log_filename_info = os.path.join(self.config["log"]["basedir"], self.config["log"]["filename_info"])
+
+        # create logger
+        self.log = logging.getLogger()
+        self.log.setLevel(logging.DEBUG)
+
+        # remove prior logging handlers
+        try:
+            self.log.handlers.pop()
+        except Exception as e:
+            pass
+
+        # create formatter
+        formatter = logging.Formatter(self.config["log"]["format"])
+
+        # console handler and set level to debug
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setLevel(self.config["log"]["level"])
+        consoleHandler.setFormatter(formatter)
+        self.log.addHandler(consoleHandler)
+
+        fileHandlerDebug = logging.FileHandler(log_filename_debug, mode="a", encoding="UTF-8")
+        fileHandlerDebug.setLevel(logging.DEBUG)
+        fileHandlerDebug.setFormatter(formatter)
+        self.log.addHandler(fileHandlerDebug)
+
+        fileHandlerInfo = logging.FileHandler(log_filename_info, mode="a", encoding="UTF-8")
+        fileHandlerInfo.setLevel(logging.INFO)
+        fileHandlerInfo.setFormatter(formatter)
+        self.log.addHandler(fileHandlerInfo)
 
     def close(self):
         if self.pool is not None:
@@ -264,7 +287,10 @@ class ZeroboxConnector(rpyc.Service):
             self.log.debug(">>> job running: SYNC")
             self.log.debug("    {}".format(self.scheduler.print_next_job()))
 
-            self.exposed_sync_status()
+            try:
+                self.exposed_sync_status()
+            except Exception as e:
+                self.log.warning("sync failed: {}".format(e))
 
         if "maintenance" in jobs:
             self.log.debug(">>> job running: MAINTENANCE")
@@ -425,9 +451,13 @@ class ZeroboxConnector(rpyc.Service):
         else:
             self.log.warning("illegal state: {}".format(self.state))
 
-    def _load_zerobox_config(self):
+    def _prepare_zerobox_config(self):
 
         zeroboxConfig = {}
+
+        zeroboxConfig["IMAGE_DIR_PRIMARY"] = self.config["image_dir_primary"]["path"]
+        zeroboxConfig["IMAGE_DIR_SECONDARY"] = self.config["image_dir_secondary"]["path"]
+
         zeroboxConfig["AUTOFOCUS_ENABLED"] = self.config["autofocus"]["value"]
         zeroboxConfig["SECONDEXPOSURE_ENABLED"] = self.config["secondexposure"]["value"]
         if self.config["se_use_threshold"]["value"]:
@@ -437,11 +467,11 @@ class ZeroboxConnector(rpyc.Service):
         zeroboxConfig["EXPOSURE_1"] = self.config["se_expcompensation_1"]["value"]
         zeroboxConfig["EXPOSURE_2"] = self.config["se_expcompensation_2"]["value"]
 
-        self.zerobox.load_config(zeroboxConfig)
+        return zeroboxConfig
 
     def exposed_load_config(self, connector_config):
         self.config = {**self.config, **obtain(connector_config)}
-        self._load_zerobox_config()
+        self.zerobox.load_config(self._prepare_zerobox_config())
 
     def exposed_get_config(self):
         return self.config
@@ -459,7 +489,7 @@ class ZeroboxConnector(rpyc.Service):
             if "type" in self.config[key]:
                 self.session[key] = self.config[key]["value"]
 
-        self._load_zerobox_config()
+        self.exposed_load_config({})
         self.exposed_detect_controller()
 
         if not self.session["intervalcamera"]:
@@ -679,8 +709,15 @@ class ZeroboxConnector(rpyc.Service):
             payload["imagesTaken"] = len(self.session["images"])
         payload["imagesInMemory"] = len(self.exposed_get_images_in_memory())
 
-        payload["freeSpaceInternal"] = self.exposed_get_free_space() / (1024*1024)
-        payload["freeSpaceExternal"] = -1
+        if self.exposed_get_free_space()[0] is not None:
+            payload["freeSpaceInternal"] = self.exposed_get_free_space()[0] / (1024*1024)
+        else:
+            payload["freeSpaceInternal"] = -1
+
+        if self.exposed_get_free_space()[1] is not None:
+            payload["freeSpaceExternal"] = self.exposed_get_free_space()[1] / (1024*1024)
+        else:
+            payload["freeSpaceExternal"] = -1
 
         payload["batteryInternal"] = -1
         if status["battery"] is not None:

@@ -20,16 +20,12 @@ from gi.repository import GExiv2
 
 CONFIG = {
 
-    "LOG_BASE_DIR"              : "./",
-    "LOG_FILENAME_DEBUG"        : "debug.log",
-    "LOG_FILENAME_INFO"         : "info.log",
-    "LOG_FORMAT"                : "%(asctime)s | %(levelname)-7s | %(message)s",
-    "LOG_LEVEL_CONSOLE"         : logging.DEBUG,
-
-    "BASE_DIR"                  : None,
+    "BASE_DIR"                  : None, # only used when path is relative (ie. starts without /)
+    "IMAGE_DIR_PRIMARY"         : "/mnt/usb/RAW",
+    "IMAGE_DIR_SECONDARY"       : "RAW",
     "TEMP_DIR"                  : "tmp",
-    "IMAGE_DIR"                 : "RAW",
     "FILE_EXTENSION"            : ".arw",
+    "MIN_FREE_SPACE"            : 300, # MB
 
     # "SERIAL_PORT"               : "/dev/ttyAMA0",
     # "SERIAL_BAUDRATE"           : 9600,
@@ -41,7 +37,7 @@ CONFIG = {
     "AUTOFOCUS_DURATION"        : 2,
 
     "SECONDEXPOSURE_ENABLED"    : True,
-    "SECONDEXPOSURE_THRESHOLD"  : 20, # 10
+    "SECONDEXPOSURE_THRESHOLD"  : 10,
     "EXPOSURE_1"                : +1,
     "EXPOSURE_2"                : -5,
 
@@ -56,7 +52,12 @@ DEBUG                           = True
 def _gphoto(cmd, *args): #, **kwargs):
     try:
         arguments = ["gphoto2"]
-        arguments.append("--{}".format(cmd))
+
+        if type(cmd) is list:
+            for c in cmd:
+                arguments.append("--{}".format(c))
+        else:
+            arguments.append("--{}".format(cmd))
 
         for arg in args:
             arguments.append(arg)
@@ -86,14 +87,20 @@ class CameraConnector(object):
     STATE_ERROR             = 4
     STATE_UNKNOWN           = 5
 
-    def __init__(self, port, image_base_directory):
+    def __init__(self, port, 
+        image_base_directory_primary, 
+        image_base_directory_secondary):
+
         self.port = port
         
         self.log = logging.getLogger()
         self.log.setLevel(logging.DEBUG)
 
-        self.image_base_directory = image_base_directory
-        self.image_directory = None
+        self.image_base_directory_primary = image_base_directory_primary
+        self.image_directory_primary = None
+
+        self.image_base_directory_secondary = image_base_directory_secondary
+        self.image_directory_secondary = None
 
         self.exposure_mode = None
         self.serialnumber = None
@@ -108,17 +115,51 @@ class CameraConnector(object):
 
     def _create_image_directory(self):
         # create image (sub-)directory
-        self.image_directory = os.path.join(self.image_base_directory, "cam_" + self.serialnumber)
+
+        if self.image_base_directory_primary is not None:
+            self.image_directory_primary = os.path.join(
+                self.image_base_directory_primary, 
+                "cam_" + self.serialnumber)
+
+            try:
+                os.makedirs(self.image_directory_primary)
+            except FileExistsError as e:
+                pass
+            except PermissionError as e:
+                pass
+
+        self.image_directory_secondary = os.path.join(
+            self.image_base_directory_secondary, 
+            "cam_" + self.serialnumber)
+
         try:
-            os.makedirs(self.image_directory)
+            os.makedirs(self.image_directory_secondary)
         except FileExistsError as e:
-            pass
+            pass        
+        except PermissionError as e:
+                pass
 
     def get_state(self):
         return self.state
 
-    def get_image_directory(self):
-        return self.image_directory
+    def get_image_directory(self, min_free_space):
+
+        # if primary not available or memory lower than switching threshold, return secondary
+
+        if self.image_directory_primary is None:
+            self.log.warn("fallback to secondary image dir: primary is None")
+            return self.image_directory_secondary
+
+        if not os.path.exists(self.image_directory_primary):
+            self.log.warn("fallback to secondary image dir: primary dir not available")
+            return self.image_directory_secondary
+
+        free_space_primary_mb = shutil.disk_usage(self.image_directory_primary).free / (1024 * 1024)
+        if free_space_primary_mb < min_free_space:
+            self.log.warn("fallback to secondary image dir: free space below threshold: {:.2f}MB".format(free_space_primary_mb))
+            return self.image_directory_secondary
+
+        return self.image_directory_primary
 
     def set_autofocus(self, enabled):
         pass
@@ -168,8 +209,11 @@ class CameraConnectorCli(CameraConnector):
         # gphoto2 --set-config-value /main/actions/autofocus=0
         # gphoto2 --set-config-value /main/actions/autofocus=1
 
-    def __init__(self, port, image_base_directory):
-        super().__init__(port, image_base_directory)
+    def __init__(self, port, 
+        image_base_directory_primary, 
+        image_base_directory_secondary):
+
+        super().__init__(port, image_base_directory_primary, image_base_directory_secondary)
 
     def open(self):
 
@@ -256,7 +300,7 @@ class CameraConnectorCli(CameraConnector):
     def capture_and_download(self, filename):
         try:
             self.state = self.STATE_BUSY
-            _gphoto("capture-image-and-download")
+            _gphoto(["capture-image-and-download", "force-overwrite"])
             if not os.path.exists("capt0000.arw"):
                 raise Exception("captured RAW file missing")
             shutil.move("capt0000.arw", os.path.join(*filename))
@@ -296,8 +340,11 @@ class CameraConnectorCli(CameraConnector):
 
 class CameraConnectorSwig(CameraConnector):
 
-    def __init__(self, port, image_base_directory):
-        super().__init__(port, image_base_directory)
+    def __init__(self, port, 
+        image_base_directory_primary, 
+        image_base_directory_secondary):
+
+        super().__init__(port, image_base_directory_primary, image_base_directory_secondary)
 
     def open(self):
         self.context = gp.gp_context_new()
@@ -536,7 +583,7 @@ class CameraConnectorSwig(CameraConnector):
 
 class Zerobox(object):
 
-    def __init__(self):
+    def __init__(self, new_config={}):
         self.config             = CONFIG
 
         self.lock               = Lock()
@@ -549,34 +596,53 @@ class Zerobox(object):
 
         # expand directories
 
-        if os.uname().nodename == "raspberrypi":
-            self.config["BASE_DIR"] = "/home/pi/zerobox/"        
-        else:
-            self.config["BASE_DIR"] = "./"
+        if self.config["BASE_DIR"] is None:
+            if os.uname().nodename == "raspberrypi":
+                self.config["BASE_DIR"] = "/home/pi/zerobox/"        
+            else:
+                self.config["BASE_DIR"] = "./"
 
-        if self.config["IMAGE_DIR"] is None:
-            self.config["IMAGE_DIR"] = self.config["BASE_DIR"]
-        elif not self.config["IMAGE_DIR"].startswith("/"):
-            self.config["IMAGE_DIR"] = os.path.join(self.config["BASE_DIR"], self.config["IMAGE_DIR"])
+        if self.config["IMAGE_DIR_PRIMARY"] is None:
+            self.config["IMAGE_DIR_PRIMARY"] = self.config["BASE_DIR"]
+        elif not self.config["IMAGE_DIR_PRIMARY"].startswith("/"):
+            self.config["IMAGE_DIR_PRIMARY"] = os.path.join(self.config["BASE_DIR"], self.config["IMAGE_DIR_PRIMARY"])
+
+        if self.config["IMAGE_DIR_SECONDARY"] is None:
+            self.config["IMAGE_DIR_SECONDARY"] = self.config["BASE_DIR"]
+        elif not self.config["IMAGE_DIR_SECONDARY"].startswith("/"):
+            self.config["IMAGE_DIR_SECONDARY"] = os.path.join(self.config["BASE_DIR"], self.config["IMAGE_DIR_SECONDARY"])
+
+        if self.config["IMAGE_DIR_PRIMARY"] == self.config["IMAGE_DIR_SECONDARY"]:
+            self.log.warn("image dir primary and secondary is identical")
+            self.config["IMAGE_DIR_SECONDARY"] = None
 
         if self.config["TEMP_DIR"] is None:
             self.config["TEMP_DIR"] = self.config["BASE_DIR"]
         elif not self.config["TEMP_DIR"].startswith("/"):
             self.config["TEMP_DIR"] = os.path.join(self.config["BASE_DIR"], self.config["TEMP_DIR"])
 
-        # create directories
-        try:
-            os.makedirs(self.config["IMAGE_DIR"])
-            os.makedirs(self.config["TEMP_DIR"])
-        except FileExistsError as e:
-            pass
+        self.load_config(new_config)
 
-        self._init_log()
+        self.log = logging.getLogger()
+
+        # create directories
+        self._create_dir(self.config["IMAGE_DIR_PRIMARY"])
+        self._create_dir(self.config["IMAGE_DIR_SECONDARY"])
+        self._create_dir(self.config["TEMP_DIR"])
 
 
     def __repr__(self):
         # return "Zerobox (cameras: {})".format(len(self.connectors.items()))
         pass
+
+
+    def _create_dir(self, path):
+        try:
+            os.makedirs(path)
+        except FileExistsError as e:
+            pass
+        except PermissionError as e:
+            self.log.warn("creating directory {} failed. no permission.".format(path))
 
 
     def disconnect_camera(self, portname):
@@ -612,38 +678,7 @@ class Zerobox(object):
 
             self.config[key] = config[key]
 
-
-    def _init_log(self):
-        if not os.path.exists(self.config["LOG_BASE_DIR"]):
-            print("LOG DIR missing. create...")
-            os.makedirs(self.config["LOG_BASE_DIR"])
-
-        log_filename_debug = os.path.join(self.config["LOG_BASE_DIR"], self.config["LOG_FILENAME_DEBUG"])
-        log_filename_info = os.path.join(self.config["LOG_BASE_DIR"], self.config["LOG_FILENAME_INFO"])
-
-        # create logger
-        self.log = logging.getLogger()
-        self.log.setLevel(logging.DEBUG)
-
-        # create formatter
-        formatter = logging.Formatter(self.config["LOG_FORMAT"])
-
-        # console handler and set level to debug
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setLevel(self.config["LOG_LEVEL_CONSOLE"])
-        consoleHandler.setFormatter(formatter)
-        self.log.addHandler(consoleHandler)
-
-        fileHandlerDebug = logging.FileHandler(log_filename_debug, mode="a", encoding="UTF-8")
-        fileHandlerDebug.setLevel(logging.DEBUG)
-        fileHandlerDebug.setFormatter(formatter)
-        self.log.addHandler(fileHandlerDebug)
-
-        fileHandlerInfo = logging.FileHandler(log_filename_info, mode="a", encoding="UTF-8")
-        fileHandlerInfo.setLevel(logging.INFO)
-        fileHandlerInfo.setFormatter(formatter)
-        self.log.addHandler(fileHandlerInfo)
-
+        # important: loading config doesn't create new directories if those have changed
 
     def print_config(self):
 
@@ -659,17 +694,46 @@ class Zerobox(object):
 
 
     def get_total_space(self):
-        return shutil.disk_usage(self.config["IMAGE_DIR"]).total
+        total_space = []
+
+        try:
+            total_space.append(shutil.disk_usage(self.config["IMAGE_DIR_PRIMARY"]).total)
+        except FileNotFoundError as e:
+            total_space.append(None)
+
+        try:
+            total_space.append(shutil.disk_usage(self.config["IMAGE_DIR_SECONDARY"]).total)
+        except FileNotFoundError as e:
+            total_space.append(None)
+
+        return total_space
 
 
     def get_free_space(self):
-        return shutil.disk_usage(self.config["IMAGE_DIR"]).free
+        free_space = []
+
+        try:
+            free_space.append(shutil.disk_usage(self.config["IMAGE_DIR_PRIMARY"]).free)
+        except FileNotFoundError as e:
+            free_space.append(None)
+            
+        try:
+            free_space.append(shutil.disk_usage(self.config["IMAGE_DIR_SECONDARY"]).free)
+        except FileNotFoundError as e:
+            free_space.append(None)
+
+        return free_space
 
 
     def get_images_in_memory(self):
         files = []
-        for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR"]):
+
+        for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR_PRIMARY"]):
             files = files + filenames
+
+        for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR_SECONDARY"]):
+            files = files + filenames
+
         return files
 
 
@@ -852,10 +916,10 @@ class Zerobox(object):
         conn = None
 
         if self.config["COMMANDLINE_MODE"]:
-            conn = CameraConnectorCli(None, self.config["IMAGE_DIR"])
+            conn = CameraConnectorCli(None, self.config["IMAGE_DIR_PRIMARY"], self.config["IMAGE_DIR_SECONDARY"])
         else:
             port = self._lookup_port(self.port_info_list, camera)
-            conn = CameraConnectorSwig(port, self.config["IMAGE_DIR"])
+            conn = CameraConnectorSwig(port, self.config["IMAGE_DIR_PRIMARY"], self.config["IMAGE_DIR_SECONDARY"])
 
         portname = camera[1]
         if portname not in self.status["cameras"]:
@@ -916,7 +980,7 @@ class Zerobox(object):
             if self.config["AUTOFOCUS_ENABLED"]:
                 self.focus_camera(portname)
 
-            filename = self._acquire_filename(conn.get_image_directory())
+            filename = self._acquire_filename(conn.get_image_directory(self.config["MIN_FREE_SPACE"]))
             filename2 = None
 
             self.log.debug("acquired filename: {} {}".format(*filename))
@@ -942,6 +1006,7 @@ class Zerobox(object):
                     conn.set_exposure_compensation(self.config["EXPOSURE_2"])
                     filename2 = (filename[0], filename[1] + "_2")
                     conn.capture_and_download(filename2)
+                    conn.set_exposure_compensation(self.config["EXPOSURE_1"])
 
             taken_images = [filename]
             if filename2 is not None:

@@ -223,7 +223,7 @@ elif args.action == "info":
 
                 print(DATA_STRING2.format(label=key, data=str(session[key])))  
 
-            if len(session["errors"]) > 1:
+            if len(session["errors"]) > 0:
                 print("")
                 print("ERRORS:")
 

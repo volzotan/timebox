@@ -291,8 +291,8 @@ class Gui():
         self.data                            = {}
         self.data["cameras"]                 = {}
         self.data["message"]                 = "..."
-        self.data["total_space"]             = None
-        self.data["free_space"]              = None
+        self.data["total_space"]             = [None, None]
+        self.data["free_space"]              = [None, None]
         self.data["images_in_memory"]        = None
         self.data["last_image_brightness"]   = None
         self.data["temperature"]             = None
@@ -643,8 +643,19 @@ class Gui():
         self.text(draw, [127,  start+2], self._timeToStr(time_done, short=True), rightalign=True)
         self.text(draw, [127,  start+9], self._timeToStr(time_remaining, short=True), rightalign=True)
 
+        free_space_primary = "----"
+        free_space_secondary = "----"
+
+        if self.data["free_space"][0] is not None:
+            free_space_primary = "{:2.1f}".format(self.data["free_space"][0])
+
+        if self.data["free_space"][1] is not None:
+            free_space_secondary = "{:2.1f}".format(self.data["free_space"][1] / (1024**3))
+
         self.text(draw, [45+5, start+16], "FR.SPC")
-        self.text(draw, [127,  start+16], "{0:2.2f}GB".format(12.345), rightalign=True)
+        self.text(draw, [107-8,  start+16], free_space_primary, rightalign=True)
+        self.text(draw, [111-4,  start+16], "|", rightalign=True)
+        self.text(draw, [127,  start+16], free_space_secondary, rightalign=True)
 
         # ERROR
 
@@ -673,17 +684,6 @@ class Gui():
         # draw.line([(0, 55), (128, 55)], fill=COLOR1)
         # self.text(draw, [1, 55], "ERROR FOO")
 
-
-    def draw_dialog(self, draw, msg, options):
-
-        draw.rectangle([(0, 0), (127, 64)], outline=None, fill=COLOR1)
-        draw.rectangle([(1, 1), (127-1, 64-2)], outline=None, fill=COLOR0)
-
-        self.text(draw, [10, 10], msg)
-        self.text(draw, [10, 30], options[0])
-        self.text(draw, [70, 30], options[1])
-
-
     def draw_logo(self, draw, info):
 
         draw.rectangle([(0, 0), (127, 64)], outline=None, fill=COLOR1)
@@ -695,8 +695,8 @@ class Gui():
         self.text(draw, [60, 44], info["version"])
         self.text(draw, [10, 52], "MEMORY")
 
-        if info["free_space"] is not None and info["total_space"] is not None:
-            ratio = 1 - (info["free_space"] / info["total_space"])
+        if info["free_space"][1] is not None and info["total_space"][1] is not None: # TODO: secondary hardcoded
+            ratio = 1 - (info["free_space"][1] / info["total_space"][1])
             draw.rectangle([(60, 52), (116, 56)], outline=None, fill=COLOR1)
             draw.rectangle([(61, 53), (int(61+54*ratio), 55)], outline=None, fill=COLOR0)
 
@@ -764,12 +764,22 @@ class Gui():
         self.text(draw, [54, 44], images_in_memory) # max: 99999
 
         free_space = "?"
+        total_free = 0
         if info["free_space"] is not None:
-            free_space = "{0:.2f}".format(info["free_space"]/1024.0**3)
+            if info["free_space"][0] is not None:
+                total_free += info["free_space"][0]
+            if info["free_space"][1] is not None:
+                total_free += info["free_space"][1]
+            free_space = "{0:.2f}".format(total_free/1024.0**3)
         self.text(draw, [126, 44], free_space, rightalign=True)
 
         if info["free_space"] is not None and info["total_space"] is not None:
-            ratio = info["free_space"] / info["total_space"]
+            total_total = 0
+            if info["total_space"][0] is not None:
+                total_total += info["total_space"][0]
+            if info["total_space"][1] is not None:
+                total_total += info["total_space"][1]
+            ratio = total_free / total_total
             self.rect(draw, [(75, 44), (100, 48)])
             if ratio < 0.99:
                 self.rect(draw, [(75+1+23*ratio, 44+1), (100-1, 48-1)], invert=True)
@@ -1216,10 +1226,9 @@ class Gui():
 
 
         elif self.state == STATE_PRE_RUN:
-            # if isInvalid:
-            #     with canvas(device) as draw:
-            #         draw_info(draw, "start")
-            #     validate()
+
+            with canvas(self.device) as draw:
+                self.draw_info(draw, "start")
 
             self.zeroboxConnector.root.load_config(self.config)
 
@@ -1267,6 +1276,9 @@ class Gui():
                 self.data["message"] = "exc. during start"
                 self.state = STATE_IDLE
                 return
+
+            with canvas(self.device) as draw:
+                self.draw_info(draw, "start: session started")
 
             # get status since the zerobox may have detected new cameras or discarded old ones
             status = obtain(self.zeroboxConnector.root.get_status(force=False))
