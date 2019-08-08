@@ -1049,11 +1049,13 @@ class Gui():
 
             for e in self.getKeyEvents():
                 if "L" == e:
-                    self.menu_selected = (self.menu_selected - 1) % 3
-                    self.invalidate()
+                    if (self.menu_selected - 1 >= 0):
+                        self.menu_selected = (self.menu_selected - 1)
+                        self.invalidate()
                 if "R" == e:
-                    self.menu_selected = (self.menu_selected + 1) % 3
-                    self.invalidate()
+                    if (self.menu_selected + 1 <= 2):
+                        self.menu_selected = (self.menu_selected + 1)
+                        self.invalidate()
                 if "3" == e:
                     if self.menu_selected == 0:
                         self.state = STATE_CONFIG
