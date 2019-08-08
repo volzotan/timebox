@@ -618,6 +618,20 @@ class ZeroboxConnector(rpyc.Service):
         if force:
             self.exposed_log_process_memory()
 
+        if force:
+            self.network_status = None
+            network_data = {}
+
+            try: 
+                ssid = subprocess.check_output(["iwgetid", "-r"])
+                if ssid is not None:
+                    network_data["ssid"] = ssid.decode("utf-8")[:-1]
+                    network_data["interface"] = "wlan0"
+                    self.network_status = network_data
+            except Exception as e:
+                self.log.debug(e)
+        data["network_status"] = self.network_status
+
         return data
 
     def exposed_set_network_status(self, interfacename, enable):
@@ -630,22 +644,6 @@ class ZeroboxConnector(rpyc.Service):
             ssid = subprocess.check_output(["sudo", "ifconfig", interfacename, mode])
         except Exception as e:
             self.log.debug(e)
-
-    def exposed_get_network_status(self, force=False):
-        if force:
-            self.network_status = None
-            data = {}
-
-            try: 
-                ssid = subprocess.check_output(["iwgetid", "-r"])
-                if ssid is not None:
-                    data["ssid"] = ssid.decode("utf-8")[:-1]
-                    data["interface"] = "wlan0"
-                    self.network_status = data
-            except Exception as e:
-                self.log.debug(e)
-
-        return self.network_status
 
     def exposed_get_next_invocation(self):
         return self.scheduler.get_next_invocation("trigger")

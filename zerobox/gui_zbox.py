@@ -31,6 +31,10 @@ from devices import RTC
 from zerobox import CameraConnector
 from zeroboxConnector import ZeroboxConnector, NoConnectedCameraException
 
+import multiprocessing
+from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import Pool
+
 COLOR0 = "black"
 COLOR1 = "white"
 
@@ -92,6 +96,10 @@ class Gui():
 
         self.display_on = True
         self.last_button_input = datetime.now()
+
+        self.pool = ThreadPool(processes=1)
+        self.get_status_result = None
+        self.get_session_result = None
 
         # state
 
@@ -459,10 +467,6 @@ class Gui():
                 value = item["max"]
 
         return value
-
-
-    def _get_session(self):
-        return obtain(self.zeroboxConnector.root.get_session())
 
 
     def getKeyEvents(self):
@@ -905,32 +909,28 @@ class Gui():
         else:
             self.text(draw, [3, offset], msg)
 
+    def _get_status(self, force=False):
+        return obtain(self.zeroboxConnector.root.get_status(force=force))
+
+    def _get_status_async(self, force):
+        kwargs = {"force": force}
+        self.get_status_result = self.pool.apply_async(self._get_status, [], kwargs)
+
+    def _get_session(self):
+        return obtain(self.zeroboxConnector.root.get_session())
+
+    def _get_session_async(self, force=False):
+        self.get_session_result = self.pool.apply_async(self._get_session)
+
     def process_jobs(self, jobs):
 
-        if "update_status" in jobs or "force_update_status" in jobs:
+        if self.get_status_result is not None:
+            try:
+                status = self.get_status_result.get(timeout=0.1)
 
-            if (datetime.now() - self.last_button_input).total_seconds() > SCREENSAVER_TIME and self.display_on:
-                self.log.debug("screensaver started")
-                self.device.hide()
-                self.display_on = False
-
-            if self.zeroboxConnector is not None:
-                force = False
-                if "force_update_status" in jobs:
-                    force = True
-                    # if None in zeroboxConnector.root.check_trigger_result():
-                    #     # probably the camera is capturing right now. Do not try to get the status
-                    #     force = False
-
-                status = obtain(self.zeroboxConnector.root.get_status(force=force))
                 if len(status) > 0:
                     self.data = {**self.data, **dict(status)}
                     # self.data["message"] = None
-
-                network_status = obtain(self.zeroboxConnector.root.get_network_status(force=force))
-                self.data["network_status"] = network_status
-
-                self.session = self._get_session()
 
                 if status is not None:
                     if status["connector_state"] == ZeroboxConnector.STATE_RUNNING and self.state == STATE_LOGO:
@@ -943,6 +943,34 @@ class Gui():
                         self.state = STATE_MENU
                         self.invalidate()
 
+            except Exception as e:
+                self.log.error("get status error: {}".format(e))
+
+            self.get_status_result = None
+
+        if self.get_session_result is not None:
+            try:
+                self.session = self.get_session_result.get(timeout=0.1) #s
+            except Exception as e:
+                self.log.error("get session error: {}".format(e))
+
+            self.get_session_result = None
+
+        if "update_status" in jobs or "force_update_status" in jobs:
+
+            if (datetime.now() - self.last_button_input).total_seconds() > SCREENSAVER_TIME and self.display_on:
+                self.log.debug("screensaver started")
+                self.device.hide()
+                self.display_on = False
+
+            if self.zeroboxConnector is not None:
+                force = False
+                
+                if "force_update_status" in jobs:
+                    force = True
+
+                self._get_status_async(force)
+                self._get_session_async()
             else:
                 self.data["message"] = "connector not found"
 
@@ -967,6 +995,7 @@ class Gui():
 
         if "update_status" in triggered_jobs:
             self.invalidate()
+
 
         if self.state == STATE_INIT:
             self.log.debug("init")
@@ -1004,7 +1033,7 @@ class Gui():
                 self.state = STATE_MENU
 
                 if self.zeroboxConnector is not None:
-                    self.status = {**self.status, **obtain(self.zeroboxConnector.root.get_status())}
+                    self.status = self._get_status()
                     if self.status["connector_state"] == ZeroboxConnector.STATE_RUNNING:
                         self.session = self._get_session()
                         self.state = STATE_RUNNING
@@ -1016,7 +1045,6 @@ class Gui():
 
             if "force_update_status" in triggered_jobs:
                 if self.zeroboxConnector is not None:
-                    # self.cameras = obtain(self.zeroboxConnector.root.detect_cameras())
                     self.data["message"] = "cam: {} | controller: {}".format(len(self.cameras), len(self.controller))
 
             for e in self.getKeyEvents():
@@ -1281,7 +1309,7 @@ class Gui():
                 self.draw_info(draw, "start: session started")
 
             # get status since the zerobox may have detected new cameras or discarded old ones
-            status = obtain(self.zeroboxConnector.root.get_status(force=False))
+            status = self._get_session()
             if len(status) > 0:
                 self.data = {**self.data, **dict(status)}
 
