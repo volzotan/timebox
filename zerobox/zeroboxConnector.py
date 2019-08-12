@@ -90,7 +90,7 @@ class ZeroboxConnector(rpyc.Service):
             pass
 
         self.scheduler.add_job("sync", 5*60*1000, delay=1000)
-        self.scheduler.add_job("maintenance", 5*60*1000, delay=2000)
+        self.scheduler.add_job("maintenance", 5*60*1000, delay=10000)
 
     def init_log(self):
 
@@ -279,7 +279,7 @@ class ZeroboxConnector(rpyc.Service):
 
     def exposed_loop(self):
 
-        self.log.debug("loop")
+        # self.log.debug("loop")
 
         jobs = self.scheduler.run_schedule()
 
@@ -307,14 +307,19 @@ class ZeroboxConnector(rpyc.Service):
 
                 shutdown = False
 
-                if battery_controller is not None and battery_controller < self.config["min_battery"]["value"]:
+                self.log.debug("BATTERY")
+                self.log.debug(battery_controller)
+                for battery_camera in battery_cameras:
+                    self.log.debug(battery_camera)
+
+                if battery_controller is not None and int(battery_controller) < self.config["min_battery"]["value"]:
                     self.log.info("SHUTDOWN LOW BATTERY! (battery_controller {} < {})"
                         .format(battery_controller, self.config["min_battery"]["value"]))
 
                     shutdown = True
 
                 for battery_camera in battery_cameras:
-                    if battery_camera[0] < self.config["min_battery"]["value"]:
+                    if int(battery_camera[0]) < self.config["min_battery"]["value"]:
                         self.log.info("SHUTDOWN LOW BATTERY! (battery_camera {} < {})"
                             .format(battery_camera[0], self.config["min_battery"]["value"]))
 
@@ -691,7 +696,7 @@ class ZeroboxConnector(rpyc.Service):
 
     def exposed_sync_status(self):
 
-        if self.exposed_get_network_status() is None:
+        if self.network_status is None or self.network_status: # empty {} == False
             self.log.info("cancel sync status. no network connection")
             raise Exception("no network connection")
 
