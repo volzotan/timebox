@@ -165,10 +165,24 @@ elif args.action == "info":
         status = obtain(conn.get_status())  #force=True)
         temperatures = status["temperature"]
         battery = status["battery"]
-        network = obtain(conn.get_network_status(force=True))
+        network = status["network_status"]
 
-        total_space = conn.get_total_space() / (1024*1024)
-        free_space = conn.get_free_space() / (1024*1024)
+        sum_total_space = 0
+        total_space = obtain(conn.get_total_space())
+        for folder in total_space:
+            if folder is None:
+                continue
+            sum_total_space += folder
+        sum_total_space = sum_total_space / (1024*1024)
+
+        sum_free_space = 0
+        free_space = obtain(conn.get_free_space())
+        for folder in free_space:
+            if folder is None:
+                continue
+            sum_free_space += folder
+        sum_free_space = sum_free_space / (1024*1024)
+
         images_in_memory = obtain(conn.get_images_in_memory())
         free_ram = conn.get_process_memory()
 
@@ -199,7 +213,8 @@ elif args.action == "info":
             msg = network["ssid"]
         print(DATA_STRING.format(label="network", data=msg))            
 
-        print(DATA_STRING.format(label="free space", data="{:.2f} / {:.2f} ({:.1f}%) [{}]".format(free_space, total_space, (free_space/total_space)*100, len(images_in_memory))))     
+        print(DATA_STRING.format(label="free space", data="{:.2f} / {:.2f} ({:.1f}%) [{}]".format(
+            sum_free_space, sum_total_space, (sum_free_space/sum_total_space)*100, len(images_in_memory))))     
 
         print(DATA_STRING.format(label="free RAM", data="{:.2f}%".format(free_ram)))        
 

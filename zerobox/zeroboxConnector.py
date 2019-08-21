@@ -319,7 +319,8 @@ class ZeroboxConnector(rpyc.Service):
                     shutdown = True
 
                 for battery_camera in battery_cameras:
-                    if int(battery_camera[0]) < self.config["min_battery"]["value"]:
+                    perc = int(battery_camera[0][:-1])
+                    if perc < self.config["min_battery"]["value"]:
                         self.log.info("SHUTDOWN LOW BATTERY! (battery_camera {} < {})"
                             .format(battery_camera[0], self.config["min_battery"]["value"]))
 

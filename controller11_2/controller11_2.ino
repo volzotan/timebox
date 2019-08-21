@@ -87,10 +87,6 @@ void setup() {
   DEBUG_PRINT(getLiPoVoltage(BATT_DIRECT));
   DEBUG_PRINT("Battery percentage:");
   DEBUG_PRINT(getLiPoVoltage(BATT_PERCENTAGE_DIRECT));
-
-  delay(1000);
-
-  switchZeroOn(true);
 }
 
 void loop() {    

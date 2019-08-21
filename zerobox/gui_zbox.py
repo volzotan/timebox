@@ -367,7 +367,7 @@ class Gui():
         val = ""
         hours = int(value/3600)
         minutes = int(value/60)%60
-        seconds = value%60
+        seconds = int(value)%60
 
         if short:
             return "{0:02d}:{1:02d}:{2:02d}".format(hours, minutes, seconds)
@@ -641,8 +641,8 @@ class Gui():
         self.text(draw, [45+5, start+2], "INTVAL")
         self.text(draw, [45+5, start+9], str(self.config["interval"]["value"]))
 
-        time_done = (datetime.now() - self.session["start"]).seconds
-        time_remaining = (self.session["end"] - datetime.now()).seconds
+        time_done = int((datetime.now() - self.session["start"]).total_seconds())
+        time_remaining = int((self.session["end"] - datetime.now()).total_seconds())
 
         self.text(draw, [127,  start+2], self._timeToStr(time_done, short=True), rightalign=True)
         self.text(draw, [127,  start+9], self._timeToStr(time_remaining, short=True), rightalign=True)
@@ -680,7 +680,7 @@ class Gui():
         self.text(draw, [1, 60-8], "{0:3d}/{1:3d}".format(len(self.session["images"]), self.config["iterations"]["value"]))
         self.text(draw, [127, 60-8], "{0:2d}%".format(int(progress*100)), rightalign=True)
         if "next_invocation" in self.data and self.data["next_invocation"] is not None:
-            self.text(draw, [55, 60-8], self._timeToStr((self.data["next_invocation"]-datetime.now()).seconds, short=True))
+            self.text(draw, [55, 60-8], self._timeToStr((self.data["next_invocation"]-datetime.now()).total_seconds(), short=True))
         draw.rectangle([(0, 60), (127, 63)], fill=COLOR1)
         draw.rectangle([(1, 61), (1+(127-2)*progress, 63-1)], fill=COLOR0)
 
@@ -980,7 +980,7 @@ class Gui():
 
         # if "trigger" in jobs:
         #     self.data["message"] = "success. took {} images in {}".format(self.images_taken, self._timeToStr(
-        #         (self.time_end - self.time_start).seconds, short=True))
+        #         (self.time_end - self.time_start).total_seconds(), short=True))
 
     def loop(self):
 
@@ -1384,7 +1384,7 @@ class Gui():
 
                     report = "Abort. Took {} images in {}".format(
                         len(self.session["images"]),
-                        self._timeToStr((self.session["end"]-self.session["start"]).seconds, short=True))
+                        self._timeToStr((datetime.now()-self.session["start"]).total_seconds(), short=True))
                     self.data["message"] = report
 
                     self.state = STATE_IDLE

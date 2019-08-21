@@ -39,7 +39,7 @@ void initPins() {
   pinMode(PIN_EXT2,            OUTPUT);
   pinMode(PIN_EXT3,            OUTPUT);
 
-  digitalWrite(PIN_ZERO_EN,    LOW);
+  digitalWrite(PIN_ZERO_EN,    HIGH);
   digitalWrite(PIN_CAMERA_EN,  LOW);
 }
 
