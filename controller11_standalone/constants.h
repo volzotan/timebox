@@ -26,14 +26,14 @@
 
 #define PRE_TRIGGER_WAIT                  12
 
-#define TRIGGER_DURATION                  10
-// 10s for 3EV 3 image bracketing mode:
+#define TRIGGER_DURATION                   1
+// 1s for 3EV 3 image bracketing mode:
 // if first and second image exposure time 
-// combined is less than 10s (= daytime), 
+// combined is less than 1s (= daytime), 
 // then 3 images are taken if longer only 
 // one or two
 
-#define POST_TRIGGER_WAIT                 36                    
+#define POST_TRIGGER_WAIT                 37             
 
 // ----------- MISC -----------
 

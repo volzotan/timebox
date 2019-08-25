@@ -14,3 +14,4 @@ eagle/**/*.job
 *.arw_2
 
 zerobox/tmp
+*.elf
