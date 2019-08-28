@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <Adafruit_NeoPixel.h>
+#include "Adafruit_MCP9808.h"
 
 #include "global.h"
 #include "constants.h"
@@ -32,6 +33,10 @@ int serialParam2 = -1;
 
 // ---------------------------
 
+Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+
+// ---------------------------
+
 void setup() {
 
   SerialUSB.begin(9600);
@@ -39,6 +44,7 @@ void setup() {
   DEBUG_PRINT("INIT");
 
   initPins();
+
   neopixel.begin();
 
   #ifdef DEBUG
@@ -53,6 +59,19 @@ void setup() {
 
     DEBUG_PRINT("DEBUG MODE ON");
   #endif
+
+
+  // set the resolution mode of reading
+  // Mode  Resolution  SampleTime
+  //  0    0.5°C       30 ms
+  //  1    0.25°C      65 ms
+  //  2    0.125°C     130 ms
+  //  3    0.0625°C    250 ms
+
+  if (!tempsensor.begin(0x18)) {
+    DEBUG_PRINT("temperature sensor not found");
+  }
+  tempsensor.setResolution(1); 
 
   #ifdef DEBUG
     // blink YELLOW, 3x, 1s

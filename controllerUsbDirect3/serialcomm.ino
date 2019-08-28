@@ -133,7 +133,18 @@ void executeCommand() {
         //     okSerial(ser);
         //     break;
         
-        case 'U': // Time 
+
+        case 'T': // Temperature
+            tempsensor.wake();
+
+            SerialUSB.print("K ");
+            SerialUSB.print(tempsensor.readTempC(), 4);
+            SerialUSB.println();
+
+            tempsensor.shutdown_wake(1);
+        break;
+
+        case 'U': // Uptime 
             //errorSerial(ERRORCODE_NOT_AVAILABLE, ser);
             SerialUSB.print("K ");
             SerialUSB.println(millis());
