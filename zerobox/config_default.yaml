@@ -39,7 +39,7 @@ secondexposure:
 se_use_threshold:
     type: boolean
     parent: "secondexposure"
-    value: False
+    value: True
 
 se_threshold:
     type: float
@@ -72,7 +72,7 @@ min_battery:
     type: int
     min: 0
     max: 25
-    value: 3 
+    value: 2 
 
 
 # --------------------------------------------------------

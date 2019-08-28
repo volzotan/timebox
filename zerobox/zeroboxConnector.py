@@ -296,8 +296,11 @@ class ZeroboxConnector(rpyc.Service):
             self.log.debug(">>> job running: MAINTENANCE")
             self.log.debug("    {}".format(self.scheduler.print_next_job()))
 
-            # TODO: check batteries and shutdown if too low
-            # ...
+            if self.session is not None and "start" in self.session:
+                runtime = datetime.now() - self.session["start"]
+                self.log.debug("capture session running for: {:.2f} seconds".format(runtime.total_seconds()))
+            else:
+                pass
 
             try:
 
