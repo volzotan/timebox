@@ -10,6 +10,7 @@ import yaml
 import logging
 import threading
 import signal
+import traceback
 
 from luma.core.interface.serial import i2c, spi
 from luma.emulator.device import pygame, capture
@@ -1447,5 +1448,9 @@ if __name__ == "__main__":
     if g.pyg is not None:
         SLEEP_DURATION = 0.1
     while True:
-        g.loop()
-        time.sleep(SLEEP_DURATION)
+        try:
+            g.loop()
+            time.sleep(SLEEP_DURATION)
+        except Exception as e:
+            self.log.error("exception in loop() occured: {}".format(e))
+            traceback.print_exc()

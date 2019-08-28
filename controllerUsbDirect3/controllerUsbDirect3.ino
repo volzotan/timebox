@@ -5,9 +5,10 @@
 #include "constants.h"
 
 // #define DEBUG
+// #define SHUTDOWN_ON_LOW_BATTERY
 
 #ifdef DEBUG
-  #define DEBUG_PRINT(x) Serial.print("["); Serial.print(millis()/1000); Serial.print("] "); Serial.println (x)
+  #define DEBUG_PRINT(x) SerialUSB.print("["); SerialUSB.print(millis()/1000); SerialUSB.print("] "); SerialUSB.println (x)
 #else
   #define DEBUG_PRINT(x)
 #endif
@@ -33,30 +34,32 @@ int serialParam2 = -1;
 
 void setup() {
 
-  Serial.begin(9600);
+  SerialUSB.begin(9600);
 
   DEBUG_PRINT("INIT");
 
   initPins();
-
   neopixel.begin();
-  #ifdef DEBUG
-    // blink YELLOW, 3x, 1s
-  ledShow(50, 50, 0);
-  #endif
-
-  #ifdef DEBUG
-  while (!Serial) {
-    ;
-  }
-  #endif
 
   #ifdef DEBUG
     // blink YELLOW, 3x, 1s
-  ledBlink(128, 128, 0, 3, 1000);
+    ledShow(50, 50, 0);
+  #endif
+
+  #ifdef DEBUG
+    while (!SerialUSB) {
+      ;
+    }
+
+    DEBUG_PRINT("DEBUG MODE ON");
+  #endif
+
+  #ifdef DEBUG
+    // blink YELLOW, 3x, 1s
+    ledBlink(128, 128, 0, 3, 1000);
   #else
     // blink GREEN, 3x, 3s
-  ledBlink(  0, 128, 0, 3, 3000);
+    ledBlink(  0, 128, 0, 3, 3000);
   #endif
 
   // battery life
@@ -64,10 +67,10 @@ void setup() {
     // battery is empty, abort right now!
 
     DEBUG_PRINT("stopping!...");
-    #ifndef DEBUG
-    stopAndShutdown();
+    #ifdef SHUTDOWN_ON_LOW_BATTERY
+      stopAndShutdown();
     #else
-    DEBUG_PRINT("stopping aborted (debug mode)");
+      DEBUG_PRINT("stopping aborted (no SHUTDOWN_ON_LOW_BATTERY)");
     #endif
   }
 
@@ -79,7 +82,7 @@ void setup() {
   DEBUG_PRINT(getLiPoVoltage(BATT_PERCENTAGE_DIRECT));
 }
 
-void loop() {    
+void loop() { 
   serialEvent();  
   ledLoop();
 }

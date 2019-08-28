@@ -296,11 +296,12 @@ class SerialController(Controller):
 
 class UsbDirectController(Controller):
 
-    CMD_PING    = "knock"
-    CMD_STATUS  = "status"
-    CMD_ON      = "on"
-    CMD_OFF     = "off"
-    CMD_TEMP    = "temp"
+    CMD_PING    = "K"
+    CMD_BATTERY = "B"
+    # CMD_STATUS  = "status"
+    CMD_ON      = "C 1"
+    CMD_OFF     = "C 0"
+    CMD_TEMP    = "T"
 
     SERIAL_BAUDRATE = 9600
     SERIAL_TIMEOUT = 1.0
@@ -321,7 +322,7 @@ class UsbDirectController(Controller):
             if "zero" in port[1].lower():
                 potential_controller = UsbDirectController(port[0])
                 try:
-                    potential_controller.get_status()
+                    potential_controller.ping()
                     controller.append(potential_controller)
                 except Exception as e:
                     print(e)
@@ -334,7 +335,7 @@ class UsbDirectController(Controller):
         try:
             self._send_command(self.CMD_PING)
         except Exception as e:
-            print(e)
+            log.error(e)
             raise e
 
     def turn_on(self, turn_on):
@@ -344,16 +345,36 @@ class UsbDirectController(Controller):
             else:
                 self._send_command(self.CMD_OFF)
         except Exception as e:
-            print(e)
+            log.error(e)
             return None
 
     def get_status(self):
+        # try:
+        #     response = self._send_command(self.CMD_STATUS)
+        #     # print(response)
+        # except Exception as e:
+        #     print(e)
+        #     return None
+
+        return None
+
+    def get_battery_status(self):
         try:
-            response = self._send_command(self.CMD_STATUS)
-            # print(response)
+            response = self._send_command(self.CMD_BATTERY)
+
+            if len(response) < 2:
+                raise Exception("response too short [{}]".format(response))
+
+            response = response.split(" ")
+
+            if len(response) != 2:
+                raise Exception("response in unexpected format [{}]".format(response))
+
+            return float(response[1])
+
         except Exception as e:
-            print(e)
-            return None
+            log.error(e)
+            raise e
 
     def get_temperature(self):
         try:
@@ -367,8 +388,16 @@ class UsbDirectController(Controller):
 
             return float(response)
         except Exception as e:
-            print(e)
+            log.error(e)
             return None
+
+    def get_uptime(self):
+        try:
+            response = self._send_command(self.CMD_UPTIME)
+            return response
+        except Exception as e:
+            log.error(e)
+            raise e
 
     def _send_command(self, cmd):
         response = ""

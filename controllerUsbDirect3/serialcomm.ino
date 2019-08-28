@@ -1,6 +1,6 @@
 /* Commandlist
  *
- *  P  ---  Ping
+ *  K  ---  Knock
  *
  *  B  ---  Battery
  *    8.00    80
@@ -11,7 +11,8 @@
  *  R  ---  Reboot    // maybe add delay time?  S 10 for example?
  *  L  ---  Remaining Lifetime/Uptime
  *
- *  T  ---  Time
+ *  T  ---  Temperature
+ *
  *  U  ---  Get Uptime
  *
  *  C  ---  Camera On
@@ -26,8 +27,8 @@
  */
 
 void serialEvent() {
-    while (Serial.available()) {
-        char inChar = (char) Serial.read();
+    while (SerialUSB.available()) {
+        char inChar = (char) SerialUSB.read();
         processCommand(inChar);
     }
 }
@@ -84,22 +85,22 @@ void processCommand(char inChar) {
 }
 
 void executeCommand() {
-    #ifdef DEBUG
-    Serial.print("=> ");
-    Serial.println(serialCommand);
-    #endif
+    // #ifdef DEBUG
+    //     SerialUSB.print("=> ");
+    //     SerialUSB.println(serialCommand);
+    // #endif
     
     switch(serialCommand) {
 
         case 'K': // Ping / Knock
-        Serial.println("K");        
+            okSerial();
         break;
 
         case 'B': // Battery Health
-        Serial.print("K ");
-        Serial.print(getLiPoVoltage(BATT_DIRECT));
-        Serial.print(" ");
-        Serial.println(getLiPoVoltage(BATT_PERCENTAGE_DIRECT));
+            SerialUSB.print("K ");
+            SerialUSB.print(getLiPoVoltage(BATT_DIRECT));
+            SerialUSB.print(" ");
+            SerialUSB.println(getLiPoVoltage(BATT_PERCENTAGE_DIRECT));
         break;
 
         // case 'Z': // Zero On 
@@ -132,10 +133,10 @@ void executeCommand() {
         //     okSerial(ser);
         //     break;
         
-        case 'T': // Time 
+        case 'U': // Time 
             //errorSerial(ERRORCODE_NOT_AVAILABLE, ser);
-        Serial.print("K ");
-        Serial.println(millis());
+            SerialUSB.print("K ");
+            SerialUSB.println(millis());
         break;        
 
         case 'C': // Camera On 
@@ -151,7 +152,7 @@ void executeCommand() {
         break; 
         
         default:
-        errorSerial(ERRORCODE_UNKNOWN_CMD);
+            errorSerial(ERRORCODE_UNKNOWN_CMD);
     }    
 
     // method returns and serial is reset
@@ -165,10 +166,10 @@ void resetSerial() {
 
 void errorSerial(int errcode) {
     resetSerial();
-    Serial.print("E ");
-    Serial.println(errcode);
+    SerialUSB.print("E ");
+    SerialUSB.println(errcode);
 }
 
 void okSerial() {
-    Serial.println("K");
+    SerialUSB.println("K");
 }

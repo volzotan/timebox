@@ -18,11 +18,11 @@
 
 // ----------- OPTIONS -----------
 
-#define LIPO_CELL_MIN                    3.1
+#define LIPO_CELL_MIN                    3.5
 #define LIPO_CELL_MAX                    4.2
 
-#define INTERVAL                        2*60
-#define ITERATIONS                      1000
+#define INTERVAL                        3*60
+#define ITERATIONS                      2000
 
 #define PRE_TRIGGER_WAIT                  12
 
@@ -49,8 +49,8 @@
 #define VDRESISTOR2                       10
 
 #define BATT_VD_RAW                        0
-#define BATT_DIRECT                       -1 
-#define BATT_PERCENTAGE_DIRECT            -4
+#define BATT_DIRECT                        1 
+#define BATT_PERCENTAGE_DIRECT             2
 
 // ----------- ERROR CODES -----------
 

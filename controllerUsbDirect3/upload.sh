@@ -1,1 +1,1 @@
-arduino upload -b arduino:avr:zero -p /dev/tty.usbmodem*
+arduino upload -b arduino:samd:arduino_zero_native -p /dev/tty.usbmodem*
