@@ -2800,7 +2800,6 @@ Created by Upverter.com</description>
 <part name="BT1" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
 <part name="BT2" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
 <part name="BT3" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
-<part name="BT4" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
 <part name="H1" library="holes" library_urn="urn:adsk.eagle:library:237" deviceset="MOUNT-HOLE" device="3.2" package3d_urn="urn:adsk.eagle:package:14275/1"/>
 <part name="H2" library="holes" library_urn="urn:adsk.eagle:library:237" deviceset="MOUNT-HOLE" device="3.2" package3d_urn="urn:adsk.eagle:package:14275/1"/>
 <part name="H3" library="holes" library_urn="urn:adsk.eagle:library:237" deviceset="MOUNT-HOLE" device="3.2" package3d_urn="urn:adsk.eagle:package:14275/1"/>
@@ -2809,7 +2808,6 @@ Created by Upverter.com</description>
 <part name="BT5" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
 <part name="BT6" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
 <part name="BT7" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
-<part name="BT8" library="Keystone - 1048" deviceset="KEYSTONE_1048" device="KEYSTONE_1048_0_0"/>
 </parts>
 <sheets>
 <sheet>
@@ -2839,12 +2837,6 @@ Created by Upverter.com</description>
 </instance>
 <instance part="BT3" gate="B" x="182.88" y="162.56" smashed="yes">
 <attribute name="NAME" x="193.04" y="161.036" size="2.54" layer="95" align="top-left"/>
-</instance>
-<instance part="BT4" gate="A" x="215.9" y="162.56" smashed="yes">
-<attribute name="NAME" x="226.06" y="161.036" size="2.54" layer="95" align="top-left"/>
-</instance>
-<instance part="BT4" gate="B" x="248.92" y="162.56" smashed="yes">
-<attribute name="NAME" x="259.08" y="161.036" size="2.54" layer="95" align="top-left"/>
 </instance>
 <instance part="H1" gate="G$1" x="15.24" y="15.24" smashed="yes">
 <attribute name="NAME" x="17.272" y="15.8242" size="1.778" layer="95"/>
@@ -2883,12 +2875,6 @@ Created by Upverter.com</description>
 <instance part="BT7" gate="B" x="182.88" y="109.22" smashed="yes">
 <attribute name="NAME" x="193.04" y="107.696" size="2.54" layer="95" align="top-left"/>
 </instance>
-<instance part="BT8" gate="A" x="215.9" y="109.22" smashed="yes">
-<attribute name="NAME" x="226.06" y="107.696" size="2.54" layer="95" align="top-left"/>
-</instance>
-<instance part="BT8" gate="B" x="248.92" y="109.22" smashed="yes">
-<attribute name="NAME" x="259.08" y="107.696" size="2.54" layer="95" align="top-left"/>
-</instance>
 </instances>
 <busses>
 </busses>
@@ -2920,26 +2906,17 @@ Created by Upverter.com</description>
 <wire x1="63.5" y1="167.64" x2="63.5" y2="165.1" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="167.64" x2="60.96" y2="172.72" width="0.1524" layer="91"/>
 <junction x="60.96" y="167.64"/>
-<pinref part="BT4" gate="A" pin="1_CATHODE"/>
-<wire x1="220.98" y1="149.86" x2="220.98" y2="147.32" width="0.1524" layer="91"/>
-<wire x1="220.98" y1="147.32" x2="246.38" y2="147.32" width="0.1524" layer="91"/>
-<wire x1="246.38" y1="147.32" x2="246.38" y2="167.64" width="0.1524" layer="91"/>
-<wire x1="246.38" y1="167.64" x2="251.46" y2="167.64" width="0.1524" layer="91"/>
-<pinref part="BT4" gate="B" pin="2_ANODE"/>
-<wire x1="251.46" y1="167.64" x2="254" y2="167.64" width="0.1524" layer="91"/>
-<wire x1="254" y1="167.64" x2="254" y2="165.1" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="172.72" x2="124.46" y2="172.72" width="0.1524" layer="91"/>
 <wire x1="124.46" y1="172.72" x2="185.42" y2="172.72" width="0.1524" layer="91"/>
-<wire x1="185.42" y1="172.72" x2="251.46" y2="172.72" width="0.1524" layer="91"/>
-<wire x1="251.46" y1="172.72" x2="251.46" y2="167.64" width="0.1524" layer="91"/>
-<junction x="251.46" y="167.64"/>
+<wire x1="185.42" y1="172.72" x2="220.98" y2="172.72" width="0.1524" layer="91"/>
+<wire x1="220.98" y1="172.72" x2="220.98" y2="165.1" width="0.1524" layer="91"/>
 <wire x1="119.38" y1="167.64" x2="124.46" y2="167.64" width="0.1524" layer="91"/>
 <wire x1="124.46" y1="167.64" x2="124.46" y2="172.72" width="0.1524" layer="91"/>
 <junction x="124.46" y="172.72"/>
 <wire x1="185.42" y1="167.64" x2="185.42" y2="172.72" width="0.1524" layer="91"/>
 <junction x="185.42" y="167.64"/>
 <junction x="185.42" y="172.72"/>
-<label x="256.54" y="172.72" size="1.778" layer="95" xref="yes"/>
+<label x="226.06" y="165.1" size="1.778" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="J1" gate="J$1" pin="3"/>
@@ -2959,11 +2936,6 @@ Created by Upverter.com</description>
 <pinref part="BT3" gate="B" pin="2_CATHODE"/>
 <wire x1="187.96" y1="149.86" x2="187.96" y2="147.32" width="0.1524" layer="91"/>
 <wire x1="187.96" y1="147.32" x2="208.28" y2="147.32" width="0.1524" layer="91"/>
-<wire x1="208.28" y1="147.32" x2="213.36" y2="147.32" width="0.1524" layer="91"/>
-<wire x1="213.36" y1="147.32" x2="213.36" y2="167.64" width="0.1524" layer="91"/>
-<pinref part="BT4" gate="A" pin="1_ANODE"/>
-<wire x1="213.36" y1="167.64" x2="220.98" y2="167.64" width="0.1524" layer="91"/>
-<wire x1="220.98" y1="167.64" x2="220.98" y2="165.1" width="0.1524" layer="91"/>
 <pinref part="BT3" gate="A" pin="1_ANODE"/>
 <wire x1="154.94" y1="165.1" x2="154.94" y2="167.64" width="0.1524" layer="91"/>
 <pinref part="BT2" gate="B" pin="2_CATHODE"/>
@@ -2988,9 +2960,8 @@ Created by Upverter.com</description>
 <wire x1="76.2" y1="142.24" x2="139.7" y2="142.24" width="0.1524" layer="91"/>
 <wire x1="139.7" y1="142.24" x2="170.18" y2="142.24" width="0.1524" layer="91"/>
 <wire x1="170.18" y1="142.24" x2="208.28" y2="142.24" width="0.1524" layer="91"/>
-<wire x1="208.28" y1="142.24" x2="254" y2="142.24" width="0.1524" layer="91"/>
-<wire x1="254" y1="142.24" x2="254" y2="149.86" width="0.1524" layer="91"/>
-<pinref part="BT4" gate="B" pin="2_CATHODE"/>
+<wire x1="208.28" y1="142.24" x2="220.98" y2="142.24" width="0.1524" layer="91"/>
+<wire x1="220.98" y1="142.24" x2="220.98" y2="149.86" width="0.1524" layer="91"/>
 <wire x1="76.2" y1="147.32" x2="76.2" y2="142.24" width="0.1524" layer="91"/>
 <junction x="76.2" y="147.32"/>
 <junction x="76.2" y="142.24"/>
@@ -2998,9 +2969,8 @@ Created by Upverter.com</description>
 <junction x="139.7" y="147.32"/>
 <junction x="139.7" y="142.24"/>
 <wire x1="208.28" y1="147.32" x2="208.28" y2="142.24" width="0.1524" layer="91"/>
-<junction x="208.28" y="147.32"/>
 <junction x="208.28" y="142.24"/>
-<label x="259.08" y="144.78" size="1.778" layer="95" xref="yes"/>
+<label x="226.06" y="149.86" size="1.778" layer="95" xref="yes"/>
 <pinref part="BT7" gate="B" pin="2_ANODE"/>
 <wire x1="187.96" y1="114.3" x2="187.96" y2="111.76" width="0.1524" layer="91"/>
 <pinref part="BT7" gate="A" pin="1_CATHODE"/>
@@ -3026,20 +2996,11 @@ Created by Upverter.com</description>
 <wire x1="63.5" y1="114.3" x2="63.5" y2="111.76" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="114.3" x2="60.96" y2="119.38" width="0.1524" layer="91"/>
 <junction x="60.96" y="114.3"/>
-<pinref part="BT8" gate="A" pin="1_CATHODE"/>
-<wire x1="220.98" y1="96.52" x2="220.98" y2="93.98" width="0.1524" layer="91"/>
-<wire x1="220.98" y1="93.98" x2="246.38" y2="93.98" width="0.1524" layer="91"/>
-<wire x1="246.38" y1="93.98" x2="246.38" y2="114.3" width="0.1524" layer="91"/>
-<wire x1="246.38" y1="114.3" x2="251.46" y2="114.3" width="0.1524" layer="91"/>
-<pinref part="BT8" gate="B" pin="2_ANODE"/>
-<wire x1="251.46" y1="114.3" x2="254" y2="114.3" width="0.1524" layer="91"/>
-<wire x1="254" y1="114.3" x2="254" y2="111.76" width="0.1524" layer="91"/>
 <wire x1="60.96" y1="119.38" x2="124.46" y2="119.38" width="0.1524" layer="91"/>
 <wire x1="124.46" y1="119.38" x2="170.18" y2="119.38" width="0.1524" layer="91"/>
 <wire x1="170.18" y1="119.38" x2="185.42" y2="119.38" width="0.1524" layer="91"/>
-<wire x1="185.42" y1="119.38" x2="251.46" y2="119.38" width="0.1524" layer="91"/>
-<wire x1="251.46" y1="119.38" x2="251.46" y2="114.3" width="0.1524" layer="91"/>
-<junction x="251.46" y="114.3"/>
+<wire x1="185.42" y1="119.38" x2="220.98" y2="119.38" width="0.1524" layer="91"/>
+<wire x1="220.98" y1="119.38" x2="220.98" y2="111.76" width="0.1524" layer="91"/>
 <wire x1="119.38" y1="114.3" x2="124.46" y2="114.3" width="0.1524" layer="91"/>
 <wire x1="124.46" y1="114.3" x2="124.46" y2="119.38" width="0.1524" layer="91"/>
 <junction x="124.46" y="119.38"/>
@@ -3061,11 +3022,6 @@ Created by Upverter.com</description>
 <pinref part="BT7" gate="B" pin="2_CATHODE"/>
 <wire x1="187.96" y1="96.52" x2="187.96" y2="93.98" width="0.1524" layer="91"/>
 <wire x1="187.96" y1="93.98" x2="208.28" y2="93.98" width="0.1524" layer="91"/>
-<wire x1="208.28" y1="93.98" x2="213.36" y2="93.98" width="0.1524" layer="91"/>
-<wire x1="213.36" y1="93.98" x2="213.36" y2="114.3" width="0.1524" layer="91"/>
-<pinref part="BT8" gate="A" pin="1_ANODE"/>
-<wire x1="213.36" y1="114.3" x2="220.98" y2="114.3" width="0.1524" layer="91"/>
-<wire x1="220.98" y1="114.3" x2="220.98" y2="111.76" width="0.1524" layer="91"/>
 <pinref part="BT7" gate="A" pin="1_ANODE"/>
 <wire x1="154.94" y1="111.76" x2="154.94" y2="114.3" width="0.1524" layer="91"/>
 <pinref part="BT6" gate="B" pin="2_CATHODE"/>
@@ -3089,9 +3045,8 @@ Created by Upverter.com</description>
 <wire x1="20.32" y1="88.9" x2="76.2" y2="88.9" width="0.1524" layer="91"/>
 <wire x1="76.2" y1="88.9" x2="139.7" y2="88.9" width="0.1524" layer="91"/>
 <wire x1="139.7" y1="88.9" x2="208.28" y2="88.9" width="0.1524" layer="91"/>
-<wire x1="208.28" y1="88.9" x2="254" y2="88.9" width="0.1524" layer="91"/>
-<wire x1="254" y1="88.9" x2="254" y2="96.52" width="0.1524" layer="91"/>
-<pinref part="BT8" gate="B" pin="2_CATHODE"/>
+<wire x1="208.28" y1="88.9" x2="220.98" y2="88.9" width="0.1524" layer="91"/>
+<wire x1="220.98" y1="88.9" x2="220.98" y2="96.52" width="0.1524" layer="91"/>
 <wire x1="76.2" y1="93.98" x2="76.2" y2="88.9" width="0.1524" layer="91"/>
 <junction x="76.2" y="93.98"/>
 <junction x="76.2" y="88.9"/>
@@ -3099,9 +3054,8 @@ Created by Upverter.com</description>
 <junction x="139.7" y="93.98"/>
 <junction x="139.7" y="88.9"/>
 <wire x1="208.28" y1="93.98" x2="208.28" y2="88.9" width="0.1524" layer="91"/>
-<junction x="208.28" y="93.98"/>
 <junction x="208.28" y="88.9"/>
-<label x="251.46" y="81.28" size="1.778" layer="95" xref="yes"/>
+<label x="226.06" y="88.9" size="1.778" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="J1" gate="J$1" pin="1"/>

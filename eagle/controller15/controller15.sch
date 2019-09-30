@@ -7377,7 +7377,6 @@ MSOP
 <part name="C29" library="SparkFun-Capacitors" library_urn="urn:adsk.eagle:library:510" deviceset="1.0UF" device="-0805-25V-10%" package3d_urn="urn:adsk.eagle:package:37429/1" value="10uF"/>
 <part name="GND40" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="R7" library="SparkFun-Passives" deviceset="RESISTOR" device="0805-RES" value="10k"/>
-<part name="GND42" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -7576,9 +7575,6 @@ MSOP
 <attribute name="NAME" x="171.2214" y="80.01" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="176.022" y="80.01" size="1.778" layer="96" rot="R90"/>
 </instance>
-<instance part="GND42" gate="1" x="152.4" y="111.76" smashed="yes" rot="R180">
-<attribute name="VALUE" x="154.94" y="114.3" size="1.778" layer="96" rot="R180"/>
-</instance>
 </instances>
 <busses>
 </busses>
@@ -7768,12 +7764,6 @@ MSOP
 <pinref part="C29" gate="G$1" pin="1"/>
 <pinref part="GND40" gate="1" pin="GND"/>
 <wire x1="167.64" y1="99.06" x2="167.64" y2="101.6" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="IC3" gate="G$1" pin="TESTJ"/>
-<wire x1="124.46" y1="104.14" x2="152.4" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="152.4" y1="104.14" x2="152.4" y2="109.22" width="0.1524" layer="91"/>
-<pinref part="GND42" gate="1" pin="GND"/>
 </segment>
 </net>
 <net name="N$8" class="0">
