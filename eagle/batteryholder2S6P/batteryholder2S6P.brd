@@ -190,6 +190,30 @@
 <text x="132.588" y="34.798" size="3.81" layer="21" ratio="15">1</text>
 <text x="132.588" y="28.448" size="3.81" layer="21" ratio="15">G</text>
 <text x="5" y="45" size="6.35" layer="21" ratio="10" rot="R90" align="center">2S6P</text>
+<text x="20" y="62" size="10.16" layer="21" ratio="15" align="center">+</text>
+<text x="40" y="62" size="10.16" layer="21" ratio="15" align="center">+</text>
+<text x="61" y="62" size="10.16" layer="21" ratio="15" align="center">+</text>
+<text x="81" y="62" size="10.16" layer="21" ratio="15" align="center">+</text>
+<text x="102" y="62" size="10.16" layer="21" ratio="15" align="center">+</text>
+<text x="122" y="62" size="10.16" layer="21" ratio="15" align="center">+</text>
+<text x="20" y="28" size="10.16" layer="21" ratio="15" align="center">-</text>
+<text x="40" y="28" size="10.16" layer="21" ratio="15" align="center">-</text>
+<text x="61" y="28" size="10.16" layer="21" ratio="15" align="center">-</text>
+<text x="81" y="28" size="10.16" layer="21" ratio="15" align="center">-</text>
+<text x="102" y="28" size="10.16" layer="21" ratio="15" align="center">-</text>
+<text x="122" y="28" size="10.16" layer="21" ratio="15" align="center">-</text>
+<text x="20" y="62" size="10.16" layer="22" ratio="15" rot="MR0" align="center">-</text>
+<text x="40" y="62" size="10.16" layer="22" ratio="15" rot="MR0" align="center">-</text>
+<text x="61" y="62" size="10.16" layer="22" ratio="15" rot="MR0" align="center">-</text>
+<text x="81" y="62" size="10.16" layer="22" ratio="15" rot="MR0" align="center">-</text>
+<text x="102" y="62" size="10.16" layer="22" ratio="15" rot="MR0" align="center">-</text>
+<text x="122" y="62" size="10.16" layer="22" ratio="15" rot="MR0" align="center">-</text>
+<text x="20" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
+<text x="40" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
+<text x="61" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
+<text x="81" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
+<text x="102" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
+<text x="122" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
 </plain>
 <libraries>
 <library name="SparkFun-Connectors" urn="urn:adsk.eagle:library:513">
@@ -653,10 +677,10 @@ design rules under a new name.</description>
 <element name="H4" library="holes" library_urn="urn:adsk.eagle:library:237" package="3,2" package3d_urn="urn:adsk.eagle:package:14275/1" value="MOUNT-HOLE3.2" x="139" y="5" smashed="yes">
 <attribute name="POPULARITY" value="7" x="139" y="5" size="1.778" layer="27" display="off"/>
 </element>
-<element name="J1" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" package="SCREWTERMINAL-5MM-3" package3d_urn="urn:adsk.eagle:package:38070/1" value="" x="140" y="31" smashed="yes" rot="R90">
-<attribute name="PROD_ID" value="CONN-10134" x="140" y="31" size="1.778" layer="27" rot="R90" display="off"/>
-<attribute name="SF_SKU" value="PRT-08433" x="140" y="31" size="1.778" layer="27" rot="R90" display="off"/>
-<attribute name="VALUE" x="138.095" y="34.429" size="0.6096" layer="27" font="vector" ratio="20" rot="R90"/>
+<element name="J1" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" package="SCREWTERMINAL-5MM-3" package3d_urn="urn:adsk.eagle:package:38070/1" value="" x="140.5" y="31" smashed="yes" rot="R90">
+<attribute name="PROD_ID" value="CONN-10134" x="140.5" y="31" size="1.778" layer="27" rot="R90" display="off"/>
+<attribute name="SF_SKU" value="PRT-08433" x="140.5" y="31" size="1.778" layer="27" rot="R90" display="off"/>
+<attribute name="VALUE" x="138.595" y="34.429" size="0.6096" layer="27" font="vector" ratio="20" rot="R90"/>
 </element>
 <element name="BT5" library="Keystone - 1048" package="KEYSTONE_1048_0" value="KEYSTONE_1048KEYSTONE_1048_0_0" x="30" y="45" smashed="yes" rot="MR270">
 <attribute name="CENTROID_NOT_SPECIFIED" value="No" x="30" y="47.54" size="1.778" layer="28" rot="MR270" display="off"/>
@@ -774,7 +798,7 @@ design rules under a new name.</description>
 </polygon>
 <via x="131.07" y="3.184" extent="1-16" drill="1"/>
 <wire x1="122.38" y1="28.4" x2="129.98" y2="36" width="3.81" layer="1"/>
-<wire x1="129.98" y1="36" x2="140" y2="36" width="3.81" layer="1"/>
+<wire x1="129.98" y1="36" x2="140.5" y2="36" width="3.81" layer="1"/>
 <via x="128.57" y="3.184" extent="1-16" drill="1"/>
 <via x="126.07" y="3.184" extent="1-16" drill="1"/>
 <via x="117.07" y="3.184" extent="1-16" drill="1"/>
@@ -812,8 +836,8 @@ design rules under a new name.</description>
 <polygon width="0.254" layer="1" thermals="no">
 <vertex x="14.78" y="88.63"/>
 <vertex x="14.78" y="76.2"/>
-<vertex x="141.732" y="76.2"/>
-<vertex x="141.732" y="88.63"/>
+<vertex x="142.232" y="76.2"/>
+<vertex x="142.232" y="88.63"/>
 </polygon>
 <contactref element="BT3" pad="4"/>
 <contactref element="BT3" pad="2"/>
@@ -831,7 +855,7 @@ design rules under a new name.</description>
 <vertex x="143.51" y="87.63"/>
 </polygon>
 <wire x1="133.35" y1="57.15" x2="133.8" y2="57" width="3.81" layer="1"/>
-<wire x1="140" y1="41" x2="138.3" y2="41" width="3.81" layer="1"/>
+<wire x1="140.5" y1="41" x2="138.3" y2="41" width="3.81" layer="1"/>
 <wire x1="138.3" y1="41" x2="133" y2="46.3" width="3.81" layer="1"/>
 <wire x1="133" y1="46.3" x2="133" y2="55.5" width="3.81" layer="1"/>
 <wire x1="133" y1="55.5" x2="134" y2="56.5" width="3.81" layer="1"/>
@@ -847,8 +871,8 @@ design rules under a new name.</description>
 <polygon width="0.254" layer="16" thermals="no">
 <vertex x="14.78" y="88.63"/>
 <vertex x="14.78" y="76.2"/>
-<vertex x="141.732" y="76.2"/>
-<vertex x="141.732" y="88.63"/>
+<vertex x="142.232" y="76.2"/>
+<vertex x="142.232" y="88.63"/>
 </polygon>
 <contactref element="J1" pad="1"/>
 <contactref element="J3" pad="GND"/>
@@ -860,7 +884,7 @@ design rules under a new name.</description>
 <vertex x="143.51" y="87.63"/>
 </polygon>
 <wire x1="128.27" y1="34.29" x2="128.27" y2="62.23" width="3.81" layer="16"/>
-<wire x1="140" y1="31" x2="131.56" y2="31" width="3.81" layer="16"/>
+<wire x1="140.5" y1="31" x2="131.56" y2="31" width="3.81" layer="16"/>
 <wire x1="131.56" y1="31" x2="128.27" y2="34.29" width="3.81" layer="16"/>
 </signal>
 </signals>
