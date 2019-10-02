@@ -160,32 +160,15 @@
 <plain>
 <wire x1="139" y1="90" x2="5" y2="90" width="0.1524" layer="20"/>
 <wire x1="5" y1="90" x2="0" y2="85" width="0.1524" layer="20" curve="90"/>
-<wire x1="0" y1="85" x2="0" y2="5" width="0.1524" layer="20"/>
 <wire x1="0" y1="5" x2="5" y2="0" width="0.1524" layer="20" curve="90"/>
 <wire x1="5" y1="0" x2="139" y2="0" width="0.1524" layer="20"/>
 <wire x1="139" y1="0" x2="144" y2="5" width="0.1524" layer="20" curve="90"/>
 <wire x1="144" y1="5" x2="144" y2="85" width="0.1524" layer="20"/>
 <wire x1="144" y1="85" x2="139" y2="90" width="0.1524" layer="20" curve="90"/>
-<text x="1.5" y="67" size="10.16" layer="21" ratio="15">+</text>
-<text x="1.5" y="15" size="10.16" layer="21" ratio="15">-</text>
-<text x="135" y="15" size="10.16" layer="21" ratio="15">-</text>
-<text x="138.938" y="63.5" size="5.08" layer="21" ratio="15">+</text>
-<text x="8.75" y="15" size="10.16" layer="22" ratio="15" rot="MR0">+</text>
-<text x="8.5" y="67" size="10.16" layer="22" ratio="15" rot="MR0">-</text>
-<text x="142.494" y="63.5" size="5.08" layer="22" ratio="15" rot="MR0">-</text>
-<text x="142.25" y="15" size="10.16" layer="22" ratio="15" rot="MR0">+</text>
-<polygon width="0.254" layer="29">
-<vertex x="134.35" y="68.58"/>
-<vertex x="141.97" y="68.58"/>
-<vertex x="141.97" y="76.2"/>
-<vertex x="134.35" y="76.2"/>
-</polygon>
-<polygon width="0.254" layer="30">
-<vertex x="134.35" y="68.58"/>
-<vertex x="141.97" y="68.58"/>
-<vertex x="141.97" y="76.2"/>
-<vertex x="134.35" y="76.2"/>
-</polygon>
+<text x="5" y="62" size="10.16" layer="21" ratio="15" align="center">+</text>
+<text x="5" y="28" size="10.16" layer="21" ratio="15" align="center">-</text>
+<text x="5" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
+<text x="5" y="62" size="10.16" layer="22" ratio="15" rot="MR0" align="center">-</text>
 <text x="132.588" y="40.894" size="3.81" layer="21" ratio="15">2</text>
 <text x="132.588" y="34.798" size="3.81" layer="21" ratio="15">1</text>
 <text x="132.588" y="28.448" size="3.81" layer="21" ratio="15">G</text>
@@ -214,6 +197,14 @@
 <text x="81" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
 <text x="102" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
 <text x="122" y="28" size="10.16" layer="22" ratio="15" rot="MR0" align="center">+</text>
+<wire x1="0" y1="5" x2="0" y2="76.1" width="0.1524" layer="20"/>
+<wire x1="0" y1="76" x2="0" y2="85" width="0.1524" layer="20"/>
+<text x="20.2" y="43.5" size="2" layer="21" ratio="10" align="center">rev. B</text>
+<text x="20.2" y="46.5" size="2" layer="21" ratio="10" align="center">2S6P</text>
+<circle x="5" y="18" radius="3.5" width="0.1524" layer="20"/>
+<circle x="5" y="72" radius="3.5" width="0.1524" layer="20"/>
+<circle x="139" y="72" radius="3.5" width="0.1524" layer="20"/>
+<circle x="139" y="18" radius="3.5" width="0.1524" layer="20"/>
 </plain>
 <libraries>
 <library name="SparkFun-Connectors" urn="urn:adsk.eagle:library:513">
@@ -779,8 +770,8 @@ design rules under a new name.</description>
 <contactref element="BT1" pad="1"/>
 <polygon width="0.254" layer="1" thermals="no">
 <vertex x="14.78" y="1.27"/>
-<vertex x="14.78" y="13.97"/>
-<vertex x="133.35" y="13.97"/>
+<vertex x="14.78" y="21.47"/>
+<vertex x="133.35" y="21.47"/>
 <vertex x="133.35" y="1.27"/>
 </polygon>
 <contactref element="J1" pad="2"/>
@@ -792,8 +783,8 @@ design rules under a new name.</description>
 <contactref element="BT5" pad="4"/>
 <polygon width="0.254" layer="16" thermals="no">
 <vertex x="14.78" y="1.27"/>
-<vertex x="14.78" y="13.97"/>
-<vertex x="133.35" y="13.97"/>
+<vertex x="14.78" y="21.47"/>
+<vertex x="133.35" y="21.47"/>
 <vertex x="133.35" y="1.27"/>
 </polygon>
 <via x="131.07" y="3.184" extent="1-16" drill="1"/>
@@ -835,8 +826,8 @@ design rules under a new name.</description>
 <signal name="TOP_PLUS">
 <polygon width="0.254" layer="1" thermals="no">
 <vertex x="14.78" y="88.63"/>
-<vertex x="14.78" y="76.2"/>
-<vertex x="142.232" y="76.2"/>
+<vertex x="14.78" y="68.2"/>
+<vertex x="142.232" y="68.2"/>
 <vertex x="142.232" y="88.63"/>
 </polygon>
 <contactref element="BT3" pad="4"/>
@@ -870,13 +861,13 @@ design rules under a new name.</description>
 <contactref element="BT5" pad="1"/>
 <polygon width="0.254" layer="16" thermals="no">
 <vertex x="14.78" y="88.63"/>
-<vertex x="14.78" y="76.2"/>
-<vertex x="142.232" y="76.2"/>
+<vertex x="14.78" y="68.2"/>
+<vertex x="142.232" y="68.2"/>
 <vertex x="142.232" y="88.63"/>
 </polygon>
 <contactref element="J1" pad="1"/>
 <contactref element="J3" pad="GND"/>
-<polygon width="0.1524" layer="16" isolate="1.524">
+<polygon width="0.1524" layer="16" isolate="1.524" thermals="no">
 <vertex x="124.46" y="87.63"/>
 <vertex x="124.46" y="60.96"/>
 <vertex x="134.62" y="50.8"/>
