@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.5.0">
+<eagle version="9.5.1">
 <drawing>
 <settings>
 <setting alwaysvectorfont="yes"/>
@@ -7261,7 +7261,7 @@ MSOP
 <part name="R_LED" library="SparkFun-Resistors" deviceset="RESISTOR" device="0805-RES" value="470"/>
 <part name="FRAME2" library="frames" deviceset="DINA4_L" device=""/>
 <part name="FRAME3" library="frames" deviceset="A3L-LOC" device=""/>
-<part name="C13" library="SparkFun-Capacitors" deviceset="CAP" device="0805" value="10nF"/>
+<part name="C13" library="SparkFun-Capacitors" deviceset="CAP" device="1206" value="10nF"/>
 <part name="R1" library="SparkFun-Resistors" deviceset="RESISTOR" device="1206" value="6.8k"/>
 <part name="R2" library="SparkFun-Resistors" deviceset="RESISTOR" device="1206" value="10k / 1%"/>
 <part name="R3" library="SparkFun-Resistors" deviceset="RESISTOR" device="1206" value="44k / 1%"/>
@@ -7304,7 +7304,7 @@ MSOP
 <part name="USB_1" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="USB_A" device="_SMT_FEMALE" package3d_urn="urn:adsk.eagle:package:38297/1"/>
 <part name="USB_2" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="USB_A" device="_SMT_FEMALE" package3d_urn="urn:adsk.eagle:package:38297/1"/>
 <part name="GND23" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
-<part name="Y2" library="SparkFun-FreqCtrl" deviceset="CRYSTAL" device="CRYSTAL-SMD-5X3-12MHZ" value="12MHz"/>
+<part name="Y2" library="SparkFun-FreqCtrl" deviceset="CRYSTAL" device="HC49UV" value="12MHz"/>
 <part name="REXT" library="SparkFun-Passives" deviceset="RESISTOR" device="0805-RES" value="2.7k / 1%"/>
 <part name="GND24" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="IC1" library="linear" library_urn="urn:adsk.eagle:library:262" deviceset="MCP1703*" device="MB" package3d_urn="urn:adsk.eagle:package:16478/2" technology="12"/>
@@ -7467,7 +7467,6 @@ MSOP
 </instance>
 <instance part="Y2" gate="G$1" x="78.74" y="104.14" smashed="yes" rot="R90">
 <attribute name="NAME" x="77.724" y="106.68" size="1.778" layer="95" rot="R90"/>
-<attribute name="VALUE" x="81.28" y="106.68" size="1.778" layer="96" rot="R90"/>
 </instance>
 <instance part="REXT" gate="G$1" x="88.9" y="63.5" smashed="yes" rot="R90">
 <attribute name="NAME" x="87.4014" y="59.69" size="1.778" layer="95" rot="R90"/>
