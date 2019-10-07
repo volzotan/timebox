@@ -61,7 +61,6 @@ void setup() {
     DEBUG_PRINT("DEBUG MODE ON");
   #endif
 
-
   // set the resolution mode of reading
   // Mode  Resolution  SampleTime
   //  0    0.5°C       30 ms

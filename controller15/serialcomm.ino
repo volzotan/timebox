@@ -6,23 +6,19 @@
  *    8.00    80
  *    voltage percentage
  *  
- *  Z  ---  Turn Zero On
- *  S  ---  Shutdown [delay in seconds]
- *  R  ---  Reboot    // maybe add delay time?  S 10 for example?
- *  L  ---  Remaining Lifetime/Uptime
- *
- *  T  ---  Temperature
- *
  *  U  ---  Get Uptime
- *
- *  C  ---  Camera On
+ *  T  ---  Temperature
+ *  C  ---  Camera On/Off                   (C 0 / C 1)
+ *  X  ---  Auxilliary USB Device 1 On/Off  (X 0 / X 1)
+ *  Y  ---  Auxilliary USB Device 2 On/Off  (Y 0 / Y 1)
+ *  Z  ---  Turn Zero On/Off                (Z 0 / Z 1)
 
  *  E  ---  Print EEPROM
  *  K  ---  Kill/reset EEPROM data
  *  
  *  Q  ---  Read Value
  *  W  ---  Write Value
- *  
+
  *  [...]
  */
 
@@ -102,19 +98,7 @@ void executeCommand() {
             SerialUSB.print(" ");
             SerialUSB.println(getBatteryPercentage());
         break;
-
-        // case 'Z': // Zero On 
-        // if (serialParam == 0) {
-        //     switchZeroOn(false);
-        //     okSerial();
-        // } else if (serialParam == 1) {
-        //     switchZeroOn(true);
-        //     okSerial();
-        // } else {
-        //     errorSerial(ERRORCODE_INVALID_PARAM);
-        // }
-        // break; 
-        
+            
         // case 'S': // Shutdown 
         //     if (ser.serialParam > 0) {
         //         if (state != STATE_ZERO_RUNNING) {
@@ -133,6 +117,11 @@ void executeCommand() {
         //     okSerial(ser);
         //     break;
         
+        case 'U': // Uptime 
+            //errorSerial(ERRORCODE_NOT_AVAILABLE, ser);
+            SerialUSB.print("K ");
+            SerialUSB.println(millis());
+        break;   
 
         case 'T': // Temperature
             tempsensor.wake();
@@ -142,24 +131,54 @@ void executeCommand() {
             SerialUSB.println();
 
             tempsensor.shutdown_wake(1);
-        break;
-
-        case 'U': // Uptime 
-            //errorSerial(ERRORCODE_NOT_AVAILABLE, ser);
-            SerialUSB.print("K ");
-            SerialUSB.println(millis());
-        break;        
+        break;     
 
         case 'C': // Camera On 
-        if (serialParam == 0) {
-            switchCameraOn(false);
-            okSerial();
-        } else if (serialParam == 1) {
-            switchCameraOn(true);
-            okSerial();
-        } else {
-            errorSerial(ERRORCODE_INVALID_PARAM);
-        }
+            if (serialParam == 0) {
+                switchCameraOn(false);
+                okSerial();
+            } else if (serialParam == 1) {
+                switchCameraOn(true);
+                okSerial();
+            } else {
+                errorSerial(ERRORCODE_INVALID_PARAM);
+            }
+        break; 
+
+        case 'X': // Auxilliary USB Device 1 On/Off 
+            if (serialParam == 0) {
+                switchUsbDeviceOn(0, false);
+                okSerial();
+            } else if (serialParam == 1) {
+                switchUsbDeviceOn(0, true);
+                okSerial();
+            } else {
+                errorSerial(ERRORCODE_INVALID_PARAM);
+            }
+        break; 
+
+        case 'X': // Auxilliary USB Device 2 On/Off 
+            if (serialParam == 0) {
+                switchUsbDeviceOn(1, false);
+                okSerial();
+            } else if (serialParam == 1) {
+                switchUsbDeviceOn(1, true);
+                okSerial();
+            } else {
+                errorSerial(ERRORCODE_INVALID_PARAM);
+            }
+        break; 
+
+        case 'Z': // Zero On 
+            if (serialParam == 0) {
+                switchZeroOn(false);
+                okSerial();
+            } else if (serialParam == 1) {
+                switchZeroOn(true);
+                okSerial();
+            } else {
+                errorSerial(ERRORCODE_INVALID_PARAM);
+            }
         break; 
         
         default:
