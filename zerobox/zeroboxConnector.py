@@ -260,10 +260,10 @@ class ZeroboxConnector(rpyc.Service):
         self.log.info("shutdown procedure: turning off all controller")
         for c in self.controller:
             try:
-                c.turn_on(False)
+                c.turn_usb_on(False)
+                c.turn_camera_on(False)
             except Exception as e:
                 self.log.error("turning off controller {} failed: {}".format(c, e))
-
                     
         self.log.info("shutdown procedure: stopping GUI service")
         subprocess.run(["sudo", "systemctl", "stop", "zerobox_gui"])
@@ -353,9 +353,9 @@ class ZeroboxConnector(rpyc.Service):
                         continue
 
                     try:
-                        c.turn_on(True)
+                        c.turn_camera_on(True)
                     except Exception as e:
-                        self.log.error("controller turn on failed: {}".format(e))
+                        self.log.error("controller camera turn on failed: {}".format(e))
                         self.session["errors"].append(e)
 
             if "usb_on" in jobs:
@@ -363,9 +363,9 @@ class ZeroboxConnector(rpyc.Service):
                 self.log.debug("    {}".format(self.scheduler.print_next_job()))
                 for c in self.controller:
                     try:
-                        c.turn_on(True)
+                        c.turn_usb_on(True)
                     except Exception as e:
-                        self.log.error("controller turn on failed: {}".format(e))
+                        self.log.error("controller USB turn on failed: {}".format(e))
                         self.session["errors"].append(e)
 
             if "trigger" in jobs:
@@ -396,7 +396,8 @@ class ZeroboxConnector(rpyc.Service):
                 if not self._is_trigger_active():
                     for c in self.controller:
                         try:
-                            c.turn_on(False)
+                            c.turn_usb_on(False)
+                            c.turn_camera_on(False)
                         except Exception as e:
                             self.log.error("controller turn off failed: {}".format(e))
                             self.session["errors"].append(e)
@@ -408,7 +409,8 @@ class ZeroboxConnector(rpyc.Service):
                         self.log.error("previous trigger active for {:.2f}! force camera off".format(trigger_age))
                         for c in self.controller:
                             try:
-                                c.turn_on(False)
+                                c.turn_usb_on(False)
+                                c.turn_camera_on(False)
                             except Exception as e:
                                 self.log.error("controller turn off failed: {}".format(e))
                                 self.session["errors"].append(e)
@@ -434,7 +436,8 @@ class ZeroboxConnector(rpyc.Service):
                             self.zerobox.disconnect_all_cameras(clean=True)
 
                             for c in self.controller:
-                                c.turn_on(False)
+                                c.turn_usb_on(False)
+                                c.turn_camera_on(False)
                         else:
                             self.log.warning("previous trigger still active! unable to turn off camera")
 
@@ -452,7 +455,8 @@ class ZeroboxConnector(rpyc.Service):
                     self.zerobox.disconnect_all_cameras(clean=True)
                     for c in self.controller:
                         try:
-                            c.turn_on(False)
+                            c.turn_usb_on(False)
+                            c.turn_camera_on(False)
                         except Exception as e:
                             self.log.error("controller turn off failed: {}".format(e))
                             self.session["errors"].append(e)
@@ -510,7 +514,8 @@ class ZeroboxConnector(rpyc.Service):
             self.zerobox.disconnect_all_cameras(clean=True)
             for c in self.controller:
                 try:
-                    c.turn_on(False)
+                    c.turn_usb_on(False)
+                    c.turn_camera_on(False)
                 except Exception as e:
                     self.log.error("controller turn off failed: {}".format(e))
                     self.session["errors"].append(e)
@@ -563,7 +568,12 @@ class ZeroboxConnector(rpyc.Service):
         self.exposed_detect_controller()
         for c in self.controller:
             try:
-                c.turn_on(turn_on)
+                if turn_on:
+                    c.turn_camera_on(turn_on)
+                    c.turn_usb_on(turn_on)
+                else:
+                    c.turn_usb_on(turn_on)
+                    c.turn_camera_on(turn_on)
             except Exception as e:
                 self.log.error("controller turn on/off failed: {}".format(e))
                 self.session["errors"].append(e)
@@ -621,7 +631,7 @@ class ZeroboxConnector(rpyc.Service):
                     if perc is not None:
                         self.battery_data = perc
                 except Exception as e:
-                    self.log.warn("controller get battery data failed: {}".format(e))
+                    self.log.warning("controller get battery data failed: {}".format(e))
         data["battery"] = self.battery_data
 
         if force:

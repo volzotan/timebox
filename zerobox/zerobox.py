@@ -10,7 +10,6 @@ import shutil
 import numpy as np
 
 import gphoto2 as gp
-from devices import UsbDirectController
 
 import gi
 gi.require_version('GExiv2', '0.10')
@@ -1105,10 +1104,7 @@ if __name__ == "__main__":
     #     z.connect_camera(camera)
     #     z.trigger_camera(portname)
 
-    # print(z.get_status())
-
-    # usbController = UsbDirectController("/dev/tty.usbmodem14201")
-    # print(usbController.get_status())
+    # print(z.get_status()
 
     # print(z.get_images_in_memory())
 

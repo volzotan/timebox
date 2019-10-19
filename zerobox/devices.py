@@ -19,12 +19,13 @@ except ImportError as e:
 
 class Controller(object):
 
-    is_data_connection = False
-
     def __init__(self):
         pass
 
-    def turn_on(self, turn_on):
+    def turn_camera_on(self, turn_on):
+        pass
+
+    def turn_usb_on(self, turn_on):
         pass
 
     def get_temperature(self):
@@ -34,23 +35,13 @@ class Controller(object):
         pass
 
     @staticmethod
-    def sort_helper(controller):
-        if controller.is_data_connection:
-            return +1
-        return 0
-
-    @staticmethod
     def find_all():
         controller = []
 
         controller = controller + YKushXSController.find_all()
-        controller = controller + SerialController.find_all()
+        controller = controller + TimeboxController.find_all()
         # controller = controller + UsbHubController.find_all()
-        controller = controller + UsbDirectController.find_all()
-
-        # sort controller. cameras should always be powered on first and usb connections to cameras second
-
-        controller = sorted(controller, key=Controller.sort_helper)
+        # controller = controller + UsbDirectController.find_all()
 
         return controller
 
@@ -65,7 +56,6 @@ class YKushXSController(Controller):
 
     def __init__(self, serialnumber):
         self.serialnumber = serialnumber
-        self.is_data_connection = True
 
     def __repr__(self):
         return "YKushXSController id: {}".format(self.serialnumber)
@@ -86,7 +76,7 @@ class YKushXSController(Controller):
 
         return controller
 
-    def turn_on(self, turn_on):
+    def turn_usb_on(self, turn_on):
         if turn_on:
             self._send_command(self.CMD_ON)
         else:
@@ -116,53 +106,42 @@ class YKushXSController(Controller):
         h.close()
         return response
 
-class SerialController(Controller):
+class TimeboxController(Controller):
 
     CMD_PING        = "K"
     CMD_BATTERY     = "B"
+    CMD_TEMPERATURE = "T"
+    CMD_CAM_ON      = "C 1"
+    CMD_CAM_OFF     = "C 0"
+    CMD_USB1_ON     = "X 0"
+    CMD_USB1_OFF    = "X 1"
+    CMD_USB2_ON     = "Y 0"
+    CMD_USB2_OFF    = "Y 1"
     CMD_ZERO_ON     = "Z 1"
     CMD_ZERO_OFF    = "Z 0"
-    CMD_UPTIME      = "T"
-    CMD_ON          = "C 1"
-    CMD_OFF         = "C 0"
 
     CMD_STATUS      = "S"
 
-    SERIAL_DEVICE = "/dev/serial0"
     SERIAL_BAUDRATE = 9600
     SERIAL_TIMEOUT = 1.0
 
-    port = None
-
-    lock = Lock()
-
-    def __init__(self, portname=SERIAL_DEVICE):
-        self.port = portname
+    def __init__(self, port):
+        self.port = port
 
     def __repr__(self):
-        return "SerialController at {}".format(self.port) #self.SERIAL_DEVICE)
+        return "TimeboxController at {}".format(self.port) #self.SERIAL_DEVICE)
 
     @staticmethod
     def find_all():
 
         controller = []
         
-        try:
-            default_controller = SerialController(SerialController.SERIAL_DEVICE)
-            default_controller.ping()
-            controller.append(default_controller)
-        except Exception as e:
-            print(e)
-            log.debug(e)
-
-        # scan other ports in case the serialController is connected as a usb device for debugging
-
         all_ports = list(serial.tools.list_ports.comports())
-        log.debug("detecting SerialController: found {} ports".format(len(all_ports)))
+        log.debug("detecting TimeboxController: found {} ports".format(len(all_ports)))
         for port in all_ports:
-            if "leonardo" in port[1].lower():
+            if "zero" in port[1].lower():
+                potential_controller = TimeboxController(port[0])
                 try:
-                    potential_controller = SerialController(portname=port[0])
                     potential_controller.ping()
                     controller.append(potential_controller)
                 except Exception as e:
@@ -188,13 +167,13 @@ class SerialController(Controller):
 
             response = response.split(" ")
 
-            if len(response) != 4:
+            if len(response) != 2:
                 raise Exception("response in unexpected format [{}]".format(response))
 
-            return float(response[3])
+            return float(response[1])
 
         except Exception as e:
-            log.debug(e)
+            log.error(e)
             raise e
 
     def turn_zero_on(self, turn_on):
@@ -215,188 +194,34 @@ class SerialController(Controller):
             log.debug(e)
             raise e
 
-    def turn_on(self, turn_on):
+    def turn_camera_on(self, turn_on):
         try:
             if turn_on:
-                self._send_command(self.CMD_ON)
+                self._send_command(self.CMD_CAM_ON)
             else:
-                self._send_command(self.CMD_OFF)
+                self._send_command(self.CMD_CAM_OFF)
         except Exception as e:
             log.debug(e)
             raise e
 
-    # def get_status(self):
-    #     try:
-    #         response = self._send_command(self.CMD_STATUS)
-    #         # print(response)
-    #     except Exception as e:
-    #         print(e)
-    #         return None
-
-    def _send_command(self, cmd):
-
-        lock_acquired = self.lock.acquire(timeout=1)
-
-        if not lock_acquired:
-            raise AccessException("Lock could not be acquired")
-
-        response = ""
-        ser = None
-
-        try:
-
-            log.debug("[{}] serial send: {}".format(self, cmd))
-
-            ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
-
-            ser.write(bytearray(cmd, "utf-8"))
-            ser.write(bytearray("\n", "utf-8"))
-
-            response = ser.read(100)
-            response = response.decode("utf-8") 
-
-            # remove every non-alphanumeric / non-underscore / non-space / non-decimalpoint character
-            response = re.sub("[^a-zA-Z0-9_ .]", '', response)
-
-            log.debug("[{}] serial receive: {}".format(self, response))
-
-            if response is None or len(response) == 0:
-                log.debug("[{}] empty response".format(self))
-                raise Exception("empty response")
-
-            if response.startswith("E"):
-                log.debug("[{}] serial error: {}".format(self, response))
-                raise Exception("serial error: {}".format(response))
-
-            if not response.startswith("K"):
-                log.debug("[{}] serial error, non K response: {}".format(self, response))
-                raise Exception("serial error, non K response: {}".format(response))
-
-            if len(response) > 1:
-                return response[2:]
-
-        except serial.serialutil.SerialException as se:
-            log.error("comm failed, SerialException: {}".format(se))
-            raise se
-
-        except AccessException as ae:
-            log.error("concurrency error: {}".format(ae))
-            raise ae
-
-        except Exception as e:
-            log.error("comm failed, unknown exception: {}".format(e))
-            raise e
-
-        finally:
-            if ser is not None:
-                ser.close()
-
-            if lock_acquired:
-                self.lock.release()
-
-class UsbDirectController(Controller):
-
-    CMD_PING    = "K"
-    CMD_BATTERY = "B"
-    # CMD_STATUS  = "status"
-    CMD_ON      = "C 1"
-    CMD_OFF     = "C 0"
-    CMD_TEMP    = "T"
-
-    SERIAL_BAUDRATE = 9600
-    SERIAL_TIMEOUT = 1.0
-
-    def __init__(self, port):
-        self.port = port
-
-    def __repr__(self):
-        return "UsbDirectController at {}".format(self.port)
-
-    @staticmethod
-    def find_all():
-        controller = []
-        
-        all_ports = list(serial.tools.list_ports.comports())
-        log.debug("detecting UsbDirectController: found {} ports".format(len(all_ports)))
-        for port in all_ports:
-            if "zero" in port[1].lower():
-                potential_controller = UsbDirectController(port[0])
-                try:
-                    potential_controller.ping()
-                    controller.append(potential_controller)
-                except Exception as e:
-                    print(e)
-
-            time.sleep(0.1)
-
-        return controller
-
-    def ping(self):
-        try:
-            self._send_command(self.CMD_PING)
-        except Exception as e:
-            log.error(e)
-            raise e
-
-    def turn_on(self, turn_on):
+    def turn_usb_on(self, turn_on, usb_device=1):
         try:
             if turn_on:
-                self._send_command(self.CMD_ON)
+                if usb_device == 1:
+                    self._send_command(self.CMD_USB1_ON)
+                elif usb_device == 2:
+                    self._send_command(self.CMD_USB2_ON)
+                else:
+                    raise Exception("unknown usb device: {}".format(usb_device))
             else:
-                self._send_command(self.CMD_OFF)
+                if usb_device == 1:
+                    self._send_command(self.CMD_USB1_OFF)
+                elif usb_device == 2:
+                    self._send_command(self.CMD_USB2_OFF)
+                else:
+                    raise Exception("unknown usb device: {}".format(usb_device))
         except Exception as e:
-            log.error(e)
-            return None
-
-    def get_status(self):
-        # try:
-        #     response = self._send_command(self.CMD_STATUS)
-        #     # print(response)
-        # except Exception as e:
-        #     print(e)
-        #     return None
-
-        return None
-
-    def get_battery_status(self):
-        try:
-            response = self._send_command(self.CMD_BATTERY)
-
-            if len(response) < 2:
-                raise Exception("response too short [{}]".format(response))
-
-            response = response.split(" ")
-
-            if len(response) != 2:
-                raise Exception("response in unexpected format [{}]".format(response))
-
-            return float(response[1])
-
-        except Exception as e:
-            log.error(e)
-            raise e
-
-    def get_temperature(self):
-        try:
-            response = self._send_command(self.CMD_TEMP)
-
-            if response is None: # error
-                return None
-
-            if response is "null": # controller has no sensor
-                return None
-
-            return float(response)
-        except Exception as e:
-            log.error(e)
-            return None
-
-    def get_uptime(self):
-        try:
-            response = self._send_command(self.CMD_UPTIME)
-            return response
-        except Exception as e:
-            log.error(e)
+            log.debug(e)
             raise e
 
     def _send_command(self, cmd):
@@ -445,6 +270,158 @@ class UsbDirectController(Controller):
         finally:
             if ser is not None:
                 ser.close()
+
+# class UsbDirectController(Controller):
+
+#     CMD_PING    = "K"
+#     CMD_BATTERY = "B"
+#     # CMD_STATUS  = "status"
+#     CMD_ON      = "C 1"
+#     CMD_OFF     = "C 0"
+#     CMD_TEMP    = "T"
+
+#     SERIAL_BAUDRATE = 9600
+#     SERIAL_TIMEOUT = 1.0
+
+#     def __init__(self, port):
+#         self.port = port
+
+#     def __repr__(self):
+#         return "UsbDirectController at {}".format(self.port)
+
+#     @staticmethod
+#     def find_all():
+#         controller = []
+        
+#         all_ports = list(serial.tools.list_ports.comports())
+#         log.debug("detecting UsbDirectController: found {} ports".format(len(all_ports)))
+#         for port in all_ports:
+#             if "zero" in port[1].lower():
+#                 potential_controller = UsbDirectController(port[0])
+#                 try:
+#                     potential_controller.ping()
+#                     controller.append(potential_controller)
+#                 except Exception as e:
+#                     print(e)
+
+#             time.sleep(0.1)
+
+#         return controller
+
+#     def ping(self):
+#         try:
+#             self._send_command(self.CMD_PING)
+#         except Exception as e:
+#             log.error(e)
+#             raise e
+
+#     def turn_camera_on(self, turn_on):
+#         try:
+#             if turn_on:
+#                 self._send_command(self.CMD_ON)
+#             else:
+#                 self._send_command(self.CMD_OFF)
+#         except Exception as e:
+#             log.error(e)
+#             return None
+
+#     def get_status(self):
+#         # try:
+#         #     response = self._send_command(self.CMD_STATUS)
+#         #     # print(response)
+#         # except Exception as e:
+#         #     print(e)
+#         #     return None
+
+#         return None
+
+#     def get_battery_status(self):
+#         try:
+#             response = self._send_command(self.CMD_BATTERY)
+
+#             if len(response) < 2:
+#                 raise Exception("response too short [{}]".format(response))
+
+#             response = response.split(" ")
+
+#             if len(response) != 2:
+#                 raise Exception("response in unexpected format [{}]".format(response))
+
+#             return float(response[1])
+
+#         except Exception as e:
+#             log.error(e)
+#             raise e
+
+#     def get_temperature(self):
+#         try:
+#             response = self._send_command(self.CMD_TEMP)
+
+#             if response is None: # error
+#                 return None
+
+#             if response is "null": # controller has no sensor
+#                 return None
+
+#             return float(response)
+#         except Exception as e:
+#             log.error(e)
+#             return None
+
+#     def get_uptime(self):
+#         try:
+#             response = self._send_command(self.CMD_UPTIME)
+#             return response
+#         except Exception as e:
+#             log.error(e)
+#             raise e
+
+#     def _send_command(self, cmd):
+#         response = ""
+#         ser = None
+
+#         try:
+#             log.debug("[{}] serial send: {}".format(self, cmd))
+
+#             ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
+
+#             ser.write(bytearray(cmd, "utf-8"))
+#             ser.write(bytearray("\n", "utf-8"))
+
+#             response = ser.read(100)
+#             response = response.decode("utf-8") 
+
+#             # remove every non-alphanumeric / non-underscore / non-space / non-decimalpoint character
+#             response = re.sub("[^a-zA-Z0-9_ .]", '', response)
+
+#             log.debug("[{}] serial receive: {}".format(self, response))
+
+#             if response is None or len(response) == 0:
+#                 log.debug("[{}] empty response".format(self))
+#                 raise Exception("empty response")
+
+#             if response.startswith("E"):
+#                 log.debug("[{}] serial error: {}".format(self, response))
+#                 raise Exception("serial error: {}".format(response))
+
+#             if not response.startswith("K"):
+#                 log.debug("[{}] serial error, non K response: {}".format(self, response))
+#                 raise Exception("serial error, non K response: {}".format(response))
+
+#             if len(response) > 1:
+#                 return response[2:]
+
+#         except serial.serialutil.SerialException as se:
+#             log.error("comm failed, SerialException: {}".format(se))
+#             raise se
+
+#         except Exception as e:
+#             log.error("comm failed, unknown exception: {}".format(e))
+#             raise e
+
+#         finally:
+#             if ser is not None:
+#                 ser.close()
 
 
 class UsbHubController(Controller):
@@ -453,7 +430,6 @@ class UsbHubController(Controller):
 
     def __init__(self, port, is_data_connection=False):
         self.port = port
-        self.is_data_connection = is_data_connection
     
     def __repr__(self):
         return "UsbHubController at {}:{}".format(self.port[0], self.port[1])
@@ -501,7 +477,7 @@ class UsbHubController(Controller):
 
         return controller
 
-    def turn_on(self, turn_on):
+    def turn_usb_on(self, turn_on):
         param = "off"
         if turn_on == True:
             param = "on"
