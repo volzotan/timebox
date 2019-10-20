@@ -348,10 +348,6 @@ class ZeroboxConnector(rpyc.Service):
                 self.log.debug(">>> job running: CAMERA ON")
                 self.log.debug("    {}".format(self.scheduler.print_next_job()))
                 for c in self.controller:
-                    # turn everything on except the data connections
-                    if c.is_data_connection:
-                        continue
-
                     try:
                         c.turn_camera_on(True)
                     except Exception as e:

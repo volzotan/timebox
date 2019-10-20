@@ -1117,6 +1117,8 @@ class Gui():
                 menu.append("-")
                 menu.append("camera on")
                 menu.append("camera off")
+                menu.append("USB on")
+                menu.append("USB off")
                 menu.append("display on/off")
                 menu.append("wifi on")
                 menu.append("wifi off")
@@ -1145,17 +1147,31 @@ class Gui():
                             # camera on
                             for c in self.controller:
                                 try:
-                                    c.turn_on(True)
+                                    c.turn_camera_on(True)
                                 except Exception as e:
                                     self.log.error("controller comm failed: {}".format(e))
                         elif option == 2:
                             # camera off
                             for c in self.controller:
                                 try:
-                                    c.turn_on(False)
+                                    c.turn_camera_on(False)
                                 except Exception as e:
                                     self.log.error("controller comm failed: {}".format(e))
                         elif option == 3:
+                            # usb on
+                            for c in self.controller:
+                                try:
+                                    c.turn_usb_on(True)
+                                except Exception as e:
+                                    self.log.error("controller comm failed: {}".format(e))
+                        elif option == 4:
+                            # usb off
+                            for c in self.controller:
+                                try:
+                                    c.turn_usb_on(False)
+                                except Exception as e:
+                                    self.log.error("controller comm failed: {}".format(e))
+                        elif option == 5:
                             # display on/off
                             if self.device is not None:
                                 if self.display_on:
@@ -1168,15 +1184,15 @@ class Gui():
                                     self.display_on = True
                             else:
                                 self.log.error("no display device found")
-                        elif option == 4:
+                        elif option == 6:
                             # wifi on
                             if self.zeroboxConnector is not None:
                                 self.zeroboxConnector.root.set_network_status("wlan0", True)
-                        elif option == 5:
+                        elif option == 7:
                             # wifi off
                             if self.zeroboxConnector is not None:
                                 self.zeroboxConnector.root.set_network_status("wlan0", False)
-                        elif option == 6:
+                        elif option == 8:
                             # reset to default config
                             with open(CONFIG_FILE_DEFAULT, "r") as stream:
                                 try:

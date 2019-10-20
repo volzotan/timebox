@@ -113,17 +113,17 @@ class TimeboxController(Controller):
     CMD_TEMPERATURE = "T"
     CMD_CAM_ON      = "C 1"
     CMD_CAM_OFF     = "C 0"
-    CMD_USB1_ON     = "X 0"
-    CMD_USB1_OFF    = "X 1"
-    CMD_USB2_ON     = "Y 0"
-    CMD_USB2_OFF    = "Y 1"
+    CMD_USB1_ON     = "X 1"
+    CMD_USB1_OFF    = "X 0"
+    CMD_USB2_ON     = "Y 1"
+    CMD_USB2_OFF    = "Y 0"
     CMD_ZERO_ON     = "Z 1"
     CMD_ZERO_OFF    = "Z 0"
 
     CMD_STATUS      = "S"
 
     SERIAL_BAUDRATE = 9600
-    SERIAL_TIMEOUT = 1.0
+    SERIAL_TIMEOUT  = 1.0
 
     def __init__(self, port):
         self.port = port
