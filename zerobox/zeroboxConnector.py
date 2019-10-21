@@ -161,14 +161,12 @@ class ZeroboxConnector(rpyc.Service):
         if self.zerobox is not None:
             self.zerobox.print_config()
 
-
     def on_connect(self, conn):
         print("on_connect")
 
 
     def on_disconnect(self, conn):
         print("on_disconnect")
-
 
     # def exposed_usb_switch_on(self, power_on):
     #     if power_on:
@@ -187,7 +185,6 @@ class ZeroboxConnector(rpyc.Service):
 
     def exposed_ping(self):
         return None
-
 
     def exposed_trigger(self):
 
@@ -252,7 +249,6 @@ class ZeroboxConnector(rpyc.Service):
 
     def exposed_disconnect_all_cameras(self):
         self.zerobox.disconnect_all_cameras(clean=True)
-
 
     def exposed_shutdown(self, delay=2.0):
         self.log.info("STARTING SHUTDOWN!")

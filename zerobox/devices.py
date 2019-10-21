@@ -125,6 +125,8 @@ class TimeboxController(Controller):
     SERIAL_BAUDRATE = 9600
     SERIAL_TIMEOUT  = 1.0
 
+    lock = Lock()
+
     def __init__(self, port):
         self.port = port
 
@@ -227,9 +229,15 @@ class TimeboxController(Controller):
     def _send_command(self, cmd):
         response = ""
         ser = None
+        lock_acquired = False
 
         try:
             log.debug("[{}] serial send: {}".format(self, cmd))
+
+            lock_acquired = self.lock.acquire(timeout=1)
+
+            if not lock_acquired:
+                raise AccessException("Lock could not be acquired")
 
             ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
 
@@ -263,6 +271,10 @@ class TimeboxController(Controller):
             log.error("comm failed, SerialException: {}".format(se))
             raise se
 
+        except AccessException as ae:
+            log.error("concurrency error: {}".format(ae))
+            raise ae
+
         except Exception as e:
             log.error("comm failed, unknown exception: {}".format(e))
             raise e
@@ -270,6 +282,10 @@ class TimeboxController(Controller):
         finally:
             if ser is not None:
                 ser.close()
+
+            if lock_acquired:
+                self.lock.release()
+
 
 # class UsbDirectController(Controller):
 
