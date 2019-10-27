@@ -1,18 +1,18 @@
 // ----------- PINS -----------
 
-// to be able to use digital pin 8 as A6 the variants.h
-// and other files need to be edited to enable analog readings
-// on additional SAMD21 pins. (see README.mk)
-#define PIN_BATT_DIRECT                   A6 // PA06
+#define PIN_BATT_DIRECT                   A1 // PB08
 
-#define PIN_CAMERA_EN                      9 // PA07
-#define PIN_BUTTON                        11 // PA16
-#define PIN_LED                           13 // PA17
-// #define PIN_ZERO_EN
+#define PIN_BUTTON                        A5 // PB02
+#define PIN_LED                           10 // PA18
+
+#define PIN_CAMERA_EN                     A4 // PA05
+#define PIN_ZERO_EN                       13 // PA17
+#define PIN_USB1_EN                        7 // PA21
+#define PIN_USB2_EN                       12 // PA19
 
 // ----------- OPTIONS -----------
 
-#define LIPO_CELL_MIN                    3.5
+#define LIPO_CELL_MIN                    3.1
 #define LIPO_CELL_MAX                    4.2
 
 // ----------- MISC -----------
@@ -21,7 +21,7 @@
 
 #define VDBASEVOLTAGE                    3.3
 #define VDRESISTOR1                      100
-#define VDRESISTOR2                     44.7
+#define VDRESISTOR2                       62
 
 // ----------- ERROR CODES -----------
 

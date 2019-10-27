@@ -157,7 +157,7 @@ void executeCommand() {
             }
         break; 
 
-        case 'X': // Auxilliary USB Device 2 On/Off 
+        case 'Y': // Auxilliary USB Device 2 On/Off 
             if (serialParam == 0) {
                 switchUsbDeviceOn(1, false);
                 okSerial();

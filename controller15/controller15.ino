@@ -7,6 +7,7 @@
 
 // #define DEBUG
 // #define SHUTDOWN_ON_LOW_BATTERY
+#define HOST_DEFAULT_POWERED_ON 1
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x) SerialUSB.print("["); SerialUSB.print(millis()/1000); SerialUSB.print("] "); SerialUSB.println (x)
@@ -54,9 +55,7 @@ void setup() {
   #endif
 
   #ifdef DEBUG
-    while (!SerialUSB) {
-      ;
-    }
+    while (!SerialUSB) {;}
 
     DEBUG_PRINT("DEBUG MODE ON");
   #endif
