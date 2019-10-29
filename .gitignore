@@ -16,3 +16,6 @@ eagle/**/CAMOutputs*
 
 zerobox/tmp
 *.elf
+
+pmca_re/**
+memorybox/**
