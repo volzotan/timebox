@@ -103,22 +103,25 @@ public class MainActivity extends Activity implements DisplayManager.Listener {
         intent.putExtra("package_name", getComponentName().getPackageName());
         intent.putExtra("class_name", getComponentName().getClassName());
         //intent.putExtra("pkey", new String[] {});// either this or these two:
-        intent.putExtra("pullingback_key", new String[] {});
+//        intent.putExtra("pullingback_key", new String[] {});
 
-//        String[] resumeKeys = new String[]{
-//                "KEY_ACCESSORY_APO",
-//                "KEY_DEDICATED_APO",
-//                "KEY_LENS_APO",
-//                "KEY_MEDIA_INOUT_APO",
-//                "KEY_PLAY_APO",
-//                "KEY_PLAY_PON",
-//                "KEY_POWER_APO",
-//                "KEY_POWER_SLIDE_PON",
-//                "KEY_RELEASE_APO"
-//        };
-//        intent.putExtra("resume_key", resumeKeys);
+        // Exit app when plugging camera into USB
+        intent.putExtra("pullingback_key", new String[] { "KEY_USB_CONNECT" });
 
-        intent.putExtra("resume_key", "KEY_RELEASE_APO");
+        String[] resumeKeys = new String[]{
+                "KEY_ACCESSORY_APO",
+                "KEY_DEDICATED_APO",
+                "KEY_LENS_APO",
+                "KEY_MEDIA_INOUT_APO",
+                "KEY_PLAY_APO",
+                "KEY_PLAY_PON",
+                "KEY_POWER_APO",
+                "KEY_POWER_SLIDE_PON",
+                "KEY_RELEASE_APO"
+        };
+        intent.putExtra("resume_key", resumeKeys);
+
+//        intent.putExtra("resume_key", "KEY_RELEASE_APO");
         sendBroadcast(intent);
     }
 

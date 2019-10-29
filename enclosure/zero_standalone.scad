@@ -10,13 +10,13 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 
 
 //% translate([0, 6, 0.1]) screw25(length=25);
-
-// battery
+//
+//// battery
 //% translate([10+80.5, 3, 2]) color("lightblue") battery();
-
-// camera
-% translate([filter_x, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
-
+//
+//// camera
+//% translate([filter_x, -size[1]/2-1.5, 6+2.5]) rotate([-90, 0, 90]) color("grey") import("external_models/RasPi_Camera_v1.stl");
+//
 //% translate([25, -41.5, 06.7]) camholder();
 
 // seal
@@ -24,32 +24,33 @@ include </Users/volzotan/GIT/timebox/enclosure/controller11.scad>
 //translate([0, 52]) camholder();
 
 //translate([80, 0]) {
-
+//
 //   intersection() {
 //        translate([0, 0, 0]) rotate([0, 0, 0]) bottom();
 //        translate([-1, -1, 0]) cube([50, 50, 50]);
 //    }
-    
+//    
 //   translate([2.1, -30, 15]) nutholder(); 
-    
+//    
 //   intersection() {
 //        translate([0, -48, 0]) rotate([0, 0, 0]) top();
 //        translate([5, -48-1, 0]) cube([50, 50, 50]);
 //        translate([-1, -48-1+25-25, 0]) cube([200, 50, 50]);
 //    }
-    
+//    
 //    % translate([0, -48, 28.1]) color("grey") seal();
-    
+//    
 //    % translate([30, -20]) screw25(length=10);
 //    % translate([11.5, -42.5-29.5, 40+14+100]) translate([2, 32+0.5, -20.095]) rotate([180, 0]) pizero();
 //}
 
 // ------------------------------ SEAL
 
-translate([0, 0, 0]) rotate([0, 0, 0]) seal1();
-translate([0, -53, 0]) rotate([0, 0, 0]) seal2();
+//translate([0, 0, 0]) rotate([0, 0, 0]) seal1();
+//translate([0, -53, 0]) rotate([0, 0, 0]) seal2();
 //
 //% translate([0, -60, 3]) rotate([0, 0, 0]) color("red") seal();
+//seal2D();
 
 // ------------------------------ PRINT
 
@@ -68,14 +69,17 @@ translate([0, -53, 0]) rotate([0, 0, 0]) seal2();
 //    
 //    translate([-size[1], -52-1.5-.2, 0]) rotate([90, -90, 180]) top();
 //    
-//    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
-//    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
-//    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
+////    translate([-60, 0, 00]) rotate([90, 0]) screw3(length=40);
+////    translate([-60, 0, 07]) rotate([90, 0]) screw3(length=45);
+////    translate([-60, 0, 14]) rotate([90, 0]) screw3(length=50);
 //} 
+
+//translate([-size[1]/2, 0, size[0]/2]) rotate([90, 0, 0]) cylinder($fn=64, d=95, h=25.5);
+//translate([-size[1]/2, -26, size[0]/2]) rotate([90, 0, 0]) cylinder($fn=64, d=95, h=25.5);
     
 // ------------------------------ EXPLOSION
 
-//translate([size[1]/2, 50]) explosion();
+translate([size[1]/2, 50]) explosion();
 
 size = [97, 47];
 crad = 6;
@@ -92,7 +96,7 @@ module explosion() {
 
     translate([]) rotate([0, -90, 90]) bottom();
     
-    translate([0, -50, 0]) rotate([0, -90, 90]) seal();
+    translate([0, -50, 0]) rotate([0, -90, 90]) color([0.3, 0.3, 0.3]) seal();
     
     translate([-38.5, -40, 13.5]) rotate([0, -90, 90]) pizero();
     
@@ -352,6 +356,11 @@ module top() {
     }
 }
 
+
+module seal2D() {
+    projection() seal();
+}
+    
 
 module seal() {
     

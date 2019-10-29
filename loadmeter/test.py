@@ -1,20 +1,22 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+import serial
 
-fig, ax = plt.subplots()
-line, = ax.plot(np.random.rand(10))
-ax.set_ylim(0, 1)
+SERIAL_DEVICE = "/dev/cu.usbmodem62140401"
+SERIAL_BAUDRATE = 115200
+SERIAL_TIMEOUT = 1.0
 
+ser = serial.Serial(SERIAL_DEVICE, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT)
 
-def update(data):
-    line.set_ydata(data)
-    return line,
+OUTPUT = "\r voltage: {:7.2f} | current: {:7.4f} | power: {:7.2f}   "
 
+while True:
 
-def data_gen():
-    while True:
-        yield np.random.rand(10)
+    response = ser.readline()
 
-ani = animation.FuncAnimation(fig, update, data_gen, interval=100)
-plt.show()
+    if response is None:
+        continue
+
+    response = response.decode("utf-8") 
+    values = response.split(" ")
+
+    if len(values) == 4:
+        print(OUTPUT.format(float(values[1]), float(values[2]), float(values[3])), end=" ")

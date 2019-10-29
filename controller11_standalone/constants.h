@@ -18,7 +18,7 @@
 
 // ----------- OPTIONS -----------
 
-#define LIPO_CELL_MIN                    3.5
+#define LIPO_CELL_MIN                    3.3
 #define LIPO_CELL_MAX                    4.2
 
 #define INTERVAL                        3*60
@@ -44,7 +44,7 @@
 
 #define VERSION                         11.2
 
-#define VDBASEVOLTAGE                    5.1
+#define VDBASEVOLTAGE                   5.05
 #define VDRESISTOR1                       10
 #define VDRESISTOR2                       10
 

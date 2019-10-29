@@ -1,0 +1,1 @@
+arduino upload -b esp8266:esp8266:huzzah -p /dev/cu.SLAB_USBtoUART

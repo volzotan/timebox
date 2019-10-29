@@ -27,11 +27,11 @@ translate([80, 0]) {
 // --------------------------------------- PRINT | PI
 
 translate([80, 0]) {
-    translate([0, 0, 0]) bottom_pi_new();
+//    translate([0, 0, 0]) bottom_pi_new();
     translate([0, -36.5, 0]) rotate([0, 0, 0]) top_pi_new();
     
-    translate([-4, 0, 0]) spacer();
-    translate([-4, -7, 0]) spacer();
+//    translate([-4, 0, 0]) spacer();
+//    translate([-4, -7, 0]) spacer();
     
     
 //% translate([0, 0, 4]) translate([2.5, 33, -20.095]) pizero();
@@ -223,8 +223,10 @@ module top_pi_new() {
         // connector cutout
         translate([size[0]-16.5-8-1.25-.1-1, size[1]-8.75, -1]) block(17.5, 10, 10, crad=1);    // power
         translate([size[0]-8-31.25, size[1]-4.5, 5.5]) {                                        // audio jack
-            cube([7, 5, 3.5]);
+//            cube([7, 5, 3.5]);
             translate([7/2, 5, 0]) rotate([90, 0, 0]) cylinder($fn=32, d=7, h=2.8);
+              translate([3.75, 5, 0.75]) rotate([90, 0, 0]) cylinder($fn=32, d=9, h=5);
+            
         }     
         translate([8.0+1.5, size[1]-4.5+5, 3.5]) rotate([90, 0, 0]) block(11, 6, 3, crad=1);    // USB        
         translate([-1, 15, 8]) rotate([90, 0, 90]) block(12, 8, 3, crad=1);                     // power switch
@@ -396,6 +398,9 @@ module bottom_pi_new() {
                 
                 translate([0, 0]) block(size[0], size[1], height, crad=4);        
             }
+            
+            // sdcard reinforcement
+            translate([0, 5, 0]) cube([2.1+1.2, size[1]-10, 4]);
         }
         
         // through hole pin cutout
@@ -418,8 +423,8 @@ module bottom_pi_new() {
        
         // sd card cutout
         translate([-2, 10, 9.5+2]) rotate([0, 90, 0]) hull() {
-            block(9, 19, .1, crad=1);
-            translate([2, 2, 4]) block(9-4, 19-4, .1, crad=1);
+            block(15, 19, .1, crad=1);
+            translate([2, 2, 4]) block(15-4, 19-4, .1, crad=1);
         }
         
         // USB cutout
@@ -452,9 +457,9 @@ module bottom_pi_new() {
     
     // magnet reinforcement
     color() {
-        translate([10, size[1]/2, 1.5]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-        translate([size[0]/2, size[1]/2, 1.5]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
-        translate([size[0]-10, size[1]/2, 1.5]) cylinder($fn=32, d=8.5+3*.4+.1, h=0.8);
+        translate([10, size[1]/2, 1.5]) cylinder($fn=32, d=12, h=0.8);
+        translate([size[0]/2, size[1]/2, 1.5]) cylinder($fn=32, d=12, h=0.8);
+        translate([size[0]-10, size[1]/2, 1.5]) cylinder($fn=32, d=12, h=0.8);
     }
     
     // screw hole reinforcements for printer

@@ -35,7 +35,7 @@ include <../camera.scad>;
 //translate([180, 110]) back();
 //translate([0, 110]) back_cnc();
 //translate([180, 110]) back2D();
-//translate([180, -100, 40]) bottom();
+translate([180, -100, 40]) bottom();
 //translate([180, -145]) socket();
 //translate([240, 0]) controller_dock();
 
@@ -47,7 +47,16 @@ include <../camera.scad>;
 // ----------------------  PRINT  ------------------------------------------
 
 //translate([180, -145]) socket();                          // print with 0.15
-translate([180, -100, 40]) rotate([-90, 0, 0]) bottom();  // print with 0.2
+//translate([180, -100, 40]) rotate([-90, 0, 0]) bottom();  // print with 0.2
+//difference() {
+//    translate([180, 0]) front();
+//    translate([180, 0, -10]) cube([100, 100, 100]);
+//}
+
+//intersection() {
+//    translate([180, 0]) front();
+//    translate([180, 0, -1]) cylinder($fn=32, d=100, h=1+2.6);
+//}
 
 module hook() {
 //    points = [
@@ -123,7 +132,7 @@ module socket() {
     
     height = 10;
     
-    oring_diam = 5+2*1.7;
+    oring_diam = 5+3.3;
     oring_depth = 1.5;
     
 //    translate([0, 0, 10]) color("red") cube([1, 9, 1]);
@@ -189,7 +198,7 @@ module socket() {
 module bottom() {
     
     size = [60, 41];
-    height = 13;
+    height = 2; //13;
     
 //    oring_diam = 5+2.5;
 //    oring_depth = 1.5;
@@ -231,10 +240,10 @@ module bottom() {
             translate([-20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 8, -1]) cylinder($fn=32, d=5.3, h=30);
             translate([20, 30, -1]) cylinder($fn=32, d=5.3, h=30);
-            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
-            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
-            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
-            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.5, h=height-5);
+            translate([-20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.45, h=height-5);
+            translate([-20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.45, h=height-5);
+            translate([20, 8, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.45, h=height-5);
+            translate([20, 30, -1]) rotate([0, 0, 30]) cylinder($fn=6, d=9.45, h=height-5);
             
             // o-ring
 //            difference() {
@@ -456,7 +465,8 @@ module back_cnc() {
 
 module front() {
     
-    height = 42; //13; //42;
+//    height = 42;
+    height = 13;
     
     // 76mm / 86mm drill
     
@@ -481,6 +491,14 @@ module front() {
     // 76.8 thread diameter
     // 4.5  thick ring height
     // 6.8  total height
+    
+    // O-Ring large
+    oring_id = 83.2 + 1; // 84-2*0.4;
+    oring_od = 88   + 1;   // 84+2*2;
+    
+    // O-Ring small
+    oring_diam = 5+3.3;
+    oring_depth = 1.5;
     
     difference() {
         union() {
@@ -516,8 +534,8 @@ module front() {
         translate([0, 0, height-(4.5+1.0)]) color("red") cylinder($fn=q, d=79.2+0.5, h=10);
         translate([0, 0, height-(6.8+1.0)]) color("red") cylinder($fn=q, d=76.8+0.5, h=10);
     
-        // o-ring cavity
-        * difference() {
+        // o-ring cavity old
+        *difference() {
             hull() {
                 translate([0, 0, -.1]) cylinder($fn=q, d=88, h=0.75);
                 translate([0, 0, 0.75+0.5]) cylinder($fn=q, d1=88-1, h=0.1);
@@ -528,6 +546,16 @@ module front() {
                 translate([0, 0, 1.5]) cylinder($fn=q, d=88-2*2.0+1, h=1);
             }
         }
+        
+        // o-ring cavity
+        color("red") difference() {
+            translate([0, 0, -1]) cylinder($fn=q, d1=oring_od+1, d2=oring_od, h=1.9+1);
+            translate([0, 0, -1.1]) cylinder($fn=q, d1=oring_id-1, d2=oring_id, h=1.9+1.2);
+            
+            // overhang support
+            for(i = [0 : 60]) rotate([0, 0, 360/60*i]) translate([0, -(2.4+.1)/2, 1.9-.2]) cube([60, 2.4+.1, 1]);
+        }
+        for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=oring_diam, h=1+oring_depth);
         
         // screw holes
         for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, -1]) cylinder($fn=32, d=5.3, h=50);
@@ -542,8 +570,11 @@ module front() {
         translate([0, 0, -.1]) cylinder($fn=q, d=filter_ring_thread_hole-2, h=10);
     }
     
+    // screw hole support
+    color("orange") for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, oring_depth]) cylinder($fn=32, d=10, h=0.2);
+    
     // screws 
-    % for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 06]) M5Screw(length=18);
+    // % for(i = [0 : num_screws]) rotate([0, 0, off+deg*i]) translate([screw_dist, 0, 06]) M5Screw(length=18);
 }
 
 
