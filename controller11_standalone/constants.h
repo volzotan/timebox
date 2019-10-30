@@ -18,7 +18,7 @@
 
 // ----------- OPTIONS -----------
 
-#define LIPO_CELL_MIN                    3.3
+#define LIPO_CELL_MIN                    3.1
 #define LIPO_CELL_MAX                    4.2
 
 #define INTERVAL                        3*60
