@@ -1354,7 +1354,7 @@ class Gui():
 
         elif self.state == STATE_RUNNING_MENU:
 
-            menu = ["display off", "back", "stop"]
+            menu = ["display off", "back", "wifi on", "wifi off", "stop"]
 
             if self.isInvalid:
                 with canvas(self.device) as draw:
@@ -1391,8 +1391,24 @@ class Gui():
                     self.menu_selected = 0
                     self.state = STATE_RUNNING
 
-                # stop
+                # wifi on
                 elif self.menu_selected == 2:
+                    if self.zeroboxConnector is not None:
+                        self.zeroboxConnector.root.set_network_status("wlan0", True)
+                        
+                        self.menu_selected = 0
+                        self.state = STATE_RUNNING
+
+                # wifi off
+                elif self.menu_selected == 3:
+                    if self.zeroboxConnector is not None:
+                        self.zeroboxConnector.root.set_network_status("wlan0", False)
+
+                        self.menu_selected = 0
+                        self.state = STATE_RUNNING
+
+                # stop
+                elif self.menu_selected == 4:
                     # self.scheduler.remove_job("trigger")
                     # self.zeroboxConnector.root.disconnect_all_cameras()
                     # for controller in self.controller:
@@ -1404,6 +1420,7 @@ class Gui():
                         self._timeToStr((datetime.now()-self.session["start"]).total_seconds(), short=True))
                     self.data["message"] = report
 
+                    self.menu_selected = 0
                     self.state = STATE_IDLE
 
                 else:

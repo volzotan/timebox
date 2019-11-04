@@ -528,6 +528,10 @@ class ZeroboxConnector(rpyc.Service):
             self.scheduler.add_job("camera_off", interval,
                                    delay = delay+(30.0+float(self.session["ic_pre_wait"]))*1000)
 
+        # disable wifi
+        self.log.info("disabling wifi for session start")
+        self.exposed_set_network_status("wlan0", False)
+
         self.state = self.STATE_RUNNING
 
         FORMAT = "  {:<24}: {}"
