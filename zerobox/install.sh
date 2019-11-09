@@ -67,6 +67,11 @@ sudo systemctl enable zerobox_gui
 sudo systemctl start zerobox
 sudo systemctl start zerobox_gui
 
+# fstab USB Stick mounting
+sudo mkdir /media/external_storage
+# UUID=8A0F-14F3 /media/external_storage/ vfat utf8,uid=pi,gid=pi,noatime 0 0
+# UUID=8A0F-14F3 /media/external_storage/ vfat users,sync,noatime,noauto,x-systemd.automount 0 0
+
 # oh-my-zsh
 # wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O ohmyzsh.sh && sh ohmyzsh.sh
 # sh -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"

@@ -20,7 +20,7 @@ from gi.repository import GExiv2
 CONFIG = {
 
     "BASE_DIR"                  : None, # only used when path is relative (ie. starts without /)
-    "IMAGE_DIR_PRIMARY"         : "/mnt/usb/RAW",
+    "IMAGE_DIR_PRIMARY"         : "/media/usb/RAW",
     "IMAGE_DIR_SECONDARY"       : "RAW",
     "TEMP_DIR"                  : "tmp",
     "FILE_EXTENSION"            : ".arw",
@@ -151,6 +151,10 @@ class CameraConnector(object):
 
         if not os.path.exists(self.image_directory_primary):
             self.log.warn("fallback to secondary image dir: primary dir not available")
+            return self.image_directory_secondary
+
+        if not os.path.ismount(self.image_directory_primary):
+            self.log.warn("fallback to secondary image dir: primary dir not correctly mounted")
             return self.image_directory_secondary
 
         free_space_primary_mb = shutil.disk_usage(self.image_directory_primary).free / (1024 * 1024)
@@ -602,7 +606,7 @@ class Zerobox(object):
                 self.config["BASE_DIR"] = "./"
 
         if self.config["IMAGE_DIR_PRIMARY"] is None:
-            self.config["IMAGE_DIR_PRIMARY"] = self.config["BASE_DIR"]
+            self.config["IMAGE_DIR_PRIMARY"] = None # self.config["BASE_DIR"]
         elif not self.config["IMAGE_DIR_PRIMARY"].startswith("/"):
             self.config["IMAGE_DIR_PRIMARY"] = os.path.join(self.config["BASE_DIR"], self.config["IMAGE_DIR_PRIMARY"])
 
@@ -625,9 +629,12 @@ class Zerobox(object):
         self.log = logging.getLogger()
 
         # create directories
-        self._create_dir(self.config["IMAGE_DIR_PRIMARY"])
-        self._create_dir(self.config["IMAGE_DIR_SECONDARY"])
-        self._create_dir(self.config["TEMP_DIR"])
+        if not self.config["IMAGE_DIR_PRIMARY"] is None:
+            self._create_dir(self.config["IMAGE_DIR_PRIMARY"])
+        if not self.config["IMAGE_DIR_SECONDARY"] is None:
+            self._create_dir(self.config["IMAGE_DIR_SECONDARY"])
+        if not self.config["TEMP_DIR"] is None:
+            self._create_dir(self.config["TEMP_DIR"])
 
 
     def __repr__(self):
@@ -695,13 +702,19 @@ class Zerobox(object):
     def get_total_space(self):
         total_space = []
 
-        try:
-            total_space.append(shutil.disk_usage(self.config["IMAGE_DIR_PRIMARY"]).total)
+        try:        
+            if self.config["IMAGE_DIR_PRIMARY"] is None:
+                total_space.append(None)
+            else:
+                total_space.append(shutil.disk_usage(self.config["IMAGE_DIR_PRIMARY"]).total)
         except FileNotFoundError as e:
             total_space.append(None)
-
-        try:
-            total_space.append(shutil.disk_usage(self.config["IMAGE_DIR_SECONDARY"]).total)
+        
+        try:       
+            if self.config["IMAGE_DIR_SECONDARY"] is None:
+                total_space.append(None)
+            else:
+                total_space.append(shutil.disk_usage(self.config["IMAGE_DIR_SECONDARY"]).total)
         except FileNotFoundError as e:
             total_space.append(None)
 
@@ -711,13 +724,20 @@ class Zerobox(object):
     def get_free_space(self):
         free_space = []
 
-        try:
-            free_space.append(shutil.disk_usage(self.config["IMAGE_DIR_PRIMARY"]).free)
+        try:        
+            if self.config["IMAGE_DIR_PRIMARY"] is None:
+                free_space.append(None)
+            else:
+                free_space.append(shutil.disk_usage(self.config["IMAGE_DIR_PRIMARY"]).free)
         except FileNotFoundError as e:
             free_space.append(None)
             
-        try:
-            free_space.append(shutil.disk_usage(self.config["IMAGE_DIR_SECONDARY"]).free)
+
+        try:        
+            if self.config["IMAGE_DIR_SECONDARY"] is None:
+                free_space.append(None)
+            else:
+                free_space.append(shutil.disk_usage(self.config["IMAGE_DIR_SECONDARY"]).free)
         except FileNotFoundError as e:
             free_space.append(None)
 
@@ -727,11 +747,13 @@ class Zerobox(object):
     def get_images_in_memory(self):
         files = []
 
-        for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR_PRIMARY"]):
-            files = files + filenames
+        if not self.config["IMAGE_DIR_PRIMARY"] is None:
+            for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR_PRIMARY"]):
+                files = files + filenames
 
-        for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR_SECONDARY"]):
-            files = files + filenames
+        if not self.config["IMAGE_DIR_SECONDARY"] is None:
+            for dirpath, dirnames, filenames in os.walk(self.config["IMAGE_DIR_SECONDARY"]):
+                files = files + filenames
 
         return files
 
@@ -994,7 +1016,7 @@ class Zerobox(object):
                 if self.config["SECONDEXPOSURE_THRESHOLD"] is not None:
                     jpeg_full_name = self._convert_raw_to_jpeg(filename[0], filename[1], self.config["TEMP_DIR"])
                     exposure = self._calculate_brightness(jpeg_full_name)
-                    self.log.info("exposure: {}".format(exposure))
+                    self.log.info("exposure: {:.3f}".format(exposure))
 
                     if exposure > self.config["SECONDEXPOSURE_THRESHOLD"]:
                         trigger_second_exposure = False

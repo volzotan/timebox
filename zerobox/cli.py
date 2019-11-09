@@ -8,7 +8,7 @@ from datetime import datetime
 import rpyc
 from rpyc.utils.classic import obtain
 
-from zeroboxConnector import ZeroboxConnector
+from zeroboxConnector import ZeroboxConnector, NoConnectedCameraException
 
 DATA_STRING = "{label:<40} : {data:>40}"
 DATA_STRING2 = "  {label:<38} : {data:>40}"

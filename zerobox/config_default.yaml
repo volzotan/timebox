@@ -78,7 +78,7 @@ min_battery:
 # --------------------------------------------------------
 
 image_dir_primary:
-    path: "/Volumes/UNTITLED"
+    path: "/media/external_storage"
 
 image_dir_secondary:
     path: "RAW"

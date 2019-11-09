@@ -332,7 +332,7 @@ class ZeroboxConnector(rpyc.Service):
             except Exception as e:
                 self.log.error("maintenance failed: {}".format(e))
                 if self.session is not None:
-                    self.session["errors"].append(e)
+                    self.session["errors"].append(str(e))
 
 
         if self.state == self.STATE_IDLE:
@@ -463,6 +463,12 @@ class ZeroboxConnector(rpyc.Service):
         zeroboxConfig["IMAGE_DIR_PRIMARY"] = self.config["image_dir_primary"]["path"]
         zeroboxConfig["IMAGE_DIR_SECONDARY"] = self.config["image_dir_secondary"]["path"]
 
+        if not zeroboxConfig["IMAGE_DIR_PRIMARY"] is None:
+            if zeroboxConfig["IMAGE_DIR_PRIMARY"].startswith("/"):
+                if not os.path.ismount(zeroboxConfig["IMAGE_DIR_PRIMARY"]):
+                    self.log.warning("PRIMARY IMAGE DIR not mounted: {}".format(zeroboxConfig["IMAGE_DIR_PRIMARY"]))
+                    zeroboxConfig["IMAGE_DIR_PRIMARY"] = None
+
         zeroboxConfig["AUTOFOCUS_ENABLED"] = self.config["autofocus"]["value"]
         zeroboxConfig["SECONDEXPOSURE_ENABLED"] = self.config["secondexposure"]["value"]
         if self.config["se_use_threshold"]["value"]:
@@ -529,8 +535,8 @@ class ZeroboxConnector(rpyc.Service):
                                    delay = delay+(30.0+float(self.session["ic_pre_wait"]))*1000)
 
         # disable wifi
-        self.log.info("disabling wifi for session start")
-        self.exposed_set_network_status("wlan0", False)
+        # self.log.info("disabling wifi for session start")
+        # self.exposed_set_network_status("wlan0", False)
 
         self.state = self.STATE_RUNNING
 
@@ -616,7 +622,7 @@ class ZeroboxConnector(rpyc.Service):
                     if temp is not None:    
                         self.temperature_data.append([temp, "controller"])
                 except Exception as e:
-                    self.log.warn("controller get temp data failed: {}".format(e))
+                    self.log.warning("controller get temp data failed: {}".format(e))
         data["temperature"] = self.temperature_data
 
         if force:
