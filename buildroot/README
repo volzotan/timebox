@@ -1,0 +1,4 @@
+# setup buildroot with basic defconfig
+
+make BR2_EXTERNAL=../external_tree raspberrypi2_defconfig
+make menuconfig
