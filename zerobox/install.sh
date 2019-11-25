@@ -38,22 +38,16 @@ sudo apt-get install -y dcraw
 sudo apt-get install -y exiv2
 sudo apt-get install -y gir1.2-gexiv2-0.10
 sudo apt-get install -y python3-gi
-sudo pip3 install pyserial
-sudo pip3 install psutil
-sudo pip3 install rpyc
-sudo pip3 install gphoto2
 
 # only available with pip2?
 # sudo pip3 install gexiv2
+sudo pip3 install -r requirements.txt
 
 # pygame dependencies
 # sudo apt-get install -y libsdl1.2-dev
 sudo apt-get install -y python3-pygame
-sudo pip3 install luma.oled
-sudo pip3 install luma.emulator
 
 # ykush
-sudo pip3 install hidapi
 sudo cp /home/pi/zerobox/udev/50-ykush.rules /etc/udev/rules.d/
 
 # create symlink for the zerobox CLI
