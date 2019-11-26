@@ -317,16 +317,16 @@ class ZeroboxConnector(rpyc.Service):
 
                     shutdown = True
 
-                for battery_camera in battery_cameras:
-                    perc = int(battery_camera[0][:-1])
-                    if perc < self.config["min_battery"]["value"]:
-                        self.log.info("SHUTDOWN LOW BATTERY! (battery_camera {} < {})"
-                            .format(battery_camera[0], self.config["min_battery"]["value"]))
+                # TODO: battery reports 0% even when more than a third of capacity remains. Disabled for now...
+                # for battery_camera in battery_cameras:
+                #     perc = int(battery_camera[0][:-1])
+                #     if perc < self.config["min_battery"]["value"]:
+                #         self.log.info("SHUTDOWN LOW BATTERY! (battery_camera {} < {})"
+                #             .format(battery_camera[0], self.config["min_battery"]["value"]))
 
-                        shutdown = True
+                #         shutdown = True
 
                 if shutdown:
-
                     self.exposed_shutdown()
 
             except Exception as e:

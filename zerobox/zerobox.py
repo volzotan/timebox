@@ -7,13 +7,11 @@ import time
 import math
 from threading import Lock
 import shutil
+
+import exifread
 import numpy as np
 
-import gphoto2 as gp
-
-import gi
-gi.require_version('GExiv2', '0.10')
-from gi.repository import GExiv2
+# import gphoto2 as gp
 
 # --- --- --- --- --- --- --- --- --- ---
 
@@ -146,20 +144,20 @@ class CameraConnector(object):
         # if primary not available or memory lower than switching threshold, return secondary
 
         if self.image_directory_primary is None:
-            self.log.warn("fallback to secondary image dir: primary is None")
+            self.log.warning("fallback to secondary image dir: primary is None")
             return self.image_directory_secondary
 
         if not os.path.exists(self.image_directory_primary):
-            self.log.warn("fallback to secondary image dir: primary dir not available")
+            self.log.warning("fallback to secondary image dir: primary dir not available")
             return self.image_directory_secondary
 
         if not os.path.ismount(self.image_directory_primary):
-            self.log.warn("fallback to secondary image dir: primary dir not correctly mounted")
+            self.log.warning("fallback to secondary image dir: primary dir not correctly mounted")
             return self.image_directory_secondary
 
         free_space_primary_mb = shutil.disk_usage(self.image_directory_primary).free / (1024 * 1024)
         if free_space_primary_mb < min_free_space:
-            self.log.warn("fallback to secondary image dir: free space below threshold: {:.2f}MB".format(free_space_primary_mb))
+            self.log.warning("fallback to secondary image dir: free space below threshold: {:.2f}MB".format(free_space_primary_mb))
             return self.image_directory_secondary
 
         return self.image_directory_primary
@@ -616,7 +614,7 @@ class Zerobox(object):
             self.config["IMAGE_DIR_SECONDARY"] = os.path.join(self.config["BASE_DIR"], self.config["IMAGE_DIR_SECONDARY"])
 
         if self.config["IMAGE_DIR_PRIMARY"] == self.config["IMAGE_DIR_SECONDARY"]:
-            self.log.warn("image dir primary and secondary is identical")
+            self.log.warning("image dir primary and secondary is identical")
             self.config["IMAGE_DIR_SECONDARY"] = None
 
         if self.config["TEMP_DIR"] is None:
@@ -648,7 +646,7 @@ class Zerobox(object):
         except FileExistsError as e:
             pass
         except PermissionError as e:
-            self.log.warn("creating directory {} failed. no permission.".format(path))
+            self.log.warning("creating directory {} failed. no permission.".format(path))
 
 
     def disconnect_camera(self, portname):
@@ -802,31 +800,34 @@ class Zerobox(object):
 
     def _calculate_brightness(self, full_name):
 
-        metadata = GExiv2.Metadata()
-        metadata.open_path(full_name)
+        with open(full_name, "rb") as image_file:
+            metadata = exifread.process_file(image_file)
 
-        exposure_time = metadata.get_exposure_time()
-        shutter = None
-        # some versions of GExiv2 return Fractions of different types
-        try: 
-            shutter = float(exposure_time.den) / float(exposure_time.nom)
-        except AttributeError as e:
-            try: 
-                shutter = float(exposure_time)
-            except Exception as e:
-                raise e
+        exposure_time = metadata["EXIF ExposureTime"].values[0]
+        if exposure_time.num == 0 or exposure_time.den == 0:
+            shutter = 0
+        else:
+            shutter = float(exposure_time.num) / float(exposure_time.den)
 
-        iso = int(metadata.get_tag_string("Exif.Photo.ISOSpeedRatings"))
+        iso = float(metadata["EXIF ISOSpeedRatings"].values[0])
 
-        try: 
-            time = datetime.datetime.strptime(metadata.get_tag_string("Exif.Photo.DateTimeOriginal"), EXIF_DATE_FORMAT)
-        except Exception as e:
-            time = datetime.datetime.strptime(metadata.get_tag_string("Exif.Image.DateTime"), EXIF_DATE_FORMAT)
+        # try: 
+        #     time = datetime.datetime.strptime(metadata["EXIF DateTimeOriginal"].values, EXIF_DATE_FORMAT)
+        # except Exception as e:
+        #     time = datetime.datetime.strptime(metadata["Image DateTime"].values, EXIF_DATE_FORMAT)
 
-        aperture = metadata.get_focal_length()
+        aperture = metadata["EXIF FNumber"].values[0]
+        
+        if aperture.num == 0 or aperture.den == 0:
+            aperture = 0
+        else:
+            aperture = aperture.num / aperture.den
+
         if aperture <= 0:
             # no aperture tag set, probably an lens adapter was used. assume fixed aperture.
             aperture = 8.0
+
+        # print("brightness:: shutter: {} | aperture: {} | iso: {}".format(shutter, aperture, iso))
 
         return self._intensity(shutter, aperture, iso)
 
@@ -1014,8 +1015,9 @@ class Zerobox(object):
 
                 trigger_second_exposure = True
                 if self.config["SECONDEXPOSURE_THRESHOLD"] is not None:
-                    jpeg_full_name = self._convert_raw_to_jpeg(filename[0], filename[1], self.config["TEMP_DIR"])
-                    exposure = self._calculate_brightness(jpeg_full_name)
+                    # jpeg_full_name = self._convert_raw_to_jpeg(filename[0], filename[1], self.config["TEMP_DIR"])
+                    image_full_name = os.path.join(filename[0], filename[1])
+                    exposure = self._calculate_brightness(image_full_name)
                     self.log.info("exposure: {:.3f}".format(exposure))
 
                     if exposure > self.config["SECONDEXPOSURE_THRESHOLD"]:
@@ -1068,7 +1070,7 @@ class Zerobox(object):
                     for portname, connector in self.connectors.items():
 
                         if connector.get_state() == CameraConnector.STATE_BUSY:
-                            self.log.warn("camera {} busy. getting status aborted".format(portname))
+                            self.log.warning("camera {} busy. getting status aborted".format(portname))
                             data["cameras"][portname]["state"] = connector.get_state()
                             continue
                         else:
@@ -1100,9 +1102,9 @@ class Zerobox(object):
                                 try:
                                     connector.open()
                                 except Exception as e:
-                                    self.log.warn("reconnect failed: {}".format(e))
+                                    self.log.warning("reconnect failed: {}".format(e))
                 else:
-                    self.log.warn("get_status lock not acquired")
+                    self.log.warning("get_status lock not acquired")
                     # so no data gets updated but old data will be returned
 
             except Exception as e:

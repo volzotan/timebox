@@ -5,4 +5,7 @@ rpyc
 hid # hidapi
 pyserial
 psutil
+exifread
+requests
+
 # gphoto2 # not required if cli mode is used

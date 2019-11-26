@@ -128,7 +128,7 @@ class Gui():
 
         self.init()
 
-        if os.uname().nodename == "raspberrypi":
+        if os.uname().nodename in ["raspberrypi", "buildroot"]:
             self.platform = PLATFORM_PI
         else:
             self.platform = PLATFORM_OSX
