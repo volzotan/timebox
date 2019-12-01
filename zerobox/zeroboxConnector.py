@@ -62,12 +62,12 @@ class ZeroboxConnector(rpyc.Service):
 
         with open(CONFIG_FILE_DEFAULT, "r") as stream:
             try:
-                self.config = {**self.config,**yaml.load(stream)}
+                self.config = {**self.config,**yaml.safe_load(stream)}
             except yaml.YAMLError as exc:
                 print(exc)
         try:
             with open(CONFIG_FILE_USER, "r") as stream:
-                self.config = {**self.config,**yaml.load(stream)}
+                self.config = {**self.config,**yaml.safe_load(stream)}
         except FileNotFoundError as e:
             print("no config file found")
 
@@ -102,7 +102,7 @@ class ZeroboxConnector(rpyc.Service):
         log_filename_info = os.path.join(self.config["log"]["basedir"], self.config["log"]["filename_info"])
 
         # create logger
-        self.log = logging.getLogger()
+        self.log = logging.getLogger("ZEROBOX")
         self.log.setLevel(logging.DEBUG)
 
         # remove prior logging handlers

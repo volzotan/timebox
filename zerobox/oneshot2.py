@@ -28,12 +28,12 @@ class Oneshot():
 
         with open(CONFIG_FILE_DEFAULT, "r") as stream:
             try:
-                self.config = {**self.config,**yaml.load(stream)}
+                self.config = {**self.config,**yaml.safe_load(stream)}
             except yaml.YAMLError as exc:
                 print(exc)
         try:
             with open(CONFIG_FILE_USER, "r") as stream:
-                self.config = {**self.config,**yaml.load(stream)}
+                self.config = {**self.config,**yaml.safe_load(stream)}
         except FileNotFoundError as e:
             print("no config file found")
 
@@ -51,7 +51,7 @@ class Oneshot():
         log_filename_info = "info.log"
 
         # create logger
-        self.log = logging.getLogger()
+        self.log = logging.getLogger("ZEROBOX")
         self.log.setLevel(logging.DEBUG)
 
         # remove prior logging handlers

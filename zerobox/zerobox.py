@@ -608,7 +608,7 @@ class Zerobox(object):
 
         self.load_config(new_config)
 
-        self.log = logging.getLogger()
+        self.log = logging.getLogger("ZEROBOX")
 
         # create directories
         if not self.config["IMAGE_DIR_PRIMARY"] is None:
