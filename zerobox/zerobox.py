@@ -221,14 +221,6 @@ class CameraConnectorCli(CameraConnector):
         self.serialnumber = self._get_serialnumber()
         self._create_image_directory()
 
-        status = self.get_exposure_status()
-        if status["expprogram"] == "A":
-            self.exposure_mode = self.MODE_APERTURE_PRIORITY
-        elif status["expprogram"] == "M":
-            self.exposure_mode = self.MODE_MANUAL
-        else:
-            self.exposure_mode = self.MODE_UNKNOWN
-
         self.state = self.STATE_CONNECTED
 
     def close(self):
@@ -364,14 +356,6 @@ class CameraConnectorSwig(CameraConnector):
         self.serialnumber = self._get_serialnumber()
 
         self._create_image_directory()
-
-        status = self.get_exposure_status()
-        if status["expprogram"] == "A":
-            self.exposure_mode = self.MODE_APERTURE_PRIORITY
-        elif status["expprogram"] == "M":
-            self.exposure_mode = self.MODE_MANUAL
-        else:
-            self.exposure_mode = self.MODE_UNKNOWN
 
         self.state = self.STATE_CONNECTED
 
@@ -933,7 +917,7 @@ class Zerobox(object):
         return self.cameras
 
 
-    def connect_camera(self, camera):
+    def connect_camera(self, camera, quiet=False):
 
         conn = None
 
@@ -966,8 +950,9 @@ class Zerobox(object):
 
         exposure_status = {}
 
-        if conn.get_state() != CameraConnector.STATE_BUSY:
-            exposure_status = conn.get_exposure_status()
+        if not quiet:
+            if conn.get_state() != CameraConnector.STATE_BUSY:
+                exposure_status = conn.get_exposure_status()
 
         self.status["cameras"][portname] = {**self.status["cameras"][portname], **exposure_status}
 
@@ -1035,7 +1020,7 @@ class Zerobox(object):
             if filename2 is not None:
                 taken_images.append(filename2)
         except Exception as e:
-            self.log.error("triggering failed: {}".format(e))
+            self.log.error("triggering failed: {} : {}".format(type(e), e))
             raise e
         finally:
             self.lock.release()

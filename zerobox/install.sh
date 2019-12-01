@@ -34,10 +34,10 @@ sudo apt-get install -y python3-smbus
 sudo apt-get install -y python3-yaml
 sudo apt-get install -y python3-numpy
 sudo apt-get install -y python3-pip
-sudo apt-get install -y dcraw
-sudo apt-get install -y exiv2
-sudo apt-get install -y gir1.2-gexiv2-0.10
-sudo apt-get install -y python3-gi
+# sudo apt-get install -y dcraw
+# sudo apt-get install -y exiv2
+# sudo apt-get install -y gir1.2-gexiv2-0.10
+# sudo apt-get install -y python3-gi
 
 # only available with pip2?
 # sudo pip3 install gexiv2
