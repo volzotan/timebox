@@ -1,23 +1,28 @@
+#!/usr/bin/env python3
+
 from zerobox import Zerobox
-# from devices import Controller
+from devices import TimeboxController
 
 import logging
-import traceback
-
 from datetime import datetime, timedelta
-import time
 import os
-import subprocess
-import sys
 import yaml
 import math
-import shutil
+import subprocess
 
-import exifread
-import numpy as np
+from PIL import ImageFont
+from luma.core.error import DeviceNotFoundError
+from luma.core.interface.serial import i2c
+from luma.core.render import canvas
+from luma.oled.device import ssd1306
+
+SHUTDOWN_IF_DONE    = True
 
 CONFIG_FILE_DEFAULT = "config_default.yaml"
 CONFIG_FILE_USER    = "config.yaml"
+
+DISPLAY_COLOR0      = "black"
+DISPLAY_COLOR1      = "white"
 
 class Oneshot():
 
@@ -37,7 +42,25 @@ class Oneshot():
         except FileNotFoundError as e:
             print("no config file found")
 
+        # print('oneshot', file=open('/dev/kmsg', 'w'))
+
         self.init_log()
+
+        self.log.info("------------")
+        self.log.info("oneshot init")
+
+        self.device = None
+        self.display_message = []
+        self.font = ImageFont.truetype("ves-3x5.ttf", 5)
+        try:
+            subprocess.call("modprobe i2c-bcm2835", shell=True)
+            subprocess.call("modprobe i2c-dev", shell=True)
+            self.device = ssd1306(i2c(), rotate=2)
+            self.device.contrast(100)
+        except DeviceNotFoundError as e:
+            self.log.error("display not found: {}".format(e))
+
+        self.print_display("init")
 
         # Pi Zero Maintenance stuff
         # Turn off HDMI to save power
@@ -79,6 +102,19 @@ class Oneshot():
         fileHandlerInfo.setFormatter(formatter)
         self.log.addHandler(fileHandlerInfo)
 
+    def print_display(self, text):
+        self.display_message.append(text)
+        if not self.device is None:
+            with canvas(self.device) as draw:
+
+                display_message_subset = self.display_message[-8:]
+
+                draw.rectangle([0, 0, 128-1, 64-1], outline=None, fill=DISPLAY_COLOR1)
+                draw.rectangle([1, 1, 128-2, 64-2], outline=None, fill=DISPLAY_COLOR0)
+
+                for i in range(0, len(display_message_subset)):
+                    draw.text([3, 3 + i*6], display_message_subset[i].upper(), font=self.font, fill=DISPLAY_COLOR1)
+
     def _prepare_zerobox_config(self):
 
         zeroboxConfig = {}
@@ -105,15 +141,33 @@ class Oneshot():
 
     def run(self):
 
+        self.print_display("start")
         self.zerobox = Zerobox(new_config=self._prepare_zerobox_config())
 
+        images_taken = []
+
         cameras = self.zerobox.detect_cameras()
+        self.print_display("found cameras: {}".format(len(cameras.keys())))
         for portname in cameras.keys():
             self.zerobox.connect_camera(cameras[portname], quiet=True)
-            self.zerobox.trigger_camera(portname)
+            self.print_display("camera connected")
+            images = self.zerobox.trigger_camera(portname)
+            images_taken += images
+
+        msg = "done. images taken: {}".format(len(images_taken))
+        self.print_display(msg)
+        self.log.info(msg)
 
     def close(self):
-        pass
+        if not self.device is None:
+            self.device.cleanup()
+            self.device = None
+
+    def close_log(self):
+        handlers = self.log.handlers[:]
+        for handler in handlers:
+            handler.close()
+            self.log.removeHandler(handler)
 
 
 if __name__ == "__main__":
@@ -128,7 +182,27 @@ if __name__ == "__main__":
         oneshot.run()
     except Exception as e:
         print(e)
+        oneshot.log.error(e)
     finally:
+        oneshot.print_display("closing...")
         oneshot.close()
+
+    if SHUTDOWN_IF_DONE:
+
+        controller = TimeboxController.find_all()
+
+        if len(controller) > 0:
+            try:
+                controller[0].shutdown(delay=3000)
+                oneshot.log.info("shutdown command sent")
+                oneshot.close_log()
+
+                subprocess.call(["poweroff"])
+            except Exception as e:
+                oneshot.log.error("poweroff failed: {}".format(e))
+        else:
+            oneshot.log.error("poweroff failed: {}".format("no controller found"))
+
+    oneshot.close_log()
     
     print("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))

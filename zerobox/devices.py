@@ -120,7 +120,7 @@ class TimeboxController(Controller):
     CMD_ZERO_ON     = "Z 1"
     CMD_ZERO_OFF    = "Z 0"
 
-    CMD_STATUS      = "S"
+    CMD_SHUTDOWN    = "S"
 
     SERIAL_BAUDRATE = 9600
     SERIAL_TIMEOUT  = 1.0
@@ -178,6 +178,13 @@ class TimeboxController(Controller):
             log.error(e)
             raise e
 
+    def shutdown(self, delay=None):
+        try:
+            self._send_command(self.CMD_SHUTDOWN, param=delay)
+        except Exception as e:
+            log.debug(e)
+            raise e
+
     def turn_zero_on(self, turn_on):
         try:
             if turn_on:
@@ -226,7 +233,7 @@ class TimeboxController(Controller):
             log.debug(e)
             raise e
 
-    def _send_command(self, cmd):
+    def _send_command(self, cmd, param=None):
         response = ""
         ser = None
         lock_acquired = False

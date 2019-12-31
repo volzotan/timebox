@@ -9,8 +9,8 @@ from threading import Lock
 import shutil
 
 import exifread
-import numpy as np
 
+# import numpy as np
 # import gphoto2 as gp
 
 # --- --- --- --- --- --- --- --- --- ---
@@ -827,7 +827,15 @@ class Zerobox(object):
         iso_repr        = math.log(iso/100, 2) + 1  # offset = 1, iso 100 -> 1, not 0
 
         if aperture is not None:
-            aperture_repr = np.interp(math.log(aperture, 2), [0, 4.5], [10, 1])
+            # scale:
+            # [0, 4.5] --> [10, 1]
+
+            val = math.log(aperture, 2)
+            val = val / 4.5
+            val = 10 - (10-1) * val
+            aperture_repr = val
+
+            # aperture_repr = np.interp(math.log(aperture, 2), [0, 4.5], [10, 1])
         else:
             aperture_repr = 1
 
@@ -933,11 +941,6 @@ class Zerobox(object):
 
         try:
             conn.open()
-        except gp.GPhoto2Error as ge:
-            self.log.error("Could not connect camera: {}".format(ge))
-            self.status["cameras"][portname]["error"] = "gphoto error"
-            self.status["cameras"][portname]["state"] = None
-            raise Exception("Could not open camera connection. GPhoto2Error.")
         except Exception as e:
             self.log.error("Could not connect camera: {}".format(e))
             self.status["cameras"][portname]["error"] = "unknown error"
@@ -1011,6 +1014,7 @@ class Zerobox(object):
                     self.status["cameras"][portname]["last_image_brightness"] = exposure
 
                 if trigger_second_exposure:
+                    self.log.info("2nd exposure triggered")
                     conn.set_exposure_compensation(self.config["EXPOSURE_2"])
                     filename2 = (filename[0], filename[1] + "_2")
                     conn.capture_and_download(filename2)
@@ -1066,8 +1070,9 @@ class Zerobox(object):
                             old = data["cameras"][portname]
                             data["cameras"][portname] = {**old, **s}
                             data["cameras"][portname]["error"] = None
-                        except gp.GPhoto2Error as ge:
-                            self.log.error("getting exposure status failed: {}".format(ge))
+                        # except gp.GPhoto2Error as e:
+                        except Exception as e:
+                            self.log.error("getting exposure status failed: {}".format(e))
 
                             detected_cameras = self._detect_cameras()
                             detected_portnames = [x[1] for x in detected_cameras]
