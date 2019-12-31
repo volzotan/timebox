@@ -6,6 +6,7 @@
  *    8.00    80
  *    voltage percentage
  *  
+ *  S  ---  Shutdown                        (S / S 1000)
  *  U  ---  Get Uptime
  *  T  ---  Temperature
  *  C  ---  Camera On/Off                   (C 0 / C 1)
@@ -31,7 +32,7 @@ void serialEvent() {
 
 void processCommand(char inChar) {
 
-        // Buffer size exceeded
+    // Buffer size exceeded
     if (strlen(inputBuffer) > 99) {
         errorSerial(ERRORCODE_MESSAGE_TOO_LONG);
         return;
@@ -41,21 +42,21 @@ void processCommand(char inChar) {
 
         int spacePos = strchr(inputBuffer, ' ')-inputBuffer;
 
-            // sanity checks
+        // sanity checks
 
-            // empty
+        // empty
         if (strlen(inputBuffer) < 1) {
             errorSerial(ERRORCODE_MESSAGE_EMPTY);
             return;
         }
 
-            // space on wrong pos / cmd longer than one char
+        // space on wrong pos / cmd longer than one char
         if (spacePos > 0 && spacePos != 1) {
             errorSerial(ERRORCODE_INVALID_MESSAGE);
             return;
         }
 
-            // double space
+        // double space
         if (spacePos > 0 && spacePos != lastIndexOf(inputBuffer, ' ')) {
             errorSerial(ERRORCODE_INVALID_MESSAGE);
             return;
@@ -99,23 +100,21 @@ void executeCommand() {
             SerialUSB.println(getBatteryPercentage());
         break;
             
-        // case 'S': // Shutdown 
-        //     if (ser.serialParam > 0) {
-        //         if (state != STATE_ZERO_RUNNING) {
-        //             errorSerial(ERRORCODE_INVALID_PARAM, ser);
-        //             break;
-        //         }
-        //         zeroShutdownTimer = millis() + ser.serialParam * 1000; 
-        //     } else {
-        //         if (state == STATE_ZERO_RUNNING) {
-        //             state = STATE_ZERO_STOP;    
-        //         } else {
-        //             switchZeroOn(false);    
-        //             zeroShutdownTimer = -1;
-        //         }
-        //     }
-        //     okSerial(ser);
-        //     break;
+        case 'S': // Shutdown 
+            if (serialParam > 0) {
+                if (state != STATE_TRIGGER_WAIT) {
+                    errorSerial(ERRORCODE_INVALID_PARAM);
+                    break;
+                }
+                postTriggerWaitDelayed = millis() + serialParam; 
+                DEBUG_PRINT("shutdown request [TRIGGER_WAIT -> TRIGGER_WAIT_DELAYED]");
+                state = STATE_TRIGGER_WAIT_DELAYED;
+            } else {
+                switchZeroOn(false);    
+                postTriggerWaitDelayed = -1;
+            }
+            okSerial();
+            break;
         
         case 'U': // Uptime 
             //errorSerial(ERRORCODE_NOT_AVAILABLE, ser);

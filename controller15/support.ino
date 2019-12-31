@@ -36,7 +36,7 @@ void initPins() {
     digitalWrite(PIN_USB1_EN,    LOW);
     digitalWrite(PIN_USB2_EN,    LOW);
 
-    #ifdef HOST_DEFAULT_POWERED_ON
+    #ifdef HOST_DEFAULT_POWERED_ON == 1
         digitalWrite(PIN_ZERO_EN, HIGH);
     #else
         digitalWrite(PIN_ZERO_EN, LOW);
@@ -162,7 +162,7 @@ void switchUsbDeviceOn(int device, boolean switchOn) {
             device_pin = PIN_USB1_EN;
         break;
         case 1:
-            device_pin = PIN_USB1_EN;
+            device_pin = PIN_USB2_EN;
         break;
         default:
             return;

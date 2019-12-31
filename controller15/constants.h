@@ -31,3 +31,12 @@
 #define ERRORCODE_UNKNOWN_CMD            103
 #define ERRORCODE_INVALID_PARAM          104
 #define ERRORCODE_NOT_AVAILABLE          110
+
+
+// ----------- ERROR CODES -----------
+
+#define STATE_LOOP                       11
+#define STATE_IDLE                       12
+#define STATE_TRIGGER_START              13
+#define STATE_TRIGGER_WAIT               14
+#define STATE_TRIGGER_WAIT_DELAYED       15

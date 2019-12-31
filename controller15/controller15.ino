@@ -5,15 +5,44 @@
 #include "global.h"
 #include "constants.h"
 
+#define SHUTDOWN_ON_LOW_BATTERY 0
+
+#define ONESHOT_MODE
 // #define DEBUG
-// #define SHUTDOWN_ON_LOW_BATTERY
-#define HOST_DEFAULT_POWERED_ON 1
+
+#ifdef ONESHOT_MODE
+    #define HOST_DEFAULT_POWERED_ON 0
+#else 
+    #define HOST_DEFAULT_POWERED_ON 1
+#endif
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x) SerialUSB.print("["); SerialUSB.print(millis()/1000); SerialUSB.print("] "); SerialUSB.println (x)
 #else
   #define DEBUG_PRINT(x)
 #endif
+
+// ---------------------------
+
+#ifdef ONESHOT_MODE
+    // Hardware is in master mode (for oneshot pi controller)
+    int state                       = STATE_IDLE;
+#else
+    // Hardware is in slave mode (for zerobox pi controller)
+    int state                       = STATE_LOOP; 
+#endif
+
+long trigger_done               = 0;
+
+long currentTrigger             = -1;
+long nextTrigger                = -1;
+long postTriggerWaitDelayed     = -1;
+
+#define TRIGGER_INTERVAL        120 *1000 // take picture every X seconds [ms]
+#define TRIGGER_MAX_ACTIVE      80  *1000 // zero & cam max time on [ms]
+// #define TRIGGER_CAM_DELAY       5   *1000 // turn camera on X seconds after zero [ms]
+// #define TRIGGER_WAIT_DELAYED    1   *1000 // wait for X seconds after zero requests shutdown [ms]
+#define TRIGGER_COUNT           2000      // max number of triggers
 
 // ---------------------------
 
@@ -85,7 +114,7 @@ void setup() {
     // battery is empty, abort right now!
 
     DEBUG_PRINT("stopping!...");
-    #ifdef SHUTDOWN_ON_LOW_BATTERY
+    #ifdef SHUTDOWN_ON_LOW_BATTERY == 1
       stopAndShutdown();
     #else
       DEBUG_PRINT("stopping aborted (no SHUTDOWN_ON_LOW_BATTERY)");
@@ -103,11 +132,107 @@ void setup() {
     DEBUG_PRINT(getBatteryPercentage());
   #endif
 
+    #ifdef ONESHOT_MODE
+        nextTrigger = millis() + 3000;
+    #endif
+
 }
 
 void loop() { 
   serialEvent();  
   ledLoop();
+
+  switch(state) {
+
+    // do nothing and wait for incoming serial commands
+    case STATE_LOOP: {
+        break;
+    }
+
+    // do nothing and check if it's time to fire a trigger event
+    case STATE_IDLE: {
+
+        // all trigger done?
+        if (trigger_done >= TRIGGER_COUNT) {
+            DEBUG_PRINT("done [IDLE -> LOOP]");
+            state = STATE_LOOP;
+        }   
+
+        // time for new trigger event?
+        if (millis() >= nextTrigger) {
+            currentTrigger = nextTrigger; 
+            nextTrigger += TRIGGER_INTERVAL; 
+            DEBUG_PRINT("start [IDLE -> TRIGGER_START]");
+            state = STATE_TRIGGER_START;
+        }
+
+        break;
+    }
+
+    // start the camera, the pi and the USB connections
+    case STATE_TRIGGER_START: {
+
+        switchCameraOn(true);
+        delay(1000);
+        switchZeroOn(true);
+        delay(500);
+        switchUsbDeviceOn(0, true);
+        delay(100);
+        switchUsbDeviceOn(1, true);
+
+        trigger_done += 1;
+        DEBUG_PRINT("trigger active [TRIGGER_START -> TRIGGER_WAIT]");
+        state = STATE_TRIGGER_WAIT;
+
+        break;
+    }
+
+    // pi is currently running and should be shutdown at the latest 
+    // after TRIGGER_MAX_ACTIVE. May ask for shutdown before that
+    case STATE_TRIGGER_WAIT: {
+
+        if (millis() >= currentTrigger + TRIGGER_MAX_ACTIVE) {
+
+            switchUsbDeviceOn(0, false);
+            delay(100);
+            switchUsbDeviceOn(1, false);
+            delay(100);
+            switchCameraOn(false);
+            delay(100);
+            switchZeroOn(false);
+            postTriggerWaitDelayed = -1;
+            DEBUG_PRINT("trigger max active done [TRIGGER_WAIT -> IDLE]");
+            state = STATE_IDLE;
+        }
+
+        break;
+    }
+
+    // pi asked for shutdown in X seconds. waiting for X to pass
+    case STATE_TRIGGER_WAIT_DELAYED: {
+
+        if (millis() >= currentTrigger + TRIGGER_MAX_ACTIVE ||
+            millis() >= postTriggerWaitDelayed) {
+
+            switchUsbDeviceOn(0, false);
+            delay(100);
+            switchUsbDeviceOn(1, false);
+            delay(100);
+            switchCameraOn(false);
+            delay(100);
+            switchZeroOn(false);
+            postTriggerWaitDelayed = -1;
+            DEBUG_PRINT("trigger done by request [TRIGGER_WAIT_DELAYED -> IDLE]");
+            state = STATE_IDLE;
+        }
+
+        break;
+    }
+
+    default: {
+
+    }
+  }
 }
 
 void stopAndShutdown() {
