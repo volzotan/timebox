@@ -175,6 +175,16 @@ void switchUsbDeviceOn(int device, boolean switchOn) {
     }
 }
 
+void switchEverytingOff() {
+    switchUsbDeviceOn(0, false);
+    delay(100);
+    switchUsbDeviceOn(1, false);
+    delay(100);
+    switchCameraOn(false);
+    delay(100);
+    switchZeroOn(false);
+}
+
 // -------------------------------- BATTERY -------------------------------- //
 
 boolean checkBattHealth() {

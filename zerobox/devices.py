@@ -203,6 +203,14 @@ class TimeboxController(Controller):
             log.debug(e)
             raise e
 
+    def get_temperature(self):
+        try:
+            response = self._send_command(self.CMD_TEMPERATURE)
+            return response
+        except Exception as e:
+            log.debug(e)
+            raise e
+
     def turn_camera_on(self, turn_on):
         try:
             if turn_on:
@@ -239,7 +247,13 @@ class TimeboxController(Controller):
         lock_acquired = False
 
         try:
-            log.debug("[{}] serial send: {}".format(self, cmd))
+            full_cmd = None
+            if param is None:
+                full_cmd = cmd
+            else:
+                full_cmd = "{} {}".format(cmd, param)
+
+            log.debug("[{}] serial send: {}".format(self, full_cmd))
 
             lock_acquired = self.lock.acquire(timeout=1)
 
@@ -248,7 +262,7 @@ class TimeboxController(Controller):
 
             ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
 
-            ser.write(bytearray(cmd, "utf-8"))
+            ser.write(bytearray(full_cmd, "utf-8"))
             ser.write(bytearray("\n", "utf-8"))
 
             response = ser.read(100)

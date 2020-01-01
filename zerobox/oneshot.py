@@ -74,16 +74,25 @@ class Oneshot():
         log_filename_info = "info.log"
 
         # create logger
-        self.log = logging.getLogger("ZEROBOX")
+        self.log = logging.getLogger() #"oneshot")
         self.log.setLevel(logging.DEBUG)
 
+        # root logger (used in devices with logging.debug(...))
+        # root_logger = logging.getLogger()
+        # root_logger.setLevel(logging.INFO)
+
+        # subloggers
+        exifread_logger = logging.getLogger("exifread")
+        exifread_logger.setLevel(logging.INFO)
+
         # remove prior logging handlers
-        try:
-            self.log.handlers.pop()
-        except Exception as e:
-            pass
+        # try:
+        #     self.log.handlers.pop()
+        # except Exception as e:
+        #     pass
 
         # create formatter
+        # formatter = logging.Formatter("%(asctime)s | %(name)-7s | %(levelname)-7s | %(message)s")
         formatter = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
 
         # console handler and set level to debug
@@ -142,7 +151,7 @@ class Oneshot():
     def run(self):
 
         self.print_display("start")
-        self.zerobox = Zerobox(new_config=self._prepare_zerobox_config())
+        self.zerobox = Zerobox(new_config=self._prepare_zerobox_config(), logger=self.log)
 
         images_taken = []
 
@@ -163,11 +172,21 @@ class Oneshot():
             self.device.cleanup()
             self.device = None
 
+    # def flush_log(self):
+    #     handlers = self.log.handlers[:]
+    #     for handler in handlers:
+    #         handler.flush()
+
+    #     subprocess.call(["sync"])
+
     def close_log(self):
-        handlers = self.log.handlers[:]
-        for handler in handlers:
-            handler.close()
-            self.log.removeHandler(handler)
+        # handlers = self.log.handlers[:]
+        # for handler in handlers:
+        #     handler.close()
+        #     self.log.removeHandler(handler)
+        
+        self.log.debug("logging shutdown")
+        logging.shutdown()
 
 
 if __name__ == "__main__":
@@ -187,16 +206,33 @@ if __name__ == "__main__":
         oneshot.print_display("closing...")
         oneshot.close()
 
+    oneshot.log.debug("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))
+
     if SHUTDOWN_IF_DONE:
 
         controller = TimeboxController.find_all()
+        oneshot.log.debug("controller found: {}".format(len(controller)))
 
         if len(controller) > 0:
             try:
-                controller[0].shutdown(delay=3000)
+
+                oneshot.log.info("battery: {}".format(controller[0].get_battery_status()))
+                oneshot.log.info("temperature: {}".format(controller[0].get_temperature()))
+
+                controller[0].turn_usb_on(False)
+                controller[0].turn_camera_on(False)
+                controller[0].shutdown(delay=11000)
+
                 oneshot.log.info("shutdown command sent")
                 oneshot.close_log()
 
+                # write the last log statements to disk
+                # and prepare the filesystem for shutdown
+                subprocess.call(["sync"])
+                # subprocess.call(["swapoff", "-a"])
+                # subprocess.call(["umount -a -r"])
+
+                time.sleep(0.5)
                 subprocess.call(["poweroff"])
             except Exception as e:
                 oneshot.log.error("poweroff failed: {}".format(e))
@@ -204,5 +240,3 @@ if __name__ == "__main__":
             oneshot.log.error("poweroff failed: {}".format("no controller found"))
 
     oneshot.close_log()
-    
-    print("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))

@@ -45,8 +45,9 @@ se_threshold:
     type: float
     parent: "secondexposure"
     min: 0
-    max: 20
+    max: 25
     value: 10.3
+    # value: 25
 
 se_expcompensation_1:
     type: float

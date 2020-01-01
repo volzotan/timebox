@@ -39,4 +39,3 @@
 #define STATE_IDLE                       12
 #define STATE_TRIGGER_START              13
 #define STATE_TRIGGER_WAIT               14
-#define STATE_TRIGGER_WAIT_DELAYED       15

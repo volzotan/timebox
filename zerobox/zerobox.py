@@ -568,7 +568,7 @@ class CameraConnectorSwig(CameraConnector):
 
 class Zerobox(object):
 
-    def __init__(self, new_config={}):
+    def __init__(self, new_config={}, logger=None):
         self.config             = CONFIG
 
         self.lock               = Lock()
@@ -608,7 +608,10 @@ class Zerobox(object):
 
         self.load_config(new_config)
 
-        self.log = logging.getLogger("ZEROBOX")
+        if not logger is None:
+            self.log = logger.getChild("zerobox")
+        else:
+            self.log = logging.getLogger("zerobox")
 
         # create directories
         if not self.config["IMAGE_DIR_PRIMARY"] is None:

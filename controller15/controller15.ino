@@ -39,7 +39,7 @@ long nextTrigger                = -1;
 long postTriggerWaitDelayed     = -1;
 
 #define TRIGGER_INTERVAL        120 *1000 // take picture every X seconds [ms]
-#define TRIGGER_MAX_ACTIVE      80  *1000 // zero & cam max time on [ms]
+#define TRIGGER_MAX_ACTIVE      90  *1000 // zero & cam max time on [ms]
 // #define TRIGGER_CAM_DELAY       5   *1000 // turn camera on X seconds after zero [ms]
 // #define TRIGGER_WAIT_DELAYED    1   *1000 // wait for X seconds after zero requests shutdown [ms]
 #define TRIGGER_COUNT           2000      // max number of triggers
@@ -188,41 +188,22 @@ void loop() {
     }
 
     // pi is currently running and should be shutdown at the latest 
-    // after TRIGGER_MAX_ACTIVE. May ask for shutdown before that
+    // after TRIGGER_MAX_ACTIVE. May ask for shutdown before that,
+    // if so: waiting for X to pass
     case STATE_TRIGGER_WAIT: {
 
         if (millis() >= currentTrigger + TRIGGER_MAX_ACTIVE) {
 
-            switchUsbDeviceOn(0, false);
-            delay(100);
-            switchUsbDeviceOn(1, false);
-            delay(100);
-            switchCameraOn(false);
-            delay(100);
-            switchZeroOn(false);
+            switchEverytingOff();
             postTriggerWaitDelayed = -1;
             DEBUG_PRINT("trigger max active done [TRIGGER_WAIT -> IDLE]");
             state = STATE_IDLE;
-        }
-
-        break;
-    }
-
-    // pi asked for shutdown in X seconds. waiting for X to pass
-    case STATE_TRIGGER_WAIT_DELAYED: {
-
-        if (millis() >= currentTrigger + TRIGGER_MAX_ACTIVE ||
+        } else if (postTriggerWaitDelayed > 0 && 
             millis() >= postTriggerWaitDelayed) {
 
-            switchUsbDeviceOn(0, false);
-            delay(100);
-            switchUsbDeviceOn(1, false);
-            delay(100);
-            switchCameraOn(false);
-            delay(100);
-            switchZeroOn(false);
+            switchEverytingOff();
             postTriggerWaitDelayed = -1;
-            DEBUG_PRINT("trigger done by request [TRIGGER_WAIT_DELAYED -> IDLE]");
+            DEBUG_PRINT("trigger done by request [TRIGGER_WAIT -> IDLE]");
             state = STATE_IDLE;
         }
 
@@ -230,7 +211,7 @@ void loop() {
     }
 
     default: {
-
+        DEBUG_PRINT("ERROR! illegal state!");
     }
   }
 }

@@ -107,8 +107,7 @@ void executeCommand() {
                     break;
                 }
                 postTriggerWaitDelayed = millis() + serialParam; 
-                DEBUG_PRINT("shutdown request [TRIGGER_WAIT -> TRIGGER_WAIT_DELAYED]");
-                state = STATE_TRIGGER_WAIT_DELAYED;
+                DEBUG_PRINT("postTriggerWaitDelayed set");
             } else {
                 switchZeroOn(false);    
                 postTriggerWaitDelayed = -1;
