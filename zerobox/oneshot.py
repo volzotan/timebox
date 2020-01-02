@@ -11,7 +11,7 @@ import math
 import subprocess
 
 from PIL import ImageFont
-from luma.core.error import DeviceNotFoundError
+# from luma.core.error import DeviceNotFoundError
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import ssd1306
@@ -53,11 +53,11 @@ class Oneshot():
         self.display_message = []
         self.font = ImageFont.truetype("ves-3x5.ttf", 5)
         try:
-            subprocess.call("modprobe i2c-bcm2835", shell=True)
-            subprocess.call("modprobe i2c-dev", shell=True)
+            subprocess.call(["modprobe", "i2c-bcm2835"])
+            subprocess.call(["modprobe", "i2c-dev"])
             self.device = ssd1306(i2c(), rotate=2)
             self.device.contrast(100)
-        except DeviceNotFoundError as e:
+        except Exception as e:
             self.log.error("display not found: {}".format(e))
 
         self.print_display("init")
@@ -82,8 +82,8 @@ class Oneshot():
         # root_logger.setLevel(logging.INFO)
 
         # subloggers
-        exifread_logger = logging.getLogger("exifread")
-        exifread_logger.setLevel(logging.INFO)
+        exifread_logger = logging.getLogger("exifread").setLevel(logging.INFO)
+        devices_logger = logging.getLogger("devices").setLevel(logging.INFO)
 
         # remove prior logging handlers
         # try:
@@ -92,8 +92,8 @@ class Oneshot():
         #     pass
 
         # create formatter
-        # formatter = logging.Formatter("%(asctime)s | %(name)-7s | %(levelname)-7s | %(message)s")
-        formatter = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
+        formatter = logging.Formatter("%(asctime)s | %(name)-7s | %(levelname)-7s | %(message)s")
+        # formatter = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
 
         # console handler and set level to debug
         consoleHandler = logging.StreamHandler()
@@ -167,17 +167,16 @@ class Oneshot():
         self.print_display(msg)
         self.log.info(msg)
 
+        battery_data = self.zerobox.get_battery_direct()
+        for portname in battery_data.keys():
+            battery_status = "battery [{}]: {}".format(portname, battery_data[portname])
+            self.print_display(battery_status)
+            self.log.info(battery_status)
+
     def close(self):
         if not self.device is None:
             self.device.cleanup()
             self.device = None
-
-    # def flush_log(self):
-    #     handlers = self.log.handlers[:]
-    #     for handler in handlers:
-    #         handler.flush()
-
-    #     subprocess.call(["sync"])
 
     def close_log(self):
         # handlers = self.log.handlers[:]
@@ -195,7 +194,9 @@ if __name__ == "__main__":
     print("start: {}".format(start))
     oneshot = Oneshot()
     
-    oneshot.config["autofocus"]["value"] = False
+    # oneshot.config["autofocus"]["value"] = False
+
+    # TODO: check for sufficient disk space. Abort and log if below threshold
 
     try:
         oneshot.run()
@@ -216,14 +217,15 @@ if __name__ == "__main__":
         if len(controller) > 0:
             try:
 
-                oneshot.log.info("battery: {}".format(controller[0].get_battery_status()))
+                oneshot.log.info("battery [controller]: {}".format(controller[0].get_battery_status()))
                 oneshot.log.info("temperature: {}".format(controller[0].get_temperature()))
 
                 controller[0].turn_usb_on(False)
                 controller[0].turn_camera_on(False)
                 controller[0].shutdown(delay=11000)
 
-                oneshot.log.info("shutdown command sent")
+                oneshot.log.debug("shutdown command sent")
+                oneshot.log.info("POWEROFF")
                 oneshot.close_log()
 
                 # write the last log statements to disk

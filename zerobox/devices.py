@@ -8,13 +8,15 @@ import subprocess
 import re
 import serial.tools.list_ports
 from threading import Lock
-import logging as log
+import logging
 
 try:
     import smbus
 except ImportError as e:
     pass
     # print("importing smbus failed. Not a raspberry pi platform, i2c will not be available.")
+
+log = logging.getLogger(__name__)
 
 
 class Controller(object):

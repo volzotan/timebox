@@ -5,7 +5,7 @@
 #include "global.h"
 #include "constants.h"
 
-#define SHUTDOWN_ON_LOW_BATTERY 0
+#define SHUTDOWN_ON_LOW_BATTERY 1
 
 #define ONESHOT_MODE
 // #define DEBUG
@@ -113,7 +113,7 @@ void setup() {
   if (!checkBattHealth()) {
     // battery is empty, abort right now!
 
-    DEBUG_PRINT("stopping!...");
+    DEBUG_PRINT("battery low! stopping...");
     #ifdef SHUTDOWN_ON_LOW_BATTERY == 1
       stopAndShutdown();
     #else
@@ -172,6 +172,14 @@ void loop() {
     // start the camera, the pi and the USB connections
     case STATE_TRIGGER_START: {
 
+        if (!checkBattHealth()) {
+            #ifdef SHUTDOWN_ON_LOW_BATTERY == 1
+                stopAndShutdown();
+            #else
+                DEBUG_PRINT("stopping aborted (no SHUTDOWN_ON_LOW_BATTERY)");
+            #endif
+        }
+
         switchCameraOn(true);
         delay(1000);
         switchZeroOn(true);
@@ -217,10 +225,17 @@ void loop() {
 }
 
 void stopAndShutdown() {
-  ledShow(0, 0, 0);
-  // switchZeroOn(false);
 
-  while(true) {
-    wait(1.0);
-  }
+    DEBUG_PRINT("STOP AND SHUTDOWN");
+
+    ledShow(0, 0, 0);
+  
+    switchUsbDeviceOn(0, false);
+    switchUsbDeviceOn(1, false);
+    switchCameraOn(false);
+    switchZeroOn(false);
+
+    while(true) {
+        wait(1.0);
+    }
 }

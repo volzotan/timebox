@@ -12,6 +12,9 @@
 
 // ----------- OPTIONS -----------
 
+// Problem: A6000 already shuts down with 
+// low battery warning at 7.0v
+
 #define LIPO_CELL_MIN                    3.1
 #define LIPO_CELL_MAX                    4.2
 

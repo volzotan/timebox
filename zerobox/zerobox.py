@@ -183,6 +183,9 @@ class CameraConnector(object):
     def _get_serialnumber(self):
         pass
 
+    def _get_battery(self):
+        pass
+
     def _get_config_value(self, config, name):
         pass
 
@@ -309,6 +312,19 @@ class CameraConnectorCli(CameraConnector):
         try:
             self.state = self.STATE_BUSY
             data = self._get_config_value("/main/status/serialnumber")
+        except Exception as e:
+            raise e
+        finally:
+            self.state = self.STATE_CONNECTED
+
+        return str(data)
+
+    def _get_battery(self):
+        data = ""
+        
+        try:
+            self.state = self.STATE_BUSY
+            data = self._get_config_value("/main/status/batterylevel")
         except Exception as e:
             raise e
         finally:
@@ -503,6 +519,13 @@ class CameraConnectorSwig(CameraConnector):
         gp.check_result(error)
 
         return self._get_config_value(config, "serialnumber")
+
+
+    def _get_battery(self):
+        error, config = gp.gp_camera_get_config(self.camera)
+        gp.check_result(error)
+
+        return self._get_config_value(config, "batterylevel")
 
 
     def _get_config_value(self, config, name):
@@ -814,7 +837,7 @@ class Zerobox(object):
             # no aperture tag set, probably an lens adapter was used. assume fixed aperture.
             aperture = 8.0
 
-        # print("brightness:: shutter: {} | aperture: {} | iso: {}".format(shutter, aperture, iso))
+        self.log.debug("brightness:: shutter: {} | aperture: {} | iso: {}".format(shutter, aperture, iso))
 
         return self._intensity(shutter, aperture, iso)
 
@@ -1043,6 +1066,26 @@ class Zerobox(object):
             
             if "battery" in status_data:
                 battery_data.append([status_data["battery"], "camera"])
+
+        return battery_data
+
+
+    """ 
+    does not use cached info in self.status but directly retrieves battery data from
+    connected cameras. Returns empty dict in case of error.
+    """
+    def get_battery_direct(self):
+        battery_data = {}
+
+        lock_acquired = self.lock.acquire(timeout=1.0)
+        if lock_acquired:
+            for portname, connector in self.connectors.items():
+                try:
+                    battery_data[portname] = connector._get_battery()
+                except Exception as e:
+                    self.log.error("Exception while retrieving battery data: {}".format(e))
+        else:
+            self.log.warning("get_battery lock not acquired")
 
         return battery_data
 
