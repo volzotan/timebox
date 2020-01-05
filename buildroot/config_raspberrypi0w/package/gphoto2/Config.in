@@ -3,7 +3,9 @@ config BR2_PACKAGE_GPHOTO2
 	select BR2_PACKAGE_POPT
 	select BR2_PACKAGE_LIBGPHOTO2
         help
-          This is a comment that explains what libfoo is. The help text
-          should be wrapped.
+          gPhoto2 is a free, redistributable, ready to use set of digital 
+          camera software applications for Unix-like systems, written by 
+          a whole team of dedicated volunteers around the world. 
+          It supports more than 2500 cameras.
 
-          http://foosoftware.org/libfoo/
+          http://www.gphoto.org/
