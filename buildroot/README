@@ -1,6 +1,6 @@
 # setup buildroot with basic defconfig
 
-make BR2_EXTERNAL=../external_tree raspberrypi2_defconfig
+make BR2_EXTERNAL=../external_tree zeroroot_defconfig
 make menuconfig
 
 # the init.d scripts require execute permissions
@@ -10,4 +10,4 @@ chmod 755 overlay/etc/init.d/S35oneshot
 
 # after flashing and booting:
 
-resize2fs /dev/mmcblk0p2
+sh install_everything.sh

@@ -41,8 +41,11 @@ CONFIG = {
 }
 
 EXIF_DATE_FORMAT                = '%Y:%m:%d %H:%M:%S'
-
 DEBUG                           = True
+
+# default aperture which is assumed for brightness calculation if a manual lens is used 
+# (important for calculating if the exposure threshold for a 2nd shot has been reached)
+DEFAULT_APERTURE                = 8.0
 
 # --- --- --- --- --- --- --- --- --- ---
 
@@ -835,7 +838,7 @@ class Zerobox(object):
 
         if aperture <= 0:
             # no aperture tag set, probably an lens adapter was used. assume fixed aperture.
-            aperture = 8.0
+            aperture = DEFAULT_APERTURE
 
         self.log.debug("brightness:: shutter: {} | aperture: {} | iso: {}".format(shutter, aperture, iso))
 
