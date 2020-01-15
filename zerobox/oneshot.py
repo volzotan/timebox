@@ -17,6 +17,7 @@ from luma.core.render import canvas
 from luma.oled.device import ssd1306
 
 SHUTDOWN_IF_DONE    = True
+USE_DISPLAY         = False
 
 CONFIG_FILE_DEFAULT = "config_default.yaml"
 CONFIG_FILE_USER    = "config.yaml"
@@ -52,13 +53,14 @@ class Oneshot():
         self.device = None
         self.display_message = []
         self.font = ImageFont.truetype("ves-3x5.ttf", 5)
-        try:
-            subprocess.call(["modprobe", "i2c-bcm2835"])
-            subprocess.call(["modprobe", "i2c-dev"])
-            self.device = ssd1306(i2c(), rotate=2)
-            self.device.contrast(100)
-        except Exception as e:
-            self.log.error("display not found: {}".format(e))
+        if USE_DISPLAY:
+            try:
+                subprocess.call(["modprobe", "i2c-bcm2835"])
+                subprocess.call(["modprobe", "i2c-dev"])
+                self.device = ssd1306(i2c(), rotate=2)
+                self.device.contrast(100)
+            except Exception as e:
+                self.log.error("display not found: {}".format(e))
 
         self.print_display("init")
 

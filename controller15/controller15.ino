@@ -42,7 +42,7 @@ long postTriggerWaitDelayed     = -1;
 #define TRIGGER_MAX_ACTIVE      90  *1000 // zero & cam max time on [ms]
 // #define TRIGGER_CAM_DELAY       5   *1000 // turn camera on X seconds after zero [ms]
 // #define TRIGGER_WAIT_DELAYED    1   *1000 // wait for X seconds after zero requests shutdown [ms]
-#define TRIGGER_COUNT           2000      // max number of triggers
+#define TRIGGER_COUNT           2160      // max number of triggers
 
 // ---------------------------
 
@@ -55,11 +55,11 @@ boolean ledOn               = false;
 
 // ---------------------------
 
-char *inputBuffer = (char*) malloc(sizeof(char) * 100);
-String serialInputString = "";
-char serialCommand = 0;
-int serialParam = -1;
-int serialParam2 = -1;
+char *inputBuffer           = (char*) malloc(sizeof(char) * 100);
+String serialInputString    = "";
+char serialCommand          = 0;
+int serialParam             = -1;
+int serialParam2            = -1;
 
 // ---------------------------
 
@@ -155,7 +155,9 @@ void loop() {
         // all trigger done?
         if (trigger_done >= TRIGGER_COUNT) {
             DEBUG_PRINT("done [IDLE -> LOOP]");
-            state = STATE_LOOP;
+
+            stopAndShutdown();
+            // state = STATE_LOOP;
         }   
 
         // time for new trigger event?
