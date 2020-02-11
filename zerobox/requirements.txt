@@ -2,10 +2,11 @@ luma.core
 luma.emulator
 luma.oled
 rpyc
-hid # hidapi
+hid # hidapi # required for the YKushXSController
 pyserial
 psutil
 exifread
 requests
+picamera # required for trashcam
 
 # gphoto2 # not required if cli mode is used
