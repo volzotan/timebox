@@ -12,7 +12,7 @@ import exifread
 from devices import TimeboxController
 
 MIN_SHUTTER_SPEED       = 16 
-SHUTDOWN_ON_COMPLETE    = False 
+SHUTDOWN_ON_COMPLETE    = True 
 
 OUTPUT_DIR              = "captures"
 OUTPUT_FILENAME         = "cap"
@@ -34,6 +34,9 @@ PiCamera creates problems when used with python 3.8.1
 To use the Raspberry Pi Camera the extended GPU firmware is required.
 Raspbian: start_x=1 in config.txt needs to be set
 Buildroot: Hardware Handling -> Firmware -> Extended (but no start_x=1)
+
+PiCamera needs at least 128mb of GPU memory. In config.txt:
+gpu_mem_256=128
 
 """
 
@@ -79,6 +82,15 @@ def print_exposure_settings(camera):
     print("--- --- ---")
 
 
+def log_capture_info(camera, filename):
+
+    STATETMENT = "{:15s}: {}"
+
+    log.info(STATETMENT.format("filename", filename))
+    log.info(STATETMENT.format("shutter speed", camera.shutter_speed))
+    log.info(STATETMENT.format("iso", camera.iso))
+
+
 def get_filename():
 
     for i in range(0, 100000):
@@ -87,6 +99,7 @@ def get_filename():
             return file_candidate
 
     raise Exception("no filenames left!")
+
 
 if __name__ == "__main__":
 
@@ -122,13 +135,14 @@ if __name__ == "__main__":
     fileHandlerDebug.setFormatter(formatter)
     log.addHandler(fileHandlerDebug)
 
+    log.info("-------------")
     log.info("trashcam init")
 
     # ---------------------------------------------------------------------------------------
 
     try: 
         os.makedirs(OUTPUT_DIR)
-        print("created dir: {}".format(OUTPUT_DIR))
+        log.debug("created dir: {}".format(OUTPUT_DIR))
     except FileExistsError as e:
         pass
 
@@ -139,24 +153,28 @@ if __name__ == "__main__":
     # camera.resolution = (3280, 2464)
     camera.framerate = 1
 
-    sleep(1)
+    sleep(2)
 
     filename = get_filename()
     camera.capture(filename)
-    read_exif_data(filename)
-    print_exposure_settings(camera)
+    log_capture_info(camera, filename)
+
+    # read_exif_data(filename)
+    # print_exposure_settings(camera)
 
     camera.iso = 100
     camera.exposure_mode = "off"
     # camera.exposure_speed = MIN_SHUTTER_SPEED
     camera.shutter_speed = MIN_SHUTTER_SPEED
 
-    sleep(1)
+    sleep(0.5)
 
-    print_exposure_settings(camera)
+    # print_exposure_settings(camera)
     filename = get_filename()
     camera.capture(filename)
-    read_exif_data(filename)
+    log_capture_info(camera, filename)
+
+    # read_exif_data(filename)
 
     camera.close()
 
@@ -164,20 +182,16 @@ if __name__ == "__main__":
 
     if SHUTDOWN_ON_COMPLETE:
 
-        controller = TimeboxController.find_all()
-        # TODO: don't try to find, use /dev/serial0
+        controller = TimeboxController.find_by_portname("/dev/serial0")
 
-
-
-        log.debug("controller found: {}".format(len(controller)))
-
-        if len(controller) > 0:
+        if controller is not None:
             try:
+                log.debug("controller found: {}".format(controller))
 
-                log.info("battery: {}".format(controller[0].get_battery_status()))
-                log.info("temperature: {}".format(controller[0].get_temperature()))
+                log.info("battery: {}".format(controller.get_battery_status()))
+                log.info("temperature: {}".format(controller.get_temperature()))
 
-                controller[0].shutdown(delay=11000)
+                controller.shutdown(delay=11000)
 
                 log.debug("shutdown command sent")
                 log.info("POWEROFF")
@@ -185,11 +199,7 @@ if __name__ == "__main__":
                 log.debug("logging shutdown")
                 logging.shutdown()
 
-                # write the last log statements to disk
-                # and prepare the filesystem for shutdown
                 subprocess.call(["sync"])
-                # subprocess.call(["swapoff", "-a"])
-                # subprocess.call(["umount -a -r"])
 
                 time.sleep(0.5)
                 subprocess.call(["poweroff"])

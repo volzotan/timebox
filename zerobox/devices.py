@@ -1,5 +1,5 @@
 import serial
-import hid
+# import hid
 
 from datetime import datetime
 import time
@@ -47,66 +47,66 @@ class Controller(object):
 
         return controller
 
-class YKushXSController(Controller):
+# class YKushXSController(Controller):
 
-    CMD_ON          = 0x11
-    CMD_OFF         = 0x01
-    CMD_PORT_STATUS = 0x21
+#     CMD_ON          = 0x11
+#     CMD_OFF         = 0x01
+#     CMD_PORT_STATUS = 0x21
 
-    VENDOR_ID       = 1240
-    PRODUCT_ID      = 61645
+#     VENDOR_ID       = 1240
+#     PRODUCT_ID      = 61645
 
-    def __init__(self, serialnumber):
-        self.serialnumber = serialnumber
+#     def __init__(self, serialnumber):
+#         self.serialnumber = serialnumber
 
-    def __repr__(self):
-        return "YKushXSController id: {}".format(self.serialnumber)
+#     def __repr__(self):
+#         return "YKushXSController id: {}".format(self.serialnumber)
 
-    @staticmethod
-    def find_all():
-        controller = []    
+#     @staticmethod
+#     def find_all():
+#         controller = []    
 
-        for d in hid.enumerate():
-            if d["vendor_id"] == YKushXSController.VENDOR_ID and d["product_id"] == YKushXSController.PRODUCT_ID:
+#         for d in hid.enumerate():
+#             if d["vendor_id"] == YKushXSController.VENDOR_ID and d["product_id"] == YKushXSController.PRODUCT_ID:
                
-                if d["serial_number"] is None:
-                    # one reason for that may be that root rights are required to open
-                    # the HID device. create a udev rule for that to enable non-root access 
-                    log.debug("YKushXSController: serial number missing. access rights?")
+#                 if d["serial_number"] is None:
+#                     # one reason for that may be that root rights are required to open
+#                     # the HID device. create a udev rule for that to enable non-root access 
+#                     log.debug("YKushXSController: serial number missing. access rights?")
 
-                controller.append(YKushXSController(d["serial_number"]))
+#                 controller.append(YKushXSController(d["serial_number"]))
 
-        return controller
+#         return controller
 
-    def turn_usb_on(self, turn_on):
-        if turn_on:
-            self._send_command(self.CMD_ON)
-        else:
-            self._send_command(self.CMD_OFF)
+#     def turn_usb_on(self, turn_on):
+#         if turn_on:
+#             self._send_command(self.CMD_ON)
+#         else:
+#             self._send_command(self.CMD_OFF)
 
-    def _send_command(self, cmd):
-        h = hid.device()
+#     def _send_command(self, cmd):
+#         h = hid.device()
 
-        if self.serialnumber is not None and len(self.serialnumber) > 0:
-            h.open(self.VENDOR_ID, self.PRODUCT_ID, self.serialnumber)
-        else:
-            h.open(self.VENDOR_ID, self.PRODUCT_ID)
+#         if self.serialnumber is not None and len(self.serialnumber) > 0:
+#             h.open(self.VENDOR_ID, self.PRODUCT_ID, self.serialnumber)
+#         else:
+#             h.open(self.VENDOR_ID, self.PRODUCT_ID)
 
-        h.set_nonblocking(1)
+#         h.set_nonblocking(1)
 
-        h.write([0, cmd] + [0] * 63)
-        time.sleep(0.05)
+#         h.write([0, cmd] + [0] * 63)
+#         time.sleep(0.05)
 
-        response = []
-        while True:
-            d = h.read(64)
-            if d:
-                response.append(d)
-            else:
-                break
+#         response = []
+#         while True:
+#             d = h.read(64)
+#             if d:
+#                 response.append(d)
+#             else:
+#                 break
 
-        h.close()
-        return response
+#         h.close()
+#         return response
 
 class TimeboxController(Controller):
 
@@ -138,7 +138,7 @@ class TimeboxController(Controller):
     @staticmethod
     def find_all():
 
-        controller = []
+        controller_list = []
         
         all_ports = list(serial.tools.list_ports.comports())
         log.debug("detecting TimeboxController: found {} ports".format(len(all_ports)))
@@ -147,13 +147,25 @@ class TimeboxController(Controller):
                 potential_controller = TimeboxController(port[0])
                 try:
                     potential_controller.ping()
-                    controller.append(potential_controller)
+                    controller_list.append(potential_controller)
                 except Exception as e:
                     print(e)
 
             time.sleep(0.1)
 
-        return controller
+        return controller_list
+
+    @staticmethod
+    def find_by_portname(portname):
+
+        potential_controller = TimeboxController(portname)
+        try:
+            potential_controller.ping()
+            return potential_controller
+        except Exception as e:
+            print(e)
+
+        return None
 
     def ping(self):
         try:
