@@ -9,6 +9,7 @@ eagle/**/*.lck
 eagle/**/eagle.epf
 eagle/**/*.pro
 eagle/**/*.job
+eagle/**/*.zip
 eagle/**/CAMOutputs*
 
 *.arw
