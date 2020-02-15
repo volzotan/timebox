@@ -5,15 +5,13 @@
 #include "global.h"
 #include "constants.h"
 
-#define SHUTDOWN_ON_LOW_BATTERY 1
+#define SHUTDOWN_ON_LOW_BATTERY
 
 #define ONESHOT_MODE
 // #define DEBUG
 
-#ifdef ONESHOT_MODE
-    #define HOST_DEFAULT_POWERED_ON 0
-#else 
-    #define HOST_DEFAULT_POWERED_ON 1
+#ifndef ONESHOT_MODE
+    #define HOST_DEFAULT_POWERED_ON
 #endif
 
 #ifdef DEBUG
@@ -114,7 +112,7 @@ void setup() {
     // battery is empty, abort right now!
 
     DEBUG_PRINT("battery low! stopping...");
-    #ifdef SHUTDOWN_ON_LOW_BATTERY == 1
+    #ifdef SHUTDOWN_ON_LOW_BATTERY
       stopAndShutdown();
     #else
       DEBUG_PRINT("stopping aborted (no SHUTDOWN_ON_LOW_BATTERY)");
@@ -175,7 +173,7 @@ void loop() {
     case STATE_TRIGGER_START: {
 
         if (!checkBattHealth()) {
-            #ifdef SHUTDOWN_ON_LOW_BATTERY == 1
+            #ifdef SHUTDOWN_ON_LOW_BATTERY
                 stopAndShutdown();
             #else
                 DEBUG_PRINT("stopping aborted (no SHUTDOWN_ON_LOW_BATTERY)");

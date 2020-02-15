@@ -29,7 +29,7 @@ void initPins() {
 
     pinMode(PIN_ZERO_EN,         OUTPUT);
 
-    #ifdef HOST_DEFAULT_POWERED_ON == 1
+    #ifdef HOST_DEFAULT_POWERED_ON
         digitalWrite(PIN_ZERO_EN, HIGH);
     #else
         digitalWrite(PIN_ZERO_EN, LOW);

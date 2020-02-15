@@ -6,8 +6,9 @@
 
 #define DEBUG
 
-#define SHUTDOWN_ON_LOW_BATTERY 1
-#define HOST_DEFAULT_POWERED_ON 0
+#define SHUTDOWN_ON_LOW_BATTERY
+// #define HOST_DEFAULT_POWERED_ON
+// #define WAIT_ON_BOOT_FOR_SERIAL
 
 #define SERIAL Serial1
 
@@ -56,13 +57,13 @@ void setup() {
     resetSerial();
 
     DEBUG_PRINT("INIT");
+    DEBUG_PRINT("DEBUG MODE ON");
 
     initPins();
 
-    #ifdef DEBUG
+    #ifdef WAIT_ON_BOOT_FOR_SERIAL
         while (!SerialUSB) {;}
-
-        DEBUG_PRINT("DEBUG MODE ON");
+        DEBUG_PRINT("SerialUsb connected");
     #endif
 
     // set the resolution mode of reading
@@ -82,7 +83,7 @@ void setup() {
         // battery is empty, abort right now!
 
         DEBUG_PRINT("battery low! stopping...");
-        #ifdef SHUTDOWN_ON_LOW_BATTERY == 1
+        #ifdef SHUTDOWN_ON_LOW_BATTERY 
 
             stopAndShutdown();
 
@@ -148,7 +149,7 @@ void loop() {
         case STATE_TRIGGER_START: {
 
             if (!checkBattHealth()) {
-                #ifdef SHUTDOWN_ON_LOW_BATTERY == 1
+                #ifdef SHUTDOWN_ON_LOW_BATTERY
 
                     stopAndShutdown();
 
