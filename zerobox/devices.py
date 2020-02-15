@@ -289,7 +289,7 @@ class TimeboxController(Controller):
 
             if response is None or len(response) == 0:
                 log.debug("[{}] empty response".format(self))
-                raise Exception("empty response")
+                raise Exception("empty response or timeout")
 
             if response.startswith("E"):
                 log.debug("[{}] serial error: {}".format(self, response))

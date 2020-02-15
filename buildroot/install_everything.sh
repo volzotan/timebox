@@ -21,7 +21,9 @@ echo "\n---"
 echo "uploading zerobox files"
 sh upload_zerobox.sh
 
-# install script need to change /boot/config.txt so boot needs to be mounted
+# install script need to access /boot/config.txt and cmdline.txt 
+# so boot partition needs to be mounted for this
+
 echo "\n---"
 echo "download pip packages"
 ssh buildroot 'sh /home/pi/zerobox/buildroot_install.sh'

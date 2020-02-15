@@ -3,19 +3,31 @@
 from time import sleep
 from datetime import datetime, timedelta
 import os
+import sys
+import argparse
 import subprocess
 import logging
 
-from picamera import PiCamera
 import exifread
+# from picamera import PiCamera
+
+try:
+    from picamera import PiCamera
+except ModuleNotFoundError as e:
+    print("no picamera! import failed")
 
 from devices import TimeboxController
 
 MIN_SHUTTER_SPEED       = 16 
 SHUTDOWN_ON_COMPLETE    = True 
 
+INTERVAL                = 60 # in sec
+MAX_ITERATIONS          = 3000
+
 OUTPUT_DIR              = "captures"
 OUTPUT_FILENAME         = "cap"
+
+SERIAL_PORT             = "/dev/ttyAMA0"
 
 """ INFO:
 
@@ -101,52 +113,17 @@ def get_filename():
     raise Exception("no filenames left!")
 
 
-if __name__ == "__main__":
+def global_except_hook(exctype, value, traceback):
+    
+    log = logging.getLogger()
 
-    # TODO: wifi off
-    # TODO: tvservice off
+    log.error("global error: {} | {}".format(exctype, value))
+    print(traceback)
+        
+    # sys.__excepthook__(exctype, value, traceback)
 
-    start = datetime.now()
 
-    # ---------------------------------------------------------------------------------------
-
-    log_filename = "trashcam.log"
-
-    # create logger
-    log = logging.getLogger() #"oneshot")
-    log.setLevel(logging.DEBUG)
-
-    # subloggers
-    exifread_logger = logging.getLogger("exifread").setLevel(logging.INFO)
-    devices_logger = logging.getLogger("devices").setLevel(logging.INFO)
-
-    # create formatter
-    formatter = logging.Formatter("%(asctime)s | %(name)-7s | %(levelname)-7s | %(message)s")
-    # formatter = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
-
-    # console handler and set level to debug
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setLevel(logging.DEBUG)
-    consoleHandler.setFormatter(formatter)
-    log.addHandler(consoleHandler)
-
-    fileHandlerDebug = logging.FileHandler(log_filename, mode="a", encoding="UTF-8")
-    fileHandlerDebug.setLevel(logging.DEBUG)
-    fileHandlerDebug.setFormatter(formatter)
-    log.addHandler(fileHandlerDebug)
-
-    log.info("-------------")
-    log.info("trashcam init")
-
-    # ---------------------------------------------------------------------------------------
-
-    try: 
-        os.makedirs(OUTPUT_DIR)
-        log.debug("created dir: {}".format(OUTPUT_DIR))
-    except FileExistsError as e:
-        pass
-
-    # ---------------------------------------------------------------------------------------
+def trigger():
 
     camera = PiCamera() # starts hidden preview for 3A automatically
     camera.resolution = (2592, 1944)
@@ -178,11 +155,98 @@ if __name__ == "__main__":
 
     camera.close()
 
-    log.debug("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))
+
+def run():
+
+    if args["persistent_mode"]:
+        log.info("PERSISTENT MODE")
+        for i in range(0, MAX_ITERATIONS):
+            log.info("iteration: {}/{}".format(i, MAX_ITERATIONS))
+            next_trigger = datetime.now() + timedelta(seconds=INTERVAL)
+            
+            trigger()
+            
+            remaining_time = next_trigger-datetime.now()
+            log.debug("sleep time till trigger: {}".format(remaining_time.total_seconds()))
+            sleep(remaining_time.total_seconds())
+    else:
+        trigger()
+
+        log.debug("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))
+
+
+if __name__ == "__main__":
+
+    start = datetime.now()
+
+    # ---------------------------------------------------------------------------------------
+
+    log_filename = "trashcam.log"
+
+    # create logger
+    log = logging.getLogger() #"oneshot")
+    log.setLevel(logging.DEBUG)
+
+    # subloggers
+    exifread_logger = logging.getLogger("exifread").setLevel(logging.INFO)
+    devices_logger = logging.getLogger("devices").setLevel(logging.INFO)
+
+    # create formatter
+    formatter = logging.Formatter("%(asctime)s | %(name)-7s | %(levelname)-7s | %(message)s")
+    # formatter = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
+
+    # console handler and set level to debug
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setLevel(logging.DEBUG)
+    consoleHandler.setFormatter(formatter)
+    log.addHandler(consoleHandler)
+
+    fileHandlerDebug = logging.FileHandler(log_filename, mode="a", encoding="UTF-8")
+    fileHandlerDebug.setLevel(logging.DEBUG)
+    fileHandlerDebug.setFormatter(formatter)
+    log.addHandler(fileHandlerDebug)
+
+    sys.excepthook = global_except_hook
+
+    # ---------------------------------------------------------------------------------------
+
+    # TODO: wifi off
+    try:
+        subprocess.call(["ifdown", "wlan0"])
+    except Exception as e:
+        log.info("disabling wifi error: {}".format(e))
+
+    # TODO: tvservice off
+    try:
+        subprocess.call(["tvservice", "-o"])    
+    except Exception as e:
+        log.info("disabling tvservice error: {}".format(e))
+
+    # ---------------------------------------------------------------------------------------
+
+    log.info("-------------")
+    log.info("trashcam init")
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-p", "--persistent-mode", type=bool, default=False, help="")
+    args = vars(ap.parse_args())
+
+    try: 
+        os.makedirs(OUTPUT_DIR)
+        log.debug("created dir: {}".format(OUTPUT_DIR))
+    except FileExistsError as e:
+        pass
+
+    try:
+        run()
+    except Exception as e:
+        log.error("error: {}".format(e))
+
+    # ---------------------------------------------------------------------------------------
 
     if SHUTDOWN_ON_COMPLETE:
 
-        controller = TimeboxController.find_by_portname("/dev/serial0")
+        controller = TimeboxController.find_by_portname(SERIAL_PORT)
 
         if controller is not None:
             try:

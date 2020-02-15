@@ -1,5 +1,6 @@
 rsync -av               \
 --exclude="RAW/"        \
+--exclude="captures/"   \
 --exclude="*.jpg"       \
 --exclude="*.log"       \
 --exclude="__pycache__" \
