@@ -29,11 +29,20 @@ long currentTrigger             = -1;
 long nextTrigger                = -1;
 long postTriggerWaitDelayed     = -1;
 
-#define TRIGGER_INTERVAL        90 *1000 // take picture every X seconds [ms]
-#define TRIGGER_MAX_ACTIVE      50 *1000 // zero & cam max time on [ms]
-// #define TRIGGER_CAM_DELAY       5   *1000 // turn camera on X seconds after zero [ms]
-// #define TRIGGER_WAIT_DELAYED    1   *1000 // wait for X seconds after zero requests shutdown [ms]
-#define TRIGGER_COUNT           10000    // max number of triggers
+long trigger_reduced_till       = -1;
+long trigger_increased_till     = -1;
+
+#define TRIGGER_INTERVAL        90  *1000       // take picture every X seconds [ms]
+#define TRIGGER_INTERVAL_RED    240 *1000
+#define TRIGGER_INTERVAL_INC    60  *1000
+
+#define TRIGGER_MAX_ACTIVE      50  *1000       // zero & cam max time on [ms]
+// #define TRIGGER_CAM_DELAY       5   *1000    // turn camera on X seconds after zero [ms]
+// #define TRIGGER_WAIT_DELAYED    1   *1000    // wait for X seconds after zero requests shutdown [ms]
+#define TRIGGER_COUNT           10000           // max number of triggers
+
+#define REDUCE_INTERVAL_TIME    60  *3600       // [s]
+#define INCREASE_INTERVAL_TIME  60  *3600       // [s]
 
 // ---------------------------
 
@@ -137,7 +146,31 @@ void loop() {
             // time for new trigger event?
             if (millis() >= nextTrigger) {
                 currentTrigger = nextTrigger; 
-                nextTrigger += TRIGGER_INTERVAL; 
+
+                int interval_length = TRIGGER_INTERVAL;
+
+                if (trigger_reduced_till > 0) {
+                    if (millis() < trigger_reduced_till) {
+                        interval_length = TRIGGER_INTERVAL_RED;
+                        DEBUG_PRINT("interval on reduced length");
+                    } else {
+                        trigger_reduced_till = -1;
+                        DEBUG_PRINT("interval switched from reduced to regular");
+                    }
+                }
+                
+                if (trigger_increased_till > 0) {
+                    if (millis() < trigger_increased_till) {
+                        interval_length = TRIGGER_INTERVAL_INC;
+                        DEBUG_PRINT("interval on increased length");
+                    } else {
+                        trigger_increased_till = -1;
+                        DEBUG_PRINT("interval switched from increased to regular");
+                    }
+                }
+
+                nextTrigger += interval_length; 
+                
                 DEBUG_PRINT("start [IDLE -> TRIGGER_START]");
                 state = STATE_TRIGGER_START;
             }

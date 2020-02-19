@@ -11,6 +11,9 @@
  *  T  ---  Temperature
  *  Z  ---  Turn Zero On/Off                (Z 0 / Z 1)
 
+ *  R  ---  Reduce Interval
+ *  I  ---  Increase Interval
+
  *  E  ---  Print EEPROM
  *  K  ---  Kill/reset EEPROM data
  *  
@@ -138,6 +141,18 @@ void executeCommand() {
             } else {
                 errorSerial(ERRORCODE_INVALID_PARAM);
             }
+        break; 
+
+        case 'R': // Reduce Interval
+            trigger_reduced_till = millis() + TRIGGER_INTERVAL_RED * 3;
+            trigger_increased_till = -1;
+            okSerial();
+        break; 
+        
+        case 'I': // Increase Interval
+            trigger_reduced_till = -1;
+            trigger_increased_till = millis() + TRIGGER_INTERVAL_INC * 3;
+            okSerial();
         break; 
         
         default:

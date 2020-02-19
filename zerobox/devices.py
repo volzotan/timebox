@@ -110,22 +110,25 @@ class Controller(object):
 
 class TimeboxController(Controller):
 
-    CMD_PING        = "K"
-    CMD_BATTERY     = "B"
-    CMD_TEMPERATURE = "T"
-    CMD_CAM_ON      = "C 1"
-    CMD_CAM_OFF     = "C 0"
-    CMD_USB1_ON     = "X 1"
-    CMD_USB1_OFF    = "X 0"
-    CMD_USB2_ON     = "Y 1"
-    CMD_USB2_OFF    = "Y 0"
-    CMD_ZERO_ON     = "Z 1"
-    CMD_ZERO_OFF    = "Z 0"
+    CMD_PING            = "K"
+    CMD_BATTERY         = "B"
+    CMD_TEMPERATURE     = "T"
+    CMD_CAM_ON          = "C 1"
+    CMD_CAM_OFF         = "C 0"
+    CMD_USB1_ON         = "X 1"
+    CMD_USB1_OFF        = "X 0"
+    CMD_USB2_ON         = "Y 1"
+    CMD_USB2_OFF        = "Y 0"
+    CMD_ZERO_ON         = "Z 1"
+    CMD_ZERO_OFF        = "Z 0"
 
-    CMD_SHUTDOWN    = "S"
+    CMD_RED_INTERVAL    = "R"
+    CMD_INC_INTERVAL    = "I"
 
-    SERIAL_BAUDRATE = 9600
-    SERIAL_TIMEOUT  = 1.0
+    CMD_SHUTDOWN        = "S"
+
+    SERIAL_BAUDRATE     = 9600
+    SERIAL_TIMEOUT      = 1.0
 
     lock = Lock()
 
@@ -251,6 +254,22 @@ class TimeboxController(Controller):
                     self._send_command(self.CMD_USB2_OFF)
                 else:
                     raise Exception("unknown usb device: {}".format(usb_device))
+        except Exception as e:
+            log.debug(e)
+            raise e
+
+    def reduce_interval(self):
+        try:
+            response = self._send_command(self.CMD_RED_INTERVAL)
+            return response
+        except Exception as e:
+            log.debug(e)
+            raise e
+
+    def increase_interval():
+        try:
+            response = self._send_command(self.CMD_INC_INTERVAL)
+            return response
         except Exception as e:
             log.debug(e)
             raise e
