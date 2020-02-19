@@ -4,30 +4,32 @@ from time import sleep
 from datetime import datetime, timedelta
 import os
 import sys
+import shutil
 import argparse
 import subprocess
 import logging
 
 import exifread
-# from picamera import PiCamera
-
-try:
-    from picamera import PiCamera
-except ModuleNotFoundError as e:
-    print("no picamera! import failed")
+from picamera import PiCamera
 
 from devices import TimeboxController
 
-MIN_SHUTTER_SPEED       = 16 
-SHUTDOWN_ON_COMPLETE    = True 
+# ---
 
-INTERVAL                = 60 # in sec
-MAX_ITERATIONS          = 3000
+SECOND_EXPOSURE_SHUTTER_SPEED   = 9
+SECOND_EXPOSURE_ISO             = 10
 
-OUTPUT_DIR              = "captures"
-OUTPUT_FILENAME         = "cap"
+SHUTDOWN_ON_COMPLETE            = True 
 
-SERIAL_PORT             = "/dev/ttyAMA0"
+INTERVAL                        = 60 # in sec
+MAX_ITERATIONS                  = 3000
+
+OUTPUT_DIR                      = "captures"
+OUTPUT_FILENAME                 = "cap"
+
+SERIAL_PORT                     = "/dev/ttyAMA0"
+
+MIN_FREE_SPACE                  = 300
 
 """ INFO:
 
@@ -47,8 +49,8 @@ To use the Raspberry Pi Camera the extended GPU firmware is required.
 Raspbian: start_x=1 in config.txt needs to be set
 Buildroot: Hardware Handling -> Firmware -> Extended (but no start_x=1)
 
-PiCamera needs at least 128mb of GPU memory. In config.txt:
-gpu_mem_256=128
+PiCamera needs at least 256mb of GPU memory. In config.txt:
+gpu_mem_512=256
 
 """
 
@@ -84,6 +86,7 @@ def print_exposure_settings(camera):
     print(STATETMENT.format("Exp speed", camera.exposure_speed))
     print(STATETMENT.format("Exp mode", camera.exposure_mode))
     print(STATETMENT.format("Exp compensation", camera.exposure_compensation))
+    print(STATETMENT.format("Meter mode", camera.meter_mode))
     print(STATETMENT.format("Framerate", camera.framerate))
     print(STATETMENT.format("brightness", camera.brightness))
     print(STATETMENT.format("Awb mode", camera.awb_mode))
@@ -106,7 +109,7 @@ def log_capture_info(camera, filename):
 def get_filename():
 
     for i in range(0, 100000):
-        file_candidate = os.path.join(OUTPUT_DIR, "{}_{}.jpg".format(OUTPUT_FILENAME, i))
+        file_candidate = os.path.join(OUTPUT_DIR, "{}_{:06d}.jpg".format(OUTPUT_FILENAME, i))
         if not os.path.exists(file_candidate):
             return file_candidate
 
@@ -125,10 +128,17 @@ def global_except_hook(exctype, value, traceback):
 
 def trigger():
 
+    image_info = []
+
     camera = PiCamera() # starts hidden preview for 3A automatically
-    camera.resolution = (2592, 1944)
-    # camera.resolution = (3280, 2464)
+    try:
+        camera.resolution = (3280, 2464) # V2 8MP
+    except Exception as e:
+        log.error("setting camera resolution failed: {}".format(e))
+        camera.resolution = (2592, 1944) # V1 5MP
+
     camera.framerate = 1
+    camera.meter_mode = "spot"
 
     sleep(2)
 
@@ -139,40 +149,27 @@ def trigger():
     # read_exif_data(filename)
     # print_exposure_settings(camera)
 
-    camera.iso = 100
+    # TODO: calculate brightness from capture_info/EXIF data
+
+    # SECOND EXPOSURE
+
+    camera.iso = SECOND_EXPOSURE_ISO
     camera.exposure_mode = "off"
-    # camera.exposure_speed = MIN_SHUTTER_SPEED
-    camera.shutter_speed = MIN_SHUTTER_SPEED
+    # camera.exposure_mode = "sports"
+    camera.shutter_speed = SECOND_EXPOSURE_SHUTTER_SPEED
 
     sleep(0.5)
 
-    # print_exposure_settings(camera)
-    filename = get_filename()
+    filename = filename[:-4] + "_2" + ".jpg"
     camera.capture(filename)
     log_capture_info(camera, filename)
 
     # read_exif_data(filename)
+    # print_exposure_settings(camera)
 
     camera.close()
 
-
-def run():
-
-    if args["persistent_mode"]:
-        log.info("PERSISTENT MODE")
-        for i in range(0, MAX_ITERATIONS):
-            log.info("iteration: {}/{}".format(i, MAX_ITERATIONS))
-            next_trigger = datetime.now() + timedelta(seconds=INTERVAL)
-            
-            trigger()
-            
-            remaining_time = next_trigger-datetime.now()
-            log.debug("sleep time till trigger: {}".format(remaining_time.total_seconds()))
-            sleep(remaining_time.total_seconds())
-    else:
-        trigger()
-
-        log.debug("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))
+    return image_info
 
 
 if __name__ == "__main__":
@@ -210,17 +207,17 @@ if __name__ == "__main__":
 
     # ---------------------------------------------------------------------------------------
 
-    # TODO: wifi off
-    try:
-        subprocess.call(["ifdown", "wlan0"])
-    except Exception as e:
-        log.info("disabling wifi error: {}".format(e))
+    # # TODO: wifi off
+    # try:
+    #     subprocess.call(["ifdown", "wlan0"])
+    # except Exception as e:
+    #     log.info("disabling wifi error: {}".format(e))
 
-    # TODO: tvservice off
-    try:
-        subprocess.call(["tvservice", "-o"])    
-    except Exception as e:
-        log.info("disabling tvservice error: {}".format(e))
+    # # TODO: tvservice off
+    # try:
+    #     subprocess.call(["tvservice", "-o"])    
+    # except Exception as e:
+    #     log.info("disabling tvservice error: {}".format(e))
 
     # ---------------------------------------------------------------------------------------
 
@@ -229,6 +226,7 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--persistent-mode", type=bool, default=False, help="")
+    ap.add_argument("-s", "--stream-mode", type=bool, default=False, help="")
     args = vars(ap.parse_args())
 
     try: 
@@ -237,8 +235,35 @@ if __name__ == "__main__":
     except FileExistsError as e:
         pass
 
+    image_info = None
+
     try:
-        run()
+
+        free_space_mb = shutil.disk_usage(OUTPUT_DIR).free / (1024 * 1024)
+        if free_space_mb < MIN_FREE_SPACE:
+            log.error("NO SPACE LEFT ON DEVICE (directory: {}, free space: {}, min free space: {}".format(OUTPUT_DIR, free_space_mb, MIN_FREE_SPACE))
+            raise Exception("no space left on device")
+
+        if args["stream_mode"]:
+            preview = StreamPreview()
+            preview.run()
+
+        if args["persistent_mode"]:
+            log.info("PERSISTENT MODE")
+            for i in range(0, MAX_ITERATIONS):
+                log.info("iteration: {}/{}".format(i, MAX_ITERATIONS))
+                next_trigger = datetime.now() + timedelta(seconds=INTERVAL)
+                
+                trigger()
+                
+                remaining_time = next_trigger-datetime.now()
+                log.debug("sleep time till trigger: {}".format(remaining_time.total_seconds()))
+                sleep(remaining_time.total_seconds())
+        else:
+            image_info = trigger()
+
+            log.debug("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))
+
     except Exception as e:
         log.error("error: {}".format(e))
 
@@ -254,6 +279,13 @@ if __name__ == "__main__":
 
                 log.info("battery: {}".format(controller.get_battery_status()))
                 log.info("temperature: {}".format(controller.get_temperature()))
+
+                # TODO: get exposure of last (primary) image
+                #       if lower than threshold
+                # if image_info is not None:
+                #     print(image_info[0])
+
+                #     controller.reduce_interval()
 
                 controller.shutdown(delay=11000)
 
