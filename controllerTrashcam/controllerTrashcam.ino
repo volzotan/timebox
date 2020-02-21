@@ -84,8 +84,9 @@ void setup() {
 
     if (!tempsensor.begin(0x18)) {
         DEBUG_PRINT("temperature sensor not found");
+    } else {
+        tempsensor.setResolution(1); 
     }
-    tempsensor.setResolution(1); 
 
     // battery life
     if (!checkBattHealth()) {

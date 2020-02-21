@@ -2,6 +2,8 @@
 
 from time import sleep
 from datetime import datetime, timedelta
+from fractions import Fraction
+import math
 import os
 import sys
 import shutil
@@ -10,7 +12,7 @@ import subprocess
 import logging
 
 import exifread
-from picamera import PiCamera
+import picamera
 
 from devices import TimeboxController
 
@@ -18,18 +20,27 @@ from devices import TimeboxController
 
 SECOND_EXPOSURE_SHUTTER_SPEED   = 9
 SECOND_EXPOSURE_ISO             = 10
+THIRD_EXPOSURE_SHUTTER_SPEED    = 9*(2**3)
 
 SHUTDOWN_ON_COMPLETE            = True 
 
 INTERVAL                        = 60 # in sec
 MAX_ITERATIONS                  = 3000
 
-OUTPUT_DIR                      = "captures"
+OUTPUT_DIR_1                    = "captures_1"
+OUTPUT_DIR_2                    = "captures_2"
+OUTPUT_DIR_3                    = "captures_3"
 OUTPUT_FILENAME                 = "cap"
 
 SERIAL_PORT                     = "/dev/ttyAMA0"
 
 MIN_FREE_SPACE                  = 300
+
+ND_FILTER                       = 10 # stops
+
+# EV values, ND-filter-value corrected
+REDUCE_INTERVAL_EV_THRESHOLD    = 1
+INCREASE_INTERVAL_EV_THRESHOLD  = 2 # 10
 
 """ INFO:
 
@@ -56,23 +67,44 @@ gpu_mem_512=256
 
 def read_exif_data(filename):
 
-    f = open(filename, 'rb')
-    metadata = exifread.process_file(f)
+    with open(filename, 'rb') as f:
+        metadata = exifread.process_file(f)
 
-    # for tag in metadata.keys():
-    #     if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote'):
-    #         print("Key: {}, value {}".format(tag, metadata[tag]))
+        # for tag in metadata.keys():
+        #     if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote'):
+        #         print("Key: {}, value {}".format(tag, metadata[tag]))
 
-    exposure_time = metadata["EXIF ExposureTime"].values[0]
-    exposure_time = float(exposure_time.num) / float(exposure_time.den)
+                    # shutter speed in seconds (e.g. 0.5)
 
-    aperture = metadata["EXIF FNumber"].values[0]
+        shutter_speed_val = metadata["EXIF ExposureTime"].values[0]
+        if shutter_speed_val.num == 0 or shutter_speed_val.den == 0:
+            shutter_speed = 0
+        else:
+            shutter_speed = float(shutter_speed_val.num) / float(shutter_speed_val.den)
 
-    iso = float(metadata["EXIF ISOSpeedRatings"].values[0])
+        # ISO (e.g. 100)
 
-    print("Exif exposure time: {}".format(exposure_time))
-    print("Exif aperture     : {}".format(aperture))
-    print("Exif ISO          : {}".format(iso))
+        iso = float(metadata["EXIF ISOSpeedRatings"].values[0])
+
+        # Aperture (e.g. 5.6)
+
+        aperture_val = metadata["EXIF FNumber"].values[0]
+
+        if aperture_val.num == 0 or aperture_val.den == 0:
+            aperture = 8 # default value (shouldnt happen with picam)
+            log.error("aperture missing! EV value calculation will be wrong")
+        else:
+            aperture = aperture_val.num / aperture_val.den
+
+        log = logging.getLogger()
+
+        log.info("Exif exposure time  : {}".format(shutter_speed))
+        log.info("Exif aperture       : {}".format(aperture))
+        log.info("Exif ISO            : {}".format(iso))
+
+        ev = math.log(aperture / shutter_speed, 2) - math.log(iso/100, 2)
+
+        return ev
 
 
 def print_exposure_settings(camera):
@@ -99,19 +131,19 @@ def print_exposure_settings(camera):
 
 def log_capture_info(camera, filename):
 
-    STATETMENT = "{:15s}: {}"
+    STATETMENT = "{:20s}: {}"
 
     log.info(STATETMENT.format("filename", filename))
     log.info(STATETMENT.format("shutter speed", camera.shutter_speed))
     log.info(STATETMENT.format("iso", camera.iso))
 
 
-def get_filename():
+def get_filename(): # returns(path, filename.ext)
 
     for i in range(0, 100000):
-        file_candidate = os.path.join(OUTPUT_DIR, "{}_{:06d}.jpg".format(OUTPUT_FILENAME, i))
-        if not os.path.exists(file_candidate):
-            return file_candidate
+        filename = "{}_{:06d}.jpg".format(OUTPUT_FILENAME, i)
+        if not os.path.exists(os.path.join(OUTPUT_DIR_1, filename)):
+            return (OUTPUT_DIR_1, filename)
 
     raise Exception("no filenames left!")
 
@@ -121,8 +153,12 @@ def global_except_hook(exctype, value, traceback):
     log = logging.getLogger()
 
     log.error("global error: {} | {}".format(exctype, value))
-    print(traceback)
-        
+
+    logging.shutdown()
+    subprocess.call(["sync"])
+
+    traceback.print_tb()
+
     # sys.__excepthook__(exctype, value, traceback)
 
 
@@ -130,28 +166,40 @@ def trigger():
 
     image_info = []
 
-    camera = PiCamera() # starts hidden preview for 3A automatically
+    camera = picamera.PiCamera() # starts hidden preview for 3A automatically
+    
     try:
         camera.resolution = (3280, 2464) # V2 8MP
-    except Exception as e:
-        log.error("setting camera resolution failed: {}".format(e))
-        camera.resolution = (2592, 1944) # V1 5MP
+        camera.framerate = Fraction(2, 1)
 
-    camera.framerate = 1
+    except picamera.exc.PiCameraValueError as e:
+        log.warning("fallback to V1 camera resolution")
+
+        camera.resolution = (2592, 1944) # V1 5MP
+        camera.framerate = Fraction(1, 1)
+
+    except Exception as e:
+        log.error("setting camera resolution failed (unknown reasons): {}".format(e))
+
+    log.debug("--- exposure 1 ---")
+
     camera.meter_mode = "spot"
 
     sleep(2)
 
     filename = get_filename()
-    camera.capture(filename)
-    log_capture_info(camera, filename)
+    full_filename = os.path.join(*filename)
+    camera.capture(full_filename)
+    log_capture_info(camera, full_filename)
 
-    # read_exif_data(filename)
+    first_exposure_ev = read_exif_data(full_filename)
+    image_info.append(first_exposure_ev)
+    log.info("brightness: {:.2f} EV".format(first_exposure_ev))
     # print_exposure_settings(camera)
 
     # TODO: calculate brightness from capture_info/EXIF data
 
-    # SECOND EXPOSURE
+    log.debug("--- exposure 2 ---")
 
     camera.iso = SECOND_EXPOSURE_ISO
     camera.exposure_mode = "off"
@@ -160,12 +208,22 @@ def trigger():
 
     sleep(0.5)
 
-    filename = filename[:-4] + "_2" + ".jpg"
-    camera.capture(filename)
-    log_capture_info(camera, filename)
+    full_filename_2 = os.path.join(OUTPUT_DIR_2, filename[1]) #[:-4] + "_2" + ".jpg")
+    camera.capture(full_filename_2)
+    log_capture_info(camera, full_filename_2)
 
-    # read_exif_data(filename)
+    # read_exif_data(full_filename_2)
     # print_exposure_settings(camera)
+
+    log.debug("--- exposure 3 ---")
+
+    camera.shutter_speed = THIRD_EXPOSURE_SHUTTER_SPEED
+
+    sleep(0.5)
+
+    full_filename_3 = os.path.join(OUTPUT_DIR_3, filename[1]) #[:-4] + "_2" + ".jpg")
+    camera.capture(full_filename_3)
+    log_capture_info(camera, full_filename_3)
 
     camera.close()
 
@@ -230,8 +288,20 @@ if __name__ == "__main__":
     args = vars(ap.parse_args())
 
     try: 
-        os.makedirs(OUTPUT_DIR)
-        log.debug("created dir: {}".format(OUTPUT_DIR))
+        os.makedirs(OUTPUT_DIR_1)
+        log.debug("created dir: {}".format(OUTPUT_DIR_1))
+    except FileExistsError as e:
+        pass
+
+    try: 
+        os.makedirs(OUTPUT_DIR_2)
+        log.debug("created dir: {}".format(OUTPUT_DIR_2))
+    except FileExistsError as e:
+        pass
+
+    try: 
+        os.makedirs(OUTPUT_DIR_3)
+        log.debug("created dir: {}".format(OUTPUT_DIR_3))
     except FileExistsError as e:
         pass
 
@@ -239,9 +309,9 @@ if __name__ == "__main__":
 
     try:
 
-        free_space_mb = shutil.disk_usage(OUTPUT_DIR).free / (1024 * 1024)
+        free_space_mb = shutil.disk_usage(OUTPUT_DIR_1).free / (1024 * 1024)
         if free_space_mb < MIN_FREE_SPACE:
-            log.error("NO SPACE LEFT ON DEVICE (directory: {}, free space: {}, min free space: {}".format(OUTPUT_DIR, free_space_mb, MIN_FREE_SPACE))
+            log.error("NO SPACE LEFT ON DEVICE (directory: {}, free space: {}, min free space: {}".format(OUTPUT_DIR_1, free_space_mb, MIN_FREE_SPACE))
             raise Exception("no space left on device")
 
         if args["stream_mode"]:
@@ -280,12 +350,18 @@ if __name__ == "__main__":
                 log.info("battery: {}".format(controller.get_battery_status()))
                 log.info("temperature: {}".format(controller.get_temperature()))
 
-                # TODO: get exposure of last (primary) image
-                #       if lower than threshold
-                # if image_info is not None:
-                #     print(image_info[0])
+                # get EV of last (primary) image and reduce if brighter than threshold
+                if image_info is not None and len(image_info) > 0:
 
-                #     controller.reduce_interval()
+                    if image_info[0] < REDUCE_INTERVAL_EV_THRESHOLD:
+                        log.debug("request interval reduction (EV: {:.2f} < {}".format(
+                            image_info[0], REDUCE_INTERVAL_EV_THRESHOLD))
+                        controller.reduce_interval()
+
+                    if image_info[0] > INCREASE_INTERVAL_EV_THRESHOLD:
+                        log.debug("request interval increase (EV: {:.2f} > {}".format(
+                            image_info[0], INCREASE_INTERVAL_EV_THRESHOLD))
+                        controller.increase_interval()
 
                 controller.shutdown(delay=11000)
 

@@ -266,7 +266,7 @@ class TimeboxController(Controller):
             log.debug(e)
             raise e
 
-    def increase_interval():
+    def increase_interval(self):
         try:
             response = self._send_command(self.CMD_INC_INTERVAL)
             return response
@@ -293,7 +293,7 @@ class TimeboxController(Controller):
             if not lock_acquired:
                 raise AccessException("Lock could not be acquired")
 
-            ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT)
+            ser = serial.Serial(self.port, self.SERIAL_BAUDRATE, timeout=self.SERIAL_TIMEOUT, write_timeout=self.SERIAL_TIMEOUT)
 
             ser.write(bytearray(full_cmd, "utf-8"))
             ser.write(bytearray("\n", "utf-8"))
