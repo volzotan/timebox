@@ -39,8 +39,8 @@ MIN_FREE_SPACE                  = 300
 ND_FILTER                       = 10 # stops
 
 # EV values, ND-filter-value corrected
-REDUCE_INTERVAL_EV_THRESHOLD    = 1
-INCREASE_INTERVAL_EV_THRESHOLD  = 2 # 10
+REDUCE_INTERVAL_EV_THRESHOLD    = 5
+INCREASE_INTERVAL_EV_THRESHOLD  = 8 # 10
 
 """ INFO:
 
@@ -134,7 +134,7 @@ def log_capture_info(camera, filename):
     STATETMENT = "{:20s}: {}"
 
     log.info(STATETMENT.format("filename", filename))
-    log.info(STATETMENT.format("shutter speed", camera.shutter_speed))
+    log.info(STATETMENT.format("shutter speed", camera.shutter_speed)) # microseconds
     log.info(STATETMENT.format("iso", camera.iso))
 
 
@@ -157,7 +157,7 @@ def global_except_hook(exctype, value, traceback):
     logging.shutdown()
     subprocess.call(["sync"])
 
-    traceback.print_tb()
+    # traceback.print_tb()
 
     # sys.__excepthook__(exctype, value, traceback)
 
@@ -168,9 +168,11 @@ def trigger():
 
     camera = picamera.PiCamera() # starts hidden preview for 3A automatically
     
+    camera.meter_mode = "spot"
+
     try:
         camera.resolution = (3280, 2464) # V2 8MP
-        camera.framerate = Fraction(2, 1)
+        camera.framerate = Fraction(1, 1)
 
     except picamera.exc.PiCameraValueError as e:
         log.warning("fallback to V1 camera resolution")
@@ -181,11 +183,9 @@ def trigger():
     except Exception as e:
         log.error("setting camera resolution failed (unknown reasons): {}".format(e))
 
-    log.debug("--- exposure 1 ---")
-
-    camera.meter_mode = "spot"
-
     sleep(2)
+
+    log.debug("--- exposure 1 ---")
 
     filename = get_filename()
     full_filename = os.path.join(*filename)
@@ -194,16 +194,20 @@ def trigger():
 
     first_exposure_ev = read_exif_data(full_filename)
     image_info.append(first_exposure_ev)
-    log.info("brightness: {:.2f} EV".format(first_exposure_ev))
+    log.info("brightness          : {:.2f} EV".format(first_exposure_ev))
+    if ND_FILTER is not None:
+        log.info("brightness (incl ND): {:.2f} EV".format(first_exposure_ev+ND_FILTER))
     # print_exposure_settings(camera)
-
-    # TODO: calculate brightness from capture_info/EXIF data
 
     log.debug("--- exposure 2 ---")
 
-    camera.iso = SECOND_EXPOSURE_ISO
+    # increase framerate, otherwise capture will block 
+    # even on short exposures for several seconds
+    # (for some reason will too fast (> 16fps) rates result in 0-value-images)
+    camera.framerate = Fraction(10, 1)
+
     camera.exposure_mode = "off"
-    # camera.exposure_mode = "sports"
+    camera.iso = SECOND_EXPOSURE_ISO
     camera.shutter_speed = SECOND_EXPOSURE_SHUTTER_SPEED
 
     sleep(0.5)
@@ -221,7 +225,7 @@ def trigger():
 
     sleep(0.5)
 
-    full_filename_3 = os.path.join(OUTPUT_DIR_3, filename[1]) #[:-4] + "_2" + ".jpg")
+    full_filename_3 = os.path.join(OUTPUT_DIR_3, filename[1])
     camera.capture(full_filename_3)
     log_capture_info(camera, full_filename_3)
 
@@ -353,14 +357,19 @@ if __name__ == "__main__":
                 # get EV of last (primary) image and reduce if brighter than threshold
                 if image_info is not None and len(image_info) > 0:
 
-                    if image_info[0] < REDUCE_INTERVAL_EV_THRESHOLD:
-                        log.debug("request interval reduction (EV: {:.2f} < {}".format(
-                            image_info[0], REDUCE_INTERVAL_EV_THRESHOLD))
+                    brightness = image_info[0]
+
+                    if ND_FILTER is not None:
+                        brightness += ND_FILTER
+
+                    if brightness < REDUCE_INTERVAL_EV_THRESHOLD:
+                        log.debug("request interval reduction (EV: {:.2f} < {})".format(
+                            brightness, REDUCE_INTERVAL_EV_THRESHOLD))
                         controller.reduce_interval()
 
-                    if image_info[0] > INCREASE_INTERVAL_EV_THRESHOLD:
-                        log.debug("request interval increase (EV: {:.2f} > {}".format(
-                            image_info[0], INCREASE_INTERVAL_EV_THRESHOLD))
+                    if brightness > INCREASE_INTERVAL_EV_THRESHOLD:
+                        log.debug("request interval increase (EV: {:.2f} > {})".format(
+                            brightness, INCREASE_INTERVAL_EV_THRESHOLD))
                         controller.increase_interval()
 
                 controller.shutdown(delay=11000)
@@ -373,8 +382,9 @@ if __name__ == "__main__":
 
                 subprocess.call(["sync"])
 
-                time.sleep(0.5)
+                sleep(0.5)
                 subprocess.call(["poweroff"])
+                exit()
             except Exception as e:
                 log.error("poweroff failed: {}".format(e))
         else:
@@ -382,4 +392,5 @@ if __name__ == "__main__":
 
     log.debug("logging shutdown")
     logging.shutdown()
+    subprocess.call(["sync"])
 
