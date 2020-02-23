@@ -112,7 +112,9 @@ class TimeboxController(Controller):
 
     CMD_PING            = "K"
     CMD_BATTERY         = "B"
+    CMD_UPTIME          = "U"
     CMD_TEMPERATURE     = "T"
+
     CMD_CAM_ON          = "C 1"
     CMD_CAM_OFF         = "C 0"
     CMD_USB1_ON         = "X 1"

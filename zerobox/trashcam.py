@@ -24,6 +24,12 @@ THIRD_EXPOSURE_SHUTTER_SPEED    = 9*(2**3)
 
 SHUTDOWN_ON_COMPLETE            = True 
 
+IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. bayer)
+# IMAGE_FORMAT                    = "rgb" # 24-bit RGB format # ~ 23 mb
+# IMAGE_FORMAT                    = "yuv" # YUV420 format
+# IMAGE_FORMAT                    = "png" # PNG format # ~ 9 mb
+
+# PERSISTENT MODE
 INTERVAL                        = 60 # in sec
 MAX_ITERATIONS                  = 3000
 
@@ -135,13 +141,16 @@ def log_capture_info(camera, filename):
 
     log.info(STATETMENT.format("filename", filename))
     log.info(STATETMENT.format("shutter speed", camera.shutter_speed)) # microseconds
+    # log.info(STATETMENT.format("exposure speed", camera.exposure_speed))
     log.info(STATETMENT.format("iso", camera.iso))
 
+def get_filename(extension): # returns(path, filename.ext)
 
-def get_filename(): # returns(path, filename.ext)
+    if extension == "jpeg":
+        extension = "jpg"
 
     for i in range(0, 100000):
-        filename = "{}_{:06d}.jpg".format(OUTPUT_FILENAME, i)
+        filename = "{}_{:06d}.{}".format(OUTPUT_FILENAME, i, extension)
         if not os.path.exists(os.path.join(OUTPUT_DIR_1, filename)):
             return (OUTPUT_DIR_1, filename)
 
@@ -187,13 +196,17 @@ def trigger():
 
     log.debug("--- exposure 1 ---")
 
-    filename = get_filename()
+    filename = get_filename(IMAGE_FORMAT)
     full_filename = os.path.join(*filename)
-    camera.capture(full_filename)
-    log_capture_info(camera, full_filename)
 
+    camera.capture(full_filename, format=IMAGE_FORMAT, bayer=True)
+    
+    # log_capture_info(camera, full_filename)
+    # print_exposure_settings(camera)
+    
     first_exposure_ev = read_exif_data(full_filename)
     image_info.append(first_exposure_ev)
+
     log.info("brightness          : {:.2f} EV".format(first_exposure_ev))
     if ND_FILTER is not None:
         log.info("brightness (incl ND): {:.2f} EV".format(first_exposure_ev+ND_FILTER))
@@ -213,7 +226,7 @@ def trigger():
     sleep(0.5)
 
     full_filename_2 = os.path.join(OUTPUT_DIR_2, filename[1]) #[:-4] + "_2" + ".jpg")
-    camera.capture(full_filename_2)
+    camera.capture(full_filename_2, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_2)
 
     # read_exif_data(full_filename_2)
@@ -226,7 +239,7 @@ def trigger():
     sleep(0.5)
 
     full_filename_3 = os.path.join(OUTPUT_DIR_3, filename[1])
-    camera.capture(full_filename_3)
+    camera.capture(full_filename_3, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_3)
 
     camera.close()
@@ -236,7 +249,8 @@ def trigger():
 
 if __name__ == "__main__":
 
-    start = datetime.now()
+    # we need to use timestamp milliseconds because we may change system time later
+    start = datetime.now().timestamp()
 
     # ---------------------------------------------------------------------------------------
 
@@ -283,8 +297,9 @@ if __name__ == "__main__":
 
     # ---------------------------------------------------------------------------------------
 
-    log.info("-------------")
-    log.info("trashcam init")
+    log.info("-----------------")
+    log.info("- trashcam init -")
+    log.info("-----------------")
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--persistent-mode", type=bool, default=False, help="")
@@ -310,6 +325,23 @@ if __name__ == "__main__":
         pass
 
     image_info = None
+    
+    controller = TimeboxController.find_by_portname(SERIAL_PORT)
+    if controller is not None:
+        try:
+            millis = controller.get_uptime() # 1008343
+            millis = int(millis)
+            secs = int(millis/1000)
+            subprocess.run(["date", "-s", "@{}".format(secs)], check=True)
+
+            start += millis/1000.0
+
+            d = datetime.fromtimestamp(secs)
+            log.debug("setting system time to {}".format(d.strftime('%Y-%m-%d %H:%M:%S')))
+        except Exception as e:
+            log.error("setting system time failed: {}".format(e))
+    else:
+        log.warning("setting system time failed, no controller found")
 
     try:
 
@@ -336,7 +368,8 @@ if __name__ == "__main__":
         else:
             image_info = trigger()
 
-            log.debug("total runtime: {:.3f} sec".format((datetime.now()-start).total_seconds()))
+        diff = datetime.now().timestamp() - start
+        log.debug("total runtime: {:.3f} sec".format(diff))
 
     except Exception as e:
         log.error("error: {}".format(e))
@@ -344,8 +377,6 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------------------
 
     if SHUTDOWN_ON_COMPLETE:
-
-        controller = TimeboxController.find_by_portname(SERIAL_PORT)
 
         if controller is not None:
             try:
