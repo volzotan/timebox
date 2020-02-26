@@ -9,6 +9,7 @@ import sys
 import shutil
 import argparse
 import subprocess
+import traceback
 import logging
 
 import exifread
@@ -19,8 +20,9 @@ from devices import TimeboxController
 # ---
 
 SECOND_EXPOSURE_SHUTTER_SPEED   = 9
-SECOND_EXPOSURE_ISO             = 10
+SECOND_EXPOSURE_ISO             = 25
 THIRD_EXPOSURE_SHUTTER_SPEED    = 9*(2**3)
+EXPOSURE_COMPENSATION           = 3 # 6 = +1 stop
 
 SHUTDOWN_ON_COMPLETE            = True 
 
@@ -28,10 +30,6 @@ IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. 
 # IMAGE_FORMAT                    = "rgb" # 24-bit RGB format # ~ 23 mb
 # IMAGE_FORMAT                    = "yuv" # YUV420 format
 # IMAGE_FORMAT                    = "png" # PNG format # ~ 9 mb
-
-# PERSISTENT MODE
-INTERVAL                        = 60 # in sec
-MAX_ITERATIONS                  = 3000
 
 OUTPUT_DIR_1                    = "captures_1"
 OUTPUT_DIR_2                    = "captures_2"
@@ -45,10 +43,19 @@ MIN_FREE_SPACE                  = 300
 ND_FILTER                       = 10 # stops
 
 # EV values, ND-filter-value corrected
-REDUCE_INTERVAL_EV_THRESHOLD    = 5
+REDUCE_INTERVAL_EV_THRESHOLD    = 3
 INCREASE_INTERVAL_EV_THRESHOLD  = 8 # 10
 
-""" INFO:
+# PERSISTENT MODE
+INTERVAL                        = 60 # in sec
+MAX_ITERATIONS                  = 3000
+
+"""                      
+┌┬┐┬─┐┌─┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
+ │ ├┬┘├─┤└─┐├─┤│  ├─┤│││
+ ┴ ┴└─┴ ┴└─┘┴ ┴└─┘┴ ┴┴ ┴
+
+INFO:
 
 The maximum resolution of the V2 camera may require additional GPU memory when operating at low framerates (<1fps). 
 Increase gpu_mem in /boot/config.txt if you encounter “out of resources” errors when attempting long-exposure captures with a V2 module.
@@ -137,12 +144,14 @@ def print_exposure_settings(camera):
 
 def log_capture_info(camera, filename):
 
-    STATETMENT = "{:20s}: {}"
+    log.info("{:20s}: {}".format("filename", filename))
 
-    log.info(STATETMENT.format("filename", filename))
-    log.info(STATETMENT.format("shutter speed", camera.shutter_speed)) # microseconds
-    # log.info(STATETMENT.format("exposure speed", camera.exposure_speed))
-    log.info(STATETMENT.format("iso", camera.iso))
+    log.info("{:20s}: {}".format("shutter speed", camera.shutter_speed)) # microseconds
+    log.info("{:20s}: {}".format("exposure speed", camera.exposure_speed/(1000*1000)))
+
+    log.info("{:20s}: {}".format("iso", camera.iso))
+    log.info("{:20s}: {:4.2f}".format("analog gain", float(camera.analog_gain)))
+    log.info("{:20s}: {:4.2f}".format("digital gain", float(camera.digital_gain)))
 
 def get_filename(extension): # returns(path, filename.ext)
 
@@ -157,7 +166,7 @@ def get_filename(extension): # returns(path, filename.ext)
     raise Exception("no filenames left!")
 
 
-def global_except_hook(exctype, value, traceback):
+def global_except_hook(exctype, value, tb):
     
     log = logging.getLogger()
 
@@ -166,7 +175,7 @@ def global_except_hook(exctype, value, traceback):
     logging.shutdown()
     subprocess.call(["sync"])
 
-    # traceback.print_tb()
+    traceback.print_tb(tb)
 
     # sys.__excepthook__(exctype, value, traceback)
 
@@ -178,6 +187,7 @@ def trigger():
     camera = picamera.PiCamera() # starts hidden preview for 3A automatically
     
     camera.meter_mode = "spot"
+    camera.exposure_compensation = EXPOSURE_COMPENSATION
 
     try:
         camera.resolution = (3280, 2464) # V2 8MP
@@ -192,7 +202,7 @@ def trigger():
     except Exception as e:
         log.error("setting camera resolution failed (unknown reasons): {}".format(e))
 
-    sleep(2)
+    sleep(1)
 
     log.debug("--- exposure 1 ---")
 
@@ -204,6 +214,7 @@ def trigger():
     # log_capture_info(camera, full_filename)
     # print_exposure_settings(camera)
     
+    log_capture_info(camera, full_filename)
     first_exposure_ev = read_exif_data(full_filename)
     image_info.append(first_exposure_ev)
 
@@ -214,12 +225,22 @@ def trigger():
 
     log.debug("--- exposure 2 ---")
 
-    # increase framerate, otherwise capture will block 
-    # even on short exposures for several seconds
-    # (for some reason will too fast (> 16fps) rates result in 0-value-images)
+    # increase framerate, otherwise capture will block even on short exposures 
+    # for several seconds (for some reason too fast rates (> 16fps) will result 
+    # in 0-value-images)
     camera.framerate = Fraction(10, 1)
+    camera.exposure_compensation = 0
 
+    # before actually disabling exposure mode (and thus disabling automatic gain control)
+    # set ISO to a low value. AGC will reduce analog and digital gain and afterwards we 
+    # can set the exposure mode to off. If that's not done the first (quite dark) exposure
+    # through the filter will nudge the AGC to increase the gain and our (mostly black) 2nd
+    # and 3rd exposures will be extremly noisy (and thus will result in jpegs with high 
+    # filesizes)
+    camera.iso = SECOND_EXPOSURE_ISO
+    sleep(1)
     camera.exposure_mode = "off"
+
     camera.iso = SECOND_EXPOSURE_ISO
     camera.shutter_speed = SECOND_EXPOSURE_SHUTTER_SPEED
 
@@ -297,14 +318,23 @@ if __name__ == "__main__":
 
     # ---------------------------------------------------------------------------------------
 
-    log.info("-----------------")
-    log.info("- trashcam init -")
-    log.info("-----------------")
+    log.info("")
+    log.info("--------------------------")
+    log.info(" ┌┬┐┬─┐┌─┐┌─┐┬ ┬┌─┐┌─┐┌┬┐ ")
+    log.info("  │ ├┬┘├─┤└─┐├─┤│  ├─┤│││ ")
+    log.info("  ┴ ┴└─┴ ┴└─┘┴ ┴└─┘┴ ┴┴ ┴ ")
+    log.info("--------------------------")
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--persistent-mode", type=bool, default=False, help="")
     ap.add_argument("-s", "--stream-mode", type=bool, default=False, help="")
     args = vars(ap.parse_args())
+
+    log.info("ND FILTER          : {} stops".format(ND_FILTER))
+    log.info("PERSISTENT MODE    : {}".format(args["persistent_mode"]))
+    log.info("STREAM MODE        : {}".format(args["stream_mode"]))
+
+    log.info("-----------------")
 
     try: 
         os.makedirs(OUTPUT_DIR_1)
@@ -329,10 +359,25 @@ if __name__ == "__main__":
     controller = TimeboxController.find_by_portname(SERIAL_PORT)
     if controller is not None:
         try:
-            millis = controller.get_uptime() # 1008343
-            millis = int(millis)
+            millis = int(controller.get_uptime()) # 1008343
             secs = int(millis/1000)
+
             subprocess.run(["date", "-s", "@{}".format(secs)], check=True)
+
+            seconds = float(millis) / 1000.0
+            minutes = seconds / 60.0
+            hours   = minutes / 60.0
+            days    = hours / 24.0
+
+            msg = "{:.0f} sec".format(seconds % 60)
+            if minutes > 1:
+                msg = "{:.0f} min, ".format(minutes % 60) + msg
+            if hours > 1:
+                msg = "{:.0f} h, ".format(hours % 24) + msg
+            if days > 1:
+                msg = "{:.0f} d, ".format(days) + msg
+
+            log.info("running for: " + msg)
 
             start += millis/1000.0
 
@@ -349,6 +394,8 @@ if __name__ == "__main__":
         if free_space_mb < MIN_FREE_SPACE:
             log.error("NO SPACE LEFT ON DEVICE (directory: {}, free space: {}, min free space: {}".format(OUTPUT_DIR_1, free_space_mb, MIN_FREE_SPACE))
             raise Exception("no space left on device")
+        else:
+            log.debug("free space in {}: {:.2f}mb".format(OUTPUT_DIR_1, free_space_mb))
 
         if args["stream_mode"]:
             preview = StreamPreview()
@@ -372,7 +419,7 @@ if __name__ == "__main__":
         log.debug("total runtime: {:.3f} sec".format(diff))
 
     except Exception as e:
-        log.error("error: {}".format(e))
+        log.error("error: [{}] {}".format(type(e), e))
 
     # ---------------------------------------------------------------------------------------
 
