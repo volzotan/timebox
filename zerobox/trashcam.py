@@ -21,7 +21,7 @@ from devices import TimeboxController
 
 SECOND_EXPOSURE_SHUTTER_SPEED   = 9
 SECOND_EXPOSURE_ISO             = 25
-THIRD_EXPOSURE_SHUTTER_SPEED    = 9*(2**3)
+THIRD_EXPOSURE_SHUTTER_SPEED    = SECOND_EXPOSURE_SHUTTER_SPEED*(2**5)
 EXPOSURE_COMPENSATION           = 3 # 6 = +1 stop
 
 SHUTDOWN_ON_COMPLETE            = True 
@@ -184,7 +184,8 @@ def trigger():
 
     image_info = []
 
-    camera = picamera.PiCamera() # starts hidden preview for 3A automatically
+    # starts hidden preview for 3A automatically
+    camera = picamera.PiCamera() 
     
     camera.meter_mode = "spot"
     camera.exposure_compensation = EXPOSURE_COMPENSATION
@@ -202,9 +203,10 @@ def trigger():
     except Exception as e:
         log.error("setting camera resolution failed (unknown reasons): {}".format(e))
 
+    # give the 3A algorithms some time for warmup
     sleep(1)
 
-    log.debug("--- exposure 1 ---")
+    log.debug("---- exposure 1 ----")
 
     filename = get_filename(IMAGE_FORMAT)
     full_filename = os.path.join(*filename)
@@ -223,7 +225,7 @@ def trigger():
         log.info("brightness (incl ND): {:.2f} EV".format(first_exposure_ev+ND_FILTER))
     # print_exposure_settings(camera)
 
-    log.debug("--- exposure 2 ---")
+    log.debug("---- exposure 2 ----")
 
     # increase framerate, otherwise capture will block even on short exposures 
     # for several seconds (for some reason too fast rates (> 16fps) will result 
@@ -240,8 +242,6 @@ def trigger():
     camera.iso = SECOND_EXPOSURE_ISO
     sleep(1)
     camera.exposure_mode = "off"
-
-    camera.iso = SECOND_EXPOSURE_ISO
     camera.shutter_speed = SECOND_EXPOSURE_SHUTTER_SPEED
 
     sleep(0.5)
@@ -253,11 +253,11 @@ def trigger():
     # read_exif_data(full_filename_2)
     # print_exposure_settings(camera)
 
-    log.debug("--- exposure 3 ---")
+    log.debug("---- exposure 3 ----")
 
     camera.shutter_speed = THIRD_EXPOSURE_SHUTTER_SPEED
 
-    sleep(0.5)
+    sleep(0.1)
 
     full_filename_3 = os.path.join(OUTPUT_DIR_3, filename[1])
     camera.capture(full_filename_3, format=IMAGE_FORMAT)
@@ -302,6 +302,9 @@ if __name__ == "__main__":
 
     sys.excepthook = global_except_hook
 
+
+    log.info(subprocess.check_output(["cat", "/proc/uptime"]))
+
     # ---------------------------------------------------------------------------------------
 
     # # TODO: wifi off
@@ -330,11 +333,11 @@ if __name__ == "__main__":
     ap.add_argument("-s", "--stream-mode", type=bool, default=False, help="")
     args = vars(ap.parse_args())
 
-    log.info("ND FILTER          : {} stops".format(ND_FILTER))
-    log.info("PERSISTENT MODE    : {}".format(args["persistent_mode"]))
-    log.info("STREAM MODE        : {}".format(args["stream_mode"]))
+    log.info("ND FILTER       : {} stops".format(ND_FILTER))
+    log.info("PERSISTENT MODE : {}".format(args["persistent_mode"]))
+    log.info("STREAM MODE     : {}".format(args["stream_mode"]))
 
-    log.info("-----------------")
+    log.info("--------------------------")
 
     try: 
         os.makedirs(OUTPUT_DIR_1)
@@ -359,6 +362,9 @@ if __name__ == "__main__":
     controller = TimeboxController.find_by_portname(SERIAL_PORT)
     if controller is not None:
         try:
+
+            log.debug("controller found: {}".format(controller))
+
             millis = int(controller.get_uptime()) # 1008343
             secs = int(millis/1000)
 
@@ -427,7 +433,6 @@ if __name__ == "__main__":
 
         if controller is not None:
             try:
-                log.debug("controller found: {}".format(controller))
 
                 log.info("battery: {}".format(controller.get_battery_status()))
                 log.info("temperature: {}".format(controller.get_temperature()))
