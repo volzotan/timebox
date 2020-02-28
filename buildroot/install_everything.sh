@@ -27,3 +27,6 @@ sh upload_zerobox.sh
 echo "\n---"
 echo "download pip packages"
 ssh buildroot 'sh /home/pi/zerobox/buildroot_install.sh'
+
+echo "DONE! reboot..."
+ssh buildroot 'reboot'
