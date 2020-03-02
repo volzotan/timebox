@@ -27,11 +27,11 @@ p
 w
 EOF
 
-sleep 3
+sleep 5
 
 echo "\n\n"
 echo "REBOOT!"
 
-sleep 1
+sleep 5
 
 reboot

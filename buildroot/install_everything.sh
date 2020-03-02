@@ -7,8 +7,8 @@ echo "resize partitions and reboot"
 scp resize_fs.sh buildroot:/root
 ssh buildroot 'sh /root/resize_fs.sh'
 
-echo "sleep 15s"
-sleep 15
+echo "sleep 20s"
+sleep 20
 
 echo "finishing resizing partitions"
 ssh buildroot 'resize2fs /dev/mmcblk0p2'
