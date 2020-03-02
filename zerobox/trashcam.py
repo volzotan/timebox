@@ -17,12 +17,14 @@ import picamera
 
 from devices import TimeboxController
 
+from PIL import Image
+
 # ---
 
 SECOND_EXPOSURE_SHUTTER_SPEED   = 9
 SECOND_EXPOSURE_ISO             = 25
-THIRD_EXPOSURE_SHUTTER_SPEED    = SECOND_EXPOSURE_SHUTTER_SPEED*(2**5)
-EXPOSURE_COMPENSATION           = 3 # 6 = +1 stop
+THIRD_EXPOSURE_SHUTTER_SPEED    = SECOND_EXPOSURE_SHUTTER_SPEED*(2**7)
+EXPOSURE_COMPENSATION           = 2 # 6 = +1 stop
 
 SHUTDOWN_ON_COMPLETE            = True 
 
@@ -153,6 +155,22 @@ def log_capture_info(camera, filename):
     log.info("{:20s}: {:4.2f}".format("analog gain", float(camera.analog_gain)))
     log.info("{:20s}: {:4.2f}".format("digital gain", float(camera.digital_gain)))
 
+
+def calculate_brightness(filename):
+
+    with Image.open(filename) as image:
+        greyscale_image = image.convert('L')
+        histogram = greyscale_image.histogram()
+        pixels = sum(histogram)
+        brightness = scale = len(histogram)
+
+        for index in range(0, scale):
+            ratio = histogram[index] / pixels
+            brightness += ratio * (-scale + index)
+
+        return 1 if brightness == 255 else brightness / scale
+
+
 def get_filename(extension): # returns(path, filename.ext)
 
     if extension == "jpeg":
@@ -218,7 +236,7 @@ def trigger():
     
     log_capture_info(camera, full_filename)
     first_exposure_ev = read_exif_data(full_filename)
-    image_info.append(first_exposure_ev)
+    image_info.append([full_filename, first_exposure_ev])
 
     log.info("brightness          : {:.2f} EV".format(first_exposure_ev))
     if ND_FILTER is not None:
@@ -250,6 +268,8 @@ def trigger():
     camera.capture(full_filename_2, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_2)
 
+    image_info.append([full_filename_2, None])
+
     # read_exif_data(full_filename_2)
     # print_exposure_settings(camera)
 
@@ -262,6 +282,8 @@ def trigger():
     full_filename_3 = os.path.join(OUTPUT_DIR_3, filename[1])
     camera.capture(full_filename_3, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_3)
+
+    image_info.append([full_filename_3, None])
 
     camera.close()
 
@@ -302,8 +324,7 @@ if __name__ == "__main__":
 
     sys.excepthook = global_except_hook
 
-
-    log.info(subprocess.check_output(["cat", "/proc/uptime"]))
+    # log.info(subprocess.check_output(["cat", "/proc/uptime"]))
 
     # ---------------------------------------------------------------------------------------
 
@@ -398,7 +419,7 @@ if __name__ == "__main__":
 
         free_space_mb = shutil.disk_usage(OUTPUT_DIR_1).free / (1024 * 1024)
         if free_space_mb < MIN_FREE_SPACE:
-            log.error("NO SPACE LEFT ON DEVICE (directory: {}, free space: {}, min free space: {}".format(OUTPUT_DIR_1, free_space_mb, MIN_FREE_SPACE))
+            log.error("NO SPACE LEFT ON DEVICE (directory: {}, free space: {:.2f}, min free space: {:.2f}".format(OUTPUT_DIR_1, free_space_mb, MIN_FREE_SPACE))
             raise Exception("no space left on device")
         else:
             log.debug("free space in {}: {:.2f}mb".format(OUTPUT_DIR_1, free_space_mb))
@@ -437,23 +458,83 @@ if __name__ == "__main__":
                 log.info("battery: {}".format(controller.get_battery_status()))
                 log.info("temperature: {}".format(controller.get_temperature()))
 
+                #
                 # get EV of last (primary) image and reduce if brighter than threshold
-                if image_info is not None and len(image_info) > 0:
+                # 
+                # option A: use EXIF data to compute EV
+                #  problem: if a ND1000 filter is used, only very bright scenes do increase
+                #           the shutter speed above minimum (and thus change the computed EV)
+                #
+                # option B: calculate brightness (or non-zero pixels) of capture_2 or _3
+                #  problem: requires 2-3s per image! (total time with option B from powerup
+                #           to request-for-shutdown is 37s)
+                #
+                # option C: get the brightest pixel in capture_2
+                #           if > than threshold, sun must be present
+                #  problem: works well for increase interval, but how to know when to reduce?
 
-                    brightness = image_info[0]
+                try:
+                    if image_info is not None and len(image_info) > 0:
 
-                    if ND_FILTER is not None:
-                        brightness += ND_FILTER
+                        # option A:
 
-                    if brightness < REDUCE_INTERVAL_EV_THRESHOLD:
-                        log.debug("request interval reduction (EV: {:.2f} < {})".format(
-                            brightness, REDUCE_INTERVAL_EV_THRESHOLD))
-                        controller.reduce_interval()
+                        # brightness = image_info[0][1]
 
-                    if brightness > INCREASE_INTERVAL_EV_THRESHOLD:
-                        log.debug("request interval increase (EV: {:.2f} > {})".format(
-                            brightness, INCREASE_INTERVAL_EV_THRESHOLD))
-                        controller.increase_interval()
+                        # if ND_FILTER is not None:
+                        #     brightness += ND_FILTER
+
+                        # # take images slower
+
+                        # if brightness <= REDUCE_INTERVAL_EV_THRESHOLD:
+                        #     log.debug("request interval reduction (EV: {:.2f} < {})".format(
+                        #         brightness, REDUCE_INTERVAL_EV_THRESHOLD))
+                        #     controller.reduce_interval()
+
+                        # # take images faster
+
+                        # if brightness > INCREASE_INTERVAL_EV_THRESHOLD:
+                        #     log.debug("request interval increase (EV: {:.2f} > {})".format(
+                        #         brightness, INCREASE_INTERVAL_EV_THRESHOLD))
+                        #     controller.increase_interval()
+
+                        # option B:
+
+                        filename_capture_1 = image_info[0][0]
+                        brightness_1 = calculate_brightness(filename_capture_1)
+                        log.info("brightness of capture_1: {:6.4f}".format(brightness_1))
+
+                        filename_capture_2 = image_info[1][0]
+                        brightness_2 = calculate_brightness(filename_capture_2)
+                        log.info("brightness of capture_2: {:6.4f}".format(brightness_2))
+
+                        if brightness_2 >= 0.001:
+
+                            # take images faster
+
+                            log.debug("request interval increase (brightness: {:.4f} > {})".format(
+                                brightness_2, 0.001))
+                            controller.increase_interval()
+
+                        elif brightness_1 < 0.2:
+
+                            # take images slower
+
+                            log.debug("request interval reduction (brightness: {:.4f} < {})".format(
+                                brightness_1, 0.2))
+                            controller.reduce_interval()
+
+                        # option C:
+
+                        # filename_capture_2 = image_info[1][0]
+                        # image = Image.open(filename_capture_2)
+                        # min_value, max_value = image.getextrema()
+
+                        # log.info("max pixel value: {}".format(max_value))
+
+                        # pass
+
+                except Exception as e:
+                    log.error("increasing/reducing interval failed: {}".format(e))
 
                 controller.shutdown(delay=11000)
 

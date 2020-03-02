@@ -36,7 +36,7 @@ long trigger_increased_till     = -1;
 #define TRIGGER_INTERVAL_RED    240 *1000
 #define TRIGGER_INTERVAL_INC    60  *1000
 
-#define TRIGGER_MAX_ACTIVE      50  *1000       // zero & cam max time on [ms]
+#define TRIGGER_MAX_ACTIVE      55  *1000       // zero & cam max time on [ms]
 // #define TRIGGER_CAM_DELAY       5   *1000    // turn camera on X seconds after zero [ms]
 // #define TRIGGER_WAIT_DELAYED    1   *1000    // wait for X seconds after zero requests shutdown [ms]
 #define TRIGGER_COUNT           10000           // max number of triggers
