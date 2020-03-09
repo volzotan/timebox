@@ -32,6 +32,7 @@ IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. 
 # IMAGE_FORMAT                    = "rgb" # 24-bit RGB format # ~ 23 mb
 # IMAGE_FORMAT                    = "yuv" # YUV420 format
 # IMAGE_FORMAT                    = "png" # PNG format # ~ 9 mb
+WRITE_RAW                       = True
 
 OUTPUT_DIR_1                    = "captures_1"
 OUTPUT_DIR_2                    = "captures_2"
@@ -42,7 +43,7 @@ SERIAL_PORT                     = "/dev/ttyAMA0"
 
 MIN_FREE_SPACE                  = 300
 
-ND_FILTER                       = 10 # stops
+# ND_FILTER                       = 10 # stops
 
 # EV values, ND-filter-value corrected
 REDUCE_INTERVAL_EV_THRESHOLD    = 3
@@ -229,7 +230,7 @@ def trigger():
     filename = get_filename(IMAGE_FORMAT)
     full_filename = os.path.join(*filename)
 
-    camera.capture(full_filename, format=IMAGE_FORMAT, bayer=True)
+    camera.capture(full_filename, format=IMAGE_FORMAT, bayer=WRITE_RAW)
     
     # log_capture_info(camera, full_filename)
     # print_exposure_settings(camera)
@@ -239,8 +240,8 @@ def trigger():
     image_info.append([full_filename, first_exposure_ev])
 
     log.info("brightness          : {:.2f} EV".format(first_exposure_ev))
-    if ND_FILTER is not None:
-        log.info("brightness (incl ND): {:.2f} EV".format(first_exposure_ev+ND_FILTER))
+    # if ND_FILTER is not None:
+    #     log.info("brightness (incl ND): {:.2f} EV".format(first_exposure_ev+ND_FILTER))
     # print_exposure_settings(camera)
 
     log.debug("---- exposure 2 ----")
@@ -354,7 +355,7 @@ if __name__ == "__main__":
     ap.add_argument("-s", "--stream-mode", type=bool, default=False, help="")
     args = vars(ap.parse_args())
 
-    log.info("ND FILTER       : {} stops".format(ND_FILTER))
+    # log.info("ND FILTER       : {} stops".format(ND_FILTER))
     log.info("PERSISTENT MODE : {}".format(args["persistent_mode"]))
     log.info("STREAM MODE     : {}".format(args["stream_mode"]))
 
@@ -501,26 +502,26 @@ if __name__ == "__main__":
 
                         filename_capture_1 = image_info[0][0]
                         brightness_1 = calculate_brightness(filename_capture_1)
-                        log.info("brightness of capture_1: {:6.4f}".format(brightness_1))
+                        log.info("brightness of capture_1: {:7.5f}".format(brightness_1))
 
                         filename_capture_2 = image_info[1][0]
                         brightness_2 = calculate_brightness(filename_capture_2)
-                        log.info("brightness of capture_2: {:6.4f}".format(brightness_2))
+                        log.info("brightness of capture_2: {:7.5f}".format(brightness_2))
 
-                        if brightness_2 >= 0.001:
+                        if brightness_2 >= 0.0001:
 
                             # take images faster
 
-                            log.debug("request interval increase (brightness: {:.4f} > {})".format(
-                                brightness_2, 0.001))
+                            log.debug("request interval increase (brightness: {:.5f} > {})".format(
+                                brightness_2, 0.0001))
                             controller.increase_interval()
 
-                        elif brightness_1 < 0.2:
+                        elif brightness_1 < 0.05:
 
                             # take images slower
 
-                            log.debug("request interval reduction (brightness: {:.4f} < {})".format(
-                                brightness_1, 0.2))
+                            log.debug("request interval reduction (brightness: {:.5f} < {})".format(
+                                brightness_1, 0.05))
                             controller.reduce_interval()
 
                         # option C:
