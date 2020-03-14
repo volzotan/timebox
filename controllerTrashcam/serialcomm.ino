@@ -144,14 +144,20 @@ void executeCommand() {
         break; 
 
         case 'R': // Reduce Interval
-            trigger_reduced_till = millis() + TRIGGER_INTERVAL_RED * 3;
+            trigger_reduced_till = millis() + TRIGGER_INTERVAL_RED * 1 + 30*1000;
             trigger_increased_till = -1;
+
+            // replace already existing next trigger
+            nextTrigger = currentTrigger + TRIGGER_INTERVAL_RED; 
             okSerial();
         break; 
         
         case 'I': // Increase Interval
             trigger_reduced_till = -1;
-            trigger_increased_till = millis() + TRIGGER_INTERVAL_INC * 3;
+            trigger_increased_till = millis() + TRIGGER_INTERVAL_INC * 3 + 30*1000;
+
+            // replace already existing next trigger
+            nextTrigger = currentTrigger + TRIGGER_INTERVAL_INC; 
             okSerial();
         break; 
         

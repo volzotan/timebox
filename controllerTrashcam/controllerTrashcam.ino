@@ -36,13 +36,10 @@ long trigger_increased_till     = -1;
 #define TRIGGER_INTERVAL_RED    240 *1000
 #define TRIGGER_INTERVAL_INC    60  *1000
 
-#define TRIGGER_MAX_ACTIVE      55  *1000       // zero & cam max time on [ms]
+#define TRIGGER_MAX_ACTIVE      59  *1000       // zero & cam max time on [ms]
 // #define TRIGGER_CAM_DELAY       5   *1000    // turn camera on X seconds after zero [ms]
 // #define TRIGGER_WAIT_DELAYED    1   *1000    // wait for X seconds after zero requests shutdown [ms]
 #define TRIGGER_COUNT           10000           // max number of triggers
-
-#define REDUCE_INTERVAL_TIME    60  *3600       // [s]
-#define INCREASE_INTERVAL_TIME  60  *3600       // [s]
 
 // ---------------------------
 
@@ -109,6 +106,14 @@ void setup() {
     }
 
     #ifdef DEBUG
+    
+        for (int i=0; i<50; i++) {
+            SerialUSB.print(".");
+            delay(100);
+        }
+        SerialUSB.println();
+
+        DEBUG_PRINT("-----------------");
         DEBUG_PRINT("Battery pin value:");
         analogRead(PIN_BATT_DIRECT);
         delay(100);
@@ -117,9 +122,19 @@ void setup() {
         DEBUG_PRINT(getBatteryVoltage());
         DEBUG_PRINT("Battery percentage:");
         DEBUG_PRINT(getBatteryPercentage());
+        DEBUG_PRINT("-----------------");
+        DEBUG_PRINT("TRIGGER_INTERVAL:");
+        DEBUG_PRINT(TRIGGER_INTERVAL);
+        DEBUG_PRINT("TRIGGER_INTERVAL_RED:");
+        DEBUG_PRINT(TRIGGER_INTERVAL_RED);
+        DEBUG_PRINT("TRIGGER_INTERVAL_INC:");
+        DEBUG_PRINT(TRIGGER_INTERVAL_INC);
+        DEBUG_PRINT("TRIGGER_MAX_ACTIVE:");
+        DEBUG_PRINT(TRIGGER_MAX_ACTIVE);
+        DEBUG_PRINT("-----------------");
     #endif
 
-    nextTrigger = millis() + 3000;
+    nextTrigger = millis() + 1000;
 
 }
 
@@ -153,17 +168,15 @@ void loop() {
                 if (trigger_reduced_till > 0) {
                     if (millis() < trigger_reduced_till) {
                         interval_length = TRIGGER_INTERVAL_RED;
-                        DEBUG_PRINT("interval on reduced length");
+                        DEBUG_PRINT("interval in reduced trigger state");
                     } else {
                         trigger_reduced_till = -1;
                         DEBUG_PRINT("interval switched from reduced to regular");
                     }
-                }
-                
-                if (trigger_increased_till > 0) {
+                } else if (trigger_increased_till > 0) {
                     if (millis() < trigger_increased_till) {
                         interval_length = TRIGGER_INTERVAL_INC;
-                        DEBUG_PRINT("interval on increased length");
+                        DEBUG_PRINT("interval in increased trigger state");
                     } else {
                         trigger_increased_till = -1;
                         DEBUG_PRINT("interval switched from increased to regular");
@@ -216,6 +229,8 @@ void loop() {
                 switchZeroOn(false);
                 postTriggerWaitDelayed = -1;
                 DEBUG_PRINT("trigger max active done [TRIGGER_WAIT -> IDLE]");
+                DEBUG_PRINT("uptime [ms]: ");
+                DEBUG_PRINT(millis()-currentTrigger);
                 state = STATE_IDLE;
             } else if (postTriggerWaitDelayed > 0 && 
                 millis() >= postTriggerWaitDelayed) {
@@ -223,6 +238,8 @@ void loop() {
                 switchZeroOn(false);
                 postTriggerWaitDelayed = -1;
                 DEBUG_PRINT("trigger done by request [TRIGGER_WAIT -> IDLE]");
+                DEBUG_PRINT("uptime [ms]:");
+                DEBUG_PRINT(millis()-currentTrigger);
                 state = STATE_IDLE;
             }
 
