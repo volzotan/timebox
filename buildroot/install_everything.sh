@@ -21,6 +21,10 @@ echo "\n---"
 echo "uploading zerobox files"
 sh upload_zerobox.sh
 
+echo "\n---"
+echo "deleting files"
+sh buildroot_clean.sh
+
 # install script need to access /boot/config.txt and cmdline.txt 
 # so boot partition needs to be mounted for this
 
