@@ -192,9 +192,13 @@ def global_except_hook(exctype, value, tb):
     log.error("global error: {} | {}".format(exctype, value))
 
     logging.shutdown()
+
     subprocess.call(["sync"])
+    sleep(1.0)
 
     traceback.print_tb(tb)
+
+    exit()
 
     # sys.__excepthook__(exctype, value, traceback)
 
@@ -473,6 +477,7 @@ if __name__ == "__main__":
                 # option C: get the brightest pixel in capture_2
                 #           if > than threshold, sun must be present
                 #  problem: works well for increase interval, but how to know when to reduce?
+                #           slow (seems to take about 8s??)
 
                 try:
                     if image_info is not None and len(image_info) > 0:
@@ -500,29 +505,29 @@ if __name__ == "__main__":
 
                         # option B:
 
-                        filename_capture_1 = image_info[0][0]
-                        brightness_1 = calculate_brightness(filename_capture_1)
-                        log.info("brightness of capture_1: {:7.5f}".format(brightness_1))
+                        # filename_capture_1 = image_info[0][0]
+                        # brightness_1 = calculate_brightness(filename_capture_1)
+                        # log.info("brightness of capture_1: {:7.5f}".format(brightness_1))
 
-                        filename_capture_2 = image_info[1][0]
-                        brightness_2 = calculate_brightness(filename_capture_2)
-                        log.info("brightness of capture_2: {:7.5f}".format(brightness_2))
+                        # filename_capture_2 = image_info[1][0]
+                        # brightness_2 = calculate_brightness(filename_capture_2)
+                        # log.info("brightness of capture_2: {:7.5f}".format(brightness_2))
 
-                        if brightness_2 >= 0.0001:
+                        # if brightness_1 < 0.05:
+
+                        #     # take images slower
+
+                        #     log.debug("request interval reduction (brightness: {:.5f} < {})".format(
+                        #         brightness_1, 0.05))
+                        #     controller.reduce_interval()
+
+                        if brightness_2 is not None and brightness_2 >= 0.0005:
 
                             # take images faster
 
                             log.debug("request interval increase (brightness: {:.5f} > {})".format(
-                                brightness_2, 0.0001))
+                                brightness_2, 0.0005))
                             controller.increase_interval()
-
-                        elif brightness_1 < 0.05:
-
-                            # take images slower
-
-                            log.debug("request interval reduction (brightness: {:.5f} < {})".format(
-                                brightness_1, 0.05))
-                            controller.reduce_interval()
 
                         # option C:
 
@@ -530,14 +535,20 @@ if __name__ == "__main__":
                         # image = Image.open(filename_capture_2)
                         # min_value, max_value = image.getextrema()
 
-                        # log.info("max pixel value: {}".format(max_value))
+                        # if max_value is not None and max_value >= 100:
+
+                        #     # take images faster
+
+                        #     log.debug("request interval increase (max value: {:.2f} > {})".format(
+                        #         max_value, 100))
+                        #     controller.increase_interval()
 
                         # pass
 
                 except Exception as e:
                     log.error("increasing/reducing interval failed: {}".format(e))
 
-                controller.shutdown(delay=11000)
+                controller.shutdown(delay=12000)
 
                 log.debug("shutdown command sent")
                 log.info("POWEROFF")
@@ -545,9 +556,9 @@ if __name__ == "__main__":
                 log.debug("logging shutdown")
                 logging.shutdown()
 
-                subprocess.call(["sync"])
+                # subprocess.call(["sync"])
+                # sleep(0.5)
 
-                sleep(0.5)
                 subprocess.call(["poweroff"])
                 exit()
             except Exception as e:
@@ -557,5 +568,11 @@ if __name__ == "__main__":
 
     log.debug("logging shutdown")
     logging.shutdown()
+
+    start = datetime.now()
     subprocess.call(["sync"])
+    diff = (datetime.now() - start).total_seconds()
+    print("sync done. took: {:.3f} sec".format(diff))
+
+    sleep(1.0)
 
