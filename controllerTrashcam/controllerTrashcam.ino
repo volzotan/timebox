@@ -9,6 +9,7 @@
 #define SHUTDOWN_ON_LOW_BATTERY
 // #define HOST_DEFAULT_POWERED_ON
 // #define WAIT_ON_BOOT_FOR_SERIAL
+// #define TEMP_SENSOR_AVAILABLE
 
 #define SERIAL Serial1
 
@@ -79,11 +80,13 @@ void setup() {
     //  2    0.125°C     130 ms
     //  3    0.0625°C    250 ms
 
-    if (!tempsensor.begin(0x18)) {
-        DEBUG_PRINT("temperature sensor not found");
-    } else {
-        tempsensor.setResolution(1); 
-    }
+    #ifdef TEMP_SENSOR_AVAILABLE
+        if (!tempsensor.begin(0x18)) {
+            DEBUG_PRINT("temperature sensor not found");
+        } else {
+            tempsensor.setResolution(1); 
+        }
+    #endif
 
     // battery life
     if (!checkBattHealth()) {
@@ -122,6 +125,12 @@ void setup() {
         DEBUG_PRINT(getBatteryVoltage());
         DEBUG_PRINT("Battery percentage:");
         DEBUG_PRINT(getBatteryPercentage());
+        DEBUG_PRINT("Temperature:");
+        #ifdef TEMP_SENSOR_AVAILABLE
+            // TODO
+        #else:
+            DEBUG_PRINT("(temp sensor not available)");
+        #endif
         DEBUG_PRINT("-----------------");
         DEBUG_PRINT("TRIGGER_INTERVAL:");
         DEBUG_PRINT(TRIGGER_INTERVAL);

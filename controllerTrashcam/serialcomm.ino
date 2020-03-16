@@ -122,13 +122,18 @@ void executeCommand() {
         break;   
 
         case 'T': // Temperature
-            tempsensor.wake();
 
-            SERIAL.print("K ");
-            SERIAL.print(tempsensor.readTempC(), 4);
-            SERIAL.println();
+            #ifdef TEMP_SENSOR_AVAILABLE
+                tempsensor.wake();
 
-            tempsensor.shutdown_wake(1);
+                SERIAL.print("K ");
+                SERIAL.print(tempsensor.readTempC(), 4);
+                SERIAL.println();
+
+                tempsensor.shutdown_wake(1);
+            #else
+                errorSerial(ERRORCODE_NOT_AVAILABLE);
+            #endif
         break;     
 
         case 'Z': // Zero On 
