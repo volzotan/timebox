@@ -1,17 +1,41 @@
 
+# remount main partition as RW
+ssh buildroot 'mount -o remount,rw /dev/root /'
+
 # create /boot dir so fstab can mount the boot partition
 ssh buildroot 'mkdir /boot'
+ssh buildroot 'mkdir /media/storage'
 ssh buildroot 'mkdir /media/external_storage'
 
-echo "resize partitions and reboot"
-scp resize_fs.sh buildroot:/root
-ssh buildroot 'sh /root/resize_fs.sh'
+# ------------------------------------------
+
+# echo "resize partition and reboot"
+# scp resize_fs.sh buildroot:/root
+# ssh buildroot 'sh /root/resize_fs.sh'
+
+# echo "sleep 20s"
+# sleep 20
+
+# echo "finishing resizing partitions"
+# ssh buildroot 'resize2fs /dev/mmcblk0p2'
+
+# ------------------------------------------
+
+echo "creating new partition and reboot"
+scp create_fs.sh buildroot:/root
+ssh buildroot 'sh /root/create_fs.sh'
 
 echo "sleep 20s"
 sleep 20
 
-echo "finishing resizing partitions"
-ssh buildroot 'resize2fs /dev/mmcblk0p2'
+echo "format new partition"
+ssh buildroot 'mke2fs -t ext4 /dev/mmcblk0p3'
+
+ssh buildroot 'reboot'
+
+# ------------------------------------------
+
+ssh buildroot 'mount -o remount,rw /dev/root /'
 
 echo "\n---"
 echo "setting current time and date on the pi"

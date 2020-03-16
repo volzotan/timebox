@@ -35,11 +35,14 @@ IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. 
 # IMAGE_FORMAT                    = "png" # PNG format # ~ 9 mb
 WRITE_RAW                       = True
 
-OUTPUT_DIR_1                    = "captures_1"
-OUTPUT_DIR_2                    = "captures_2"
-OUTPUT_DIR_3                    = "captures_3"
-OUTPUT_DIR_4                    = "captures_4"
+BASE_DIR                        = "/media/storage/"
+OUTPUT_DIR_1                    = BASE_DIR + "captures_1"
+OUTPUT_DIR_2                    = BASE_DIR + "captures_2"
+OUTPUT_DIR_3                    = BASE_DIR + "captures_3"
+OUTPUT_DIR_4                    = BASE_DIR + "captures_4"
 OUTPUT_FILENAME                 = "cap"
+
+LOG_FILE                        = BASE_DIR + "log_trashcam.log"
 
 SERIAL_PORT                     = "/dev/ttyAMA0"
 
@@ -329,8 +332,6 @@ if __name__ == "__main__":
 
     # ---------------------------------------------------------------------------------------
 
-    log_filename = "log_trashcam.log"
-
     # create logger
     log = logging.getLogger() #"oneshot")
     log.setLevel(logging.DEBUG)
@@ -349,7 +350,7 @@ if __name__ == "__main__":
     consoleHandler.setFormatter(formatter)
     log.addHandler(consoleHandler)
 
-    fileHandlerDebug = logging.FileHandler(log_filename, mode="a", encoding="UTF-8")
+    fileHandlerDebug = logging.FileHandler(LOG_FILE, mode="a", encoding="UTF-8")
     fileHandlerDebug.setLevel(logging.DEBUG)
     fileHandlerDebug.setFormatter(formatter)
     log.addHandler(fileHandlerDebug)
@@ -392,7 +393,8 @@ if __name__ == "__main__":
 
     log.info("--------------------------")
 
-    log.info("system status [start]: {}".format(run_subprocess("vcgencmd get_throttled")))
+    log.debug("system status [start]: {}".format(run_subprocess("vcgencmd get_throttled")))
+    log.debug("runlevel: {}".format(run_subprocess("runlevel")))
 
     try: 
         os.makedirs(OUTPUT_DIR_1)
@@ -493,6 +495,11 @@ if __name__ == "__main__":
 
     # ---------------------------------------------------------------------------------------
 
+    start = datetime.now()
+    subprocess.call(["sync"])
+    diff = (datetime.now() - start).total_seconds()
+    log.debug("sync done. took: {:.3f} sec".format(diff))
+
     temp = None
     try: 
         temp_str = str(subprocess.check_output(["vcgencmd", "measure_temp"]))
@@ -572,7 +579,7 @@ if __name__ == "__main__":
     except Exception as e:
         log.error("increasing/reducing interval failed: {}".format(e))
 
-    log.info("system status [end]: {}".format(run_subprocess("vcgencmd get_throttled")))
+    log.debug("system status [end]  : {}".format(run_subprocess("vcgencmd get_throttled")))
 
     if SHUTDOWN_ON_COMPLETE:
 
@@ -600,6 +607,8 @@ if __name__ == "__main__":
 
                 controller.shutdown(delay=15000)
 
+                log.debug("runlevel: {}".format(run_subprocess("runlevel")))
+
                 log.debug("shutdown command sent")
                 log.info("POWEROFF")
                 
@@ -607,7 +616,7 @@ if __name__ == "__main__":
                 logging.shutdown()
 
                 subprocess.call(["sync"])
-                sleep(0.5)
+                sleep(3)
 
                 subprocess.call(["poweroff"])
                 exit()
