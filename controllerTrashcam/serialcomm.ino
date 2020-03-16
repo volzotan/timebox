@@ -126,11 +126,16 @@ void executeCommand() {
             #ifdef TEMP_SENSOR_AVAILABLE
                 tempsensor.wake();
 
-                SERIAL.print("K ");
-                SERIAL.print(tempsensor.readTempC(), 4);
-                SERIAL.println();
+                float temp = tempsensor.readTempC();
+                if (temp == temp) { // is not NaN
+                    SERIAL.print("K ");
+                    SERIAL.print(temp, 4);
+                    SERIAL.println();
+                } else {
+                    errorSerial(ERRORCODE_NOT_AVAILABLE);
+                }
 
-                tempsensor.shutdown_wake(1);
+                tempsensor.shutdown();
             #else
                 errorSerial(ERRORCODE_NOT_AVAILABLE);
             #endif
