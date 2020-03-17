@@ -5,7 +5,7 @@ ssh buildroot 'mount -o remount,rw /dev/root /'
 # create /boot dir so fstab can mount the boot partition
 ssh buildroot 'mkdir /boot'
 ssh buildroot 'mkdir /media/storage'
-ssh buildroot 'mkdir /media/external_storage'
+# ssh buildroot 'mkdir /media/external_storage'
 
 # ------------------------------------------
 
@@ -33,14 +33,16 @@ ssh buildroot 'mke2fs -t ext4 /dev/mmcblk0p3'
 
 ssh buildroot 'reboot'
 
-# ------------------------------------------
+echo "sleep 20s"
+sleep 20
 
-ssh buildroot 'mount -o remount,rw /dev/root /'
+# ------------------------------------------
 
 echo "\n---"
 echo "setting current time and date on the pi"
 sh set_date.sh
 
+# upload_zerobox.sh takes care of RW-remount
 echo "\n---"
 echo "uploading zerobox files"
 sh upload_zerobox.sh
