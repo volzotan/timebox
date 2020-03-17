@@ -393,9 +393,6 @@ if __name__ == "__main__":
 
     log.info("--------------------------")
 
-    log.debug("system status [start]: {}".format(run_subprocess("vcgencmd get_throttled")))
-    log.debug("runlevel: {}".format(run_subprocess("runlevel")))
-
     try: 
         os.makedirs(OUTPUT_DIR_1)
         log.debug("created dir: {}".format(OUTPUT_DIR_1))
@@ -579,8 +576,6 @@ if __name__ == "__main__":
     except Exception as e:
         log.error("increasing/reducing interval failed: {}".format(e))
 
-    log.debug("system status [end]  : {}".format(run_subprocess("vcgencmd get_throttled")))
-
     if SHUTDOWN_ON_COMPLETE:
 
         if controller is not None:
@@ -607,8 +602,6 @@ if __name__ == "__main__":
 
                 controller.shutdown(delay=15000)
 
-                log.debug("runlevel: {}".format(run_subprocess("runlevel")))
-
                 log.debug("shutdown command sent")
                 log.info("POWEROFF")
                 
@@ -616,6 +609,9 @@ if __name__ == "__main__":
                 logging.shutdown()
 
                 subprocess.call(["sync"])
+                
+                # important, damage to filesystem: 
+                # wait a few sec before poweroff!
                 sleep(3)
 
                 subprocess.call(["poweroff"])
