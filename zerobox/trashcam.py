@@ -28,6 +28,8 @@ FOURTH_EXPOSURE_SHUTTER_SPEED   = SECOND_EXPOSURE_SHUTTER_SPEED*(2**11)
 EXPOSURE_COMPENSATION           = 2 # 6 = +1 stop
 
 SHUTDOWN_ON_COMPLETE            = True 
+CHECK_FOR_INTERVAL_REDUCE       = False
+CHECK_FOR_INTERVAL_INCREASE     = True          
 
 IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. bayer)
 # IMAGE_FORMAT                    = "rgb" # 24-bit RGB format # ~ 23 mb
@@ -455,6 +457,15 @@ if __name__ == "__main__":
     except Exception as e:
         log.error("setting system time failed: {}".format(e))
 
+    # try:
+    #     if controller is not None:
+    #         controller.get_actions()
+    #         subprocess.run(["sh", "mjpg_stream.sh"], shell=True, check=True)
+    #     else:
+    #         log.warning("checking for controller actions failed, no controller found")
+    # except Exception as e:
+    #     log.error("checking for controller actions failed: {}".format(e))
+
     try:
 
         free_space_mb = shutil.disk_usage(OUTPUT_DIR_1).free / (1024 * 1024)
@@ -495,7 +506,7 @@ if __name__ == "__main__":
     start = datetime.now()
     subprocess.call(["sync"])
     diff = (datetime.now() - start).total_seconds()
-    log.debug("sync done. took: {:.3f} sec".format(diff))
+    log.debug("sync done. took         : {:.3f} sec".format(diff))
 
     temp = None
     try: 
@@ -549,13 +560,15 @@ if __name__ == "__main__":
 
             # option B:
 
-            # filename_capture_1 = image_info[0][0]
-            # brightness_1 = calculate_brightness(filename_capture_1)
-            # log.info("brightness of capture_1: {:7.5f}".format(brightness_1))
+            if CHECK_FOR_INTERVAL_REDUCE:
+                filename_capture_1 = image_info[0][0]
+                brightness_1 = calculate_brightness(filename_capture_1)
+                log.info("brightness of capture_1 : {:7.5f}".format(brightness_1))
 
-            filename_capture_2 = image_info[1][0]
-            brightness_2 = calculate_brightness(filename_capture_2)
-            log.info("brightness of capture_2 : {:7.5f}".format(brightness_2))
+            if CHECK_FOR_INTERVAL_INCREASE:
+                filename_capture_2 = image_info[1][0]
+                brightness_2 = calculate_brightness(filename_capture_2)
+                log.info("brightness of capture_2 : {:7.5f}".format(brightness_2))
 
             # option C:
 
@@ -583,14 +596,7 @@ if __name__ == "__main__":
 
                 log.info("battery                 : {}".format(controller.get_battery_status()))
                 # log.info("temperature [controller]: {}".format(controller.get_temperature()))
-
-                # if brightness_1 < 0.05:
-
-                #     # take images slower
-
-                #     log.debug("request interval reduction (brightness: {:.5f} < {})".format(
-                #         brightness_1, 0.05))
-                #     controller.reduce_interval()
+                log.info("debug register          : {}".format(controller.get_debug_register()))
 
                 if brightness_2 is not None and brightness_2 >= 0.0001:
 
@@ -599,6 +605,14 @@ if __name__ == "__main__":
                     log.debug("request interval increase (brightness: {:.5f} > {})".format(
                         brightness_2, 0.0001))
                     controller.increase_interval()
+
+                elif brightness_1 is not None and brightness_1 < 0.01:
+
+                    # take images slower
+
+                    log.debug("request interval reduction (brightness: {:.5f} < {})".format(
+                        brightness_1, 0.01))
+                    controller.reduce_interval()
 
                 controller.shutdown(delay=15000)
 
@@ -612,7 +626,7 @@ if __name__ == "__main__":
                 
                 # important, damage to filesystem: 
                 # wait a few sec before poweroff!
-                sleep(3)
+                sleep(4)
 
                 subprocess.call(["poweroff"])
                 exit()

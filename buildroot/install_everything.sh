@@ -23,6 +23,7 @@ ssh buildroot 'mkdir /media/storage'
 
 echo "creating new partition and reboot"
 scp create_fs.sh buildroot:/root
+scp remount_rw.sh buildroot:/root
 ssh buildroot 'sh /root/create_fs.sh'
 
 echo "sleep 20s"

@@ -114,6 +114,7 @@ class TimeboxController(Controller):
     CMD_BATTERY         = "B"
     CMD_UPTIME          = "U"
     CMD_TEMPERATURE     = "T"
+    CMD_DEBUG_REGISTER  = "D"
 
     CMD_CAM_ON          = "C 1"
     CMD_CAM_OFF         = "C 0"
@@ -256,6 +257,13 @@ class TimeboxController(Controller):
                     self._send_command(self.CMD_USB2_OFF)
                 else:
                     raise Exception("unknown usb device: {}".format(usb_device))
+        except Exception as e:
+            log.debug(e)
+            raise e
+
+    def get_debug_register(self):
+        try:
+            return self._send_command(self.CMD_DEBUG_REGISTER)
         except Exception as e:
             log.debug(e)
             raise e

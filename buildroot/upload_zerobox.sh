@@ -19,6 +19,7 @@ rsync -av                           \
 --include="devices.py"              \
 --include="requirements.txt"        \
 --include="buildroot_install.sh"    \
+--include="mjpg_stream.sh"          \
 --exclude="*"                       \
 ~/GIT/timebox/zerobox buildroot:/home/pi
 
