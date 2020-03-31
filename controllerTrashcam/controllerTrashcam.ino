@@ -33,6 +33,8 @@ long postTriggerWaitDelayed     = -1;
 long trigger_reduced_till       = -1;
 long trigger_increased_till     = -1;
 
+boolean trigger_ended_dirty     = false;        // zero was shutdown by force (max time active)
+
 #define TRIGGER_INTERVAL        90  *1000       // take picture every X seconds [ms]
 #define TRIGGER_INTERVAL_RED    240 *1000
 #define TRIGGER_INTERVAL_INC    60  *1000
@@ -237,6 +239,7 @@ void loop() {
 
                 switchZeroOn(false);
                 postTriggerWaitDelayed = -1;
+                trigger_ended_dirty = true;
                 DEBUG_PRINT("trigger max active done [TRIGGER_WAIT -> IDLE]");
                 DEBUG_PRINT("uptime [ms]: ");
                 DEBUG_PRINT(millis()-currentTrigger);
@@ -246,6 +249,7 @@ void loop() {
 
                 switchZeroOn(false);
                 postTriggerWaitDelayed = -1;
+                trigger_ended_dirty = false;
                 DEBUG_PRINT("trigger done by request [TRIGGER_WAIT -> IDLE]");
                 DEBUG_PRINT("uptime [ms]:");
                 DEBUG_PRINT(millis()-currentTrigger);

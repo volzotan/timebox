@@ -25,10 +25,11 @@ SECOND_EXPOSURE_SHUTTER_SPEED   = 9
 SECOND_EXPOSURE_ISO             = 25
 THIRD_EXPOSURE_SHUTTER_SPEED    = SECOND_EXPOSURE_SHUTTER_SPEED*(2**7)
 FOURTH_EXPOSURE_SHUTTER_SPEED   = SECOND_EXPOSURE_SHUTTER_SPEED*(2**11)
+FIFTH_EXPOSURE_SHUTTER_SPEED    = 2*1000*1000
 EXPOSURE_COMPENSATION           = 2 # 6 = +1 stop
 
 SHUTDOWN_ON_COMPLETE            = True 
-CHECK_FOR_INTERVAL_REDUCE       = False
+CHECK_FOR_INTERVAL_REDUCE       = True
 CHECK_FOR_INTERVAL_INCREASE     = True          
 
 IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. bayer)
@@ -42,6 +43,7 @@ OUTPUT_DIR_1                    = BASE_DIR + "captures_1"
 OUTPUT_DIR_2                    = BASE_DIR + "captures_2"
 OUTPUT_DIR_3                    = BASE_DIR + "captures_3"
 OUTPUT_DIR_4                    = BASE_DIR + "captures_4"
+OUTPUT_DIR_5                    = BASE_DIR + "captures_5"
 OUTPUT_FILENAME                 = "cap"
 
 LOG_FILE                        = BASE_DIR + "log_trashcam.log"
@@ -246,6 +248,8 @@ def trigger():
     except Exception as e:
         log.error("setting camera resolution failed (unknown reasons): {}".format(e))
 
+    # camera.exposure_mode = "verylong"
+
     # give the 3A algorithms some time for warmup
     sleep(1)
 
@@ -322,8 +326,24 @@ def trigger():
 
     image_info.append([full_filename_4, None])
 
-    camera.close()
+    # log.debug("------ exposure 5 ------")
 
+    # camera.framerate = Fraction(1, 2)
+    # camera.exposure_mode = "auto" #"verylong" # "auto"
+    # camera.shutter_speed = FIFTH_EXPOSURE_SHUTTER_SPEED
+    # camera.iso = 200
+
+    # sleep(0.1)
+
+    # full_filename_5 = os.path.join(OUTPUT_DIR_5, filename[1])
+    # camera.capture(full_filename_5, format=IMAGE_FORMAT)
+    # log_capture_info(camera, full_filename_5)
+
+    # image_info.append([full_filename_5, None])
+
+    log.debug("------    done    ------")
+
+    camera.close()
     return image_info
 
 

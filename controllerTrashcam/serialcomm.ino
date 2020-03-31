@@ -11,6 +11,8 @@
  *  T  ---  Temperature
  *  Z  ---  Turn Zero On/Off                (Z 0 / Z 1)
 
+ *  D  ---  Read Debug Registers
+
  *  R  ---  Reduce Interval
  *  I  ---  Increase Interval
 
@@ -151,6 +153,13 @@ void executeCommand() {
             } else {
                 errorSerial(ERRORCODE_INVALID_PARAM);
             }
+        break; 
+
+        case 'D': // Debug Registers
+            SERIAL.print("K ");
+            SERIAL.print(trigger_ended_dirty);
+            SERIAL.println();
+            
         break; 
 
         case 'R': // Reduce Interval
