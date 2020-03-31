@@ -1,2 +1,0 @@
-source "$BR2_EXTERNAL_ZEROROOT_PATH/package/gphoto2/Config.in"
-source "$BR2_EXTERNAL_ZEROROOT_PATH/package/python-exifread/Config.in"

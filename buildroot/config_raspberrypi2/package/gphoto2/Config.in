@@ -1,9 +1,0 @@
-config BR2_PACKAGE_GPHOTO2
-	bool "gphoto2"
-	select BR2_PACKAGE_POPT
-	select BR2_PACKAGE_LIBGPHOTO2
-        help
-          This is a comment that explains what libfoo is. The help text
-          should be wrapped.
-
-          http://foosoftware.org/libfoo/
