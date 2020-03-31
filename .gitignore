@@ -12,8 +12,16 @@ eagle/**/*.job
 eagle/**/*.zip
 eagle/**/CAMOutputs*
 
+zerobox/.idea/**
+
 *.arw
 *.arw_2
+
+*.mkv
+
+*.log
+
+*.pyc
 
 zerobox/tmp
 *.elf
