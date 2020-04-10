@@ -1,10 +1,11 @@
+#include <RTCZero.h>
 #include <Wire.h>
 #include "Adafruit_MCP9808.h"
 
 #include "global.h"
 #include "constants.h"
 
-#define DEBUG
+// #define DEBUG
 
 #define SHUTDOWN_ON_LOW_BATTERY
 // #define HOST_DEFAULT_POWERED_ON
@@ -35,8 +36,8 @@ long trigger_increased_till     = -1;
 
 boolean trigger_ended_dirty     = false;        // zero was shutdown by force (max time active)
 
-#define TRIGGER_INTERVAL        90  *1000       // take picture every X seconds [ms]
-#define TRIGGER_INTERVAL_RED    240 *1000
+#define TRIGGER_INTERVAL        120 *1000       // take picture every X seconds [ms]
+#define TRIGGER_INTERVAL_RED    600 *1000
 #define TRIGGER_INTERVAL_INC    60  *1000
 
 #define TRIGGER_MAX_ACTIVE      59  *1000       // zero & cam max time on [ms]
@@ -54,6 +55,7 @@ int serialParam2            = -1;
 
 // ---------------------------
 
+RTCZero rtc;
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 
 // ---------------------------
@@ -62,6 +64,9 @@ void setup() {
 
     SerialUSB.begin(9600);
     SERIAL.begin(9600);
+
+    rtc.begin();
+    rtc.attachInterrupt(alarmFired);
 
     resetSerial();
 
@@ -145,6 +150,12 @@ void setup() {
         DEBUG_PRINT("-----------------");
     #endif
 
+    // wait X seconds without disabling USB to allow uploads
+    delay(5000);
+
+    DEBUG_PRINT("setup done");
+
+    // let's go
     nextTrigger = millis() + 1000;
 
 }
@@ -199,6 +210,9 @@ void loop() {
                 DEBUG_PRINT("start [IDLE -> TRIGGER_START]");
                 state = STATE_TRIGGER_START;
             }
+
+            // sleep 
+            wait(1);
 
             break;
         }
@@ -256,6 +270,8 @@ void loop() {
                 state = STATE_IDLE;
             }
 
+            // stay active
+
             break;
         }
 
@@ -265,6 +281,10 @@ void loop() {
     }
 }
 
+void alarmFired() {
+
+}
+
 void stopAndShutdown() {
 
     DEBUG_PRINT("STOP AND SHUTDOWN");
@@ -272,6 +292,6 @@ void stopAndShutdown() {
     switchZeroOn(false);
 
     while(true) {
-        wait(1.0);
+        wait(1);
     }
 }

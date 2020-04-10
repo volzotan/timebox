@@ -60,21 +60,27 @@ int lastIndexOf(const char * s, char target) {
     return ret;
 }
 
-void wait(float seconds) {
+void wait(int seconds) {
 
     #ifdef DEBUG
+
         for (int i = 0; i < (int) seconds; ++i) {
             delay(1000);
-            Serial.println("> sleep");
+            DEBUG_PRINT("> sleep");
         }
-        return;
+        
+        alarmFired();
+
+    #else
+
+        long epoch = rtc.getEpoch();
+        epoch += long(seconds);
+        rtc.setAlarmEpoch(epoch);
+        rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
+        rtc.standbyMode();
+
     #endif
 
-    for (int i = 0; i < (int) seconds; ++i) {
-        delay(1000);
-    }
-
-  
     // for (int i = 0; i < (int) seconds; ++i) {
     //   Sleepy::loseSomeTime(1000);
     // }
