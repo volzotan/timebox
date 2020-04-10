@@ -30,7 +30,10 @@ EXPOSURE_COMPENSATION           = 2 # 6 = +1 stop
 
 SHUTDOWN_ON_COMPLETE            = True 
 CHECK_FOR_INTERVAL_REDUCE       = True
-CHECK_FOR_INTERVAL_INCREASE     = True          
+CHECK_FOR_INTERVAL_INCREASE     = True 
+
+# very slow. gzip takes even with lowest settings ~13s for one jpeg+raw image     
+COMPRESS_CAPTURE_1              = False 
 
 IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. bayer)
 # IMAGE_FORMAT                    = "rgb" # 24-bit RGB format # ~ 23 mb
@@ -181,15 +184,30 @@ def calculate_brightness(filename):
         return 1 if brightness == 255 else brightness / scale
 
 
-def get_filename(extension): # returns(path, filename.ext)
+# all extensions are checked for duplicate filenames, first extension 
+# is returned as file name candidate
+def get_filename(extensions): # returns(path, filename.ext)
 
-    if extension == "jpeg":
-        extension = "jpg"
+    if not type(extensions) is list:
+        extensions = [extensions]
+
+    for i in range(0, len(extensions)):
+        if extensions[i] == "jpeg":
+            extensions[i] = "jpg"
 
     for i in range(0, 100000):
-        filename = "{}_{:06d}.{}".format(OUTPUT_FILENAME, i, extension)
-        if not os.path.exists(os.path.join(OUTPUT_DIR_1, filename)):
-            return (OUTPUT_DIR_1, filename)
+
+        filename_base = "{}_{:06d}.".format(OUTPUT_FILENAME, i)
+        duplicate_found = False
+
+        for extension in extensions:
+            filename = filename_base + extension
+            if os.path.exists(os.path.join(OUTPUT_DIR_1, filename)):
+                duplicate_found = True
+                break
+
+        if not duplicate_found:
+            return (OUTPUT_DIR_1, filename_base + extensions[0])
 
     raise Exception("no filenames left!")
 
@@ -255,7 +273,7 @@ def trigger():
 
     log.debug("------ exposure 1 ------")
 
-    filename = get_filename(IMAGE_FORMAT)
+    filename = get_filename([IMAGE_FORMAT, "jpg.gz", "jpeg.gz"])
     full_filename = os.path.join(*filename)
 
     camera.capture(full_filename, format=IMAGE_FORMAT, bayer=WRITE_RAW)
@@ -583,12 +601,12 @@ if __name__ == "__main__":
             if CHECK_FOR_INTERVAL_REDUCE:
                 filename_capture_1 = image_info[0][0]
                 brightness_1 = calculate_brightness(filename_capture_1)
-                log.info("brightness of capture_1 : {:7.5f}".format(brightness_1))
+                log.info("brightness of capture_1 : {:8.6f}".format(brightness_1))
 
             if CHECK_FOR_INTERVAL_INCREASE:
                 filename_capture_2 = image_info[1][0]
                 brightness_2 = calculate_brightness(filename_capture_2)
-                log.info("brightness of capture_2 : {:7.5f}".format(brightness_2))
+                log.info("brightness of capture_2 : {:8.6f}".format(brightness_2))
 
             # option C:
 
@@ -609,6 +627,17 @@ if __name__ == "__main__":
     except Exception as e:
         log.error("increasing/reducing interval failed: {}".format(e))
 
+    if COMPRESS_CAPTURE_1:
+        try:
+            timer_compression = datetime.now()
+            # subprocess.run(["tar", "-czvf", filename_capture_1 + ".tar.gz", filename_capture_1], check=True)
+            # subprocess.run(["rm", filename_capture_1], check=True)            
+            subprocess.run(["gzip", "-1", "-f", filename_capture_1], check=True)
+            diff = datetime.now() - timer_compression
+            log.debug("compressing capture_1 image took: {:.2f}s".format(diff.total_seconds()))
+        except Exception as e:
+            log.error("compressing capture_1 image failed: {}".format(e))
+
     if SHUTDOWN_ON_COMPLETE:
 
         if controller is not None:
@@ -618,19 +647,19 @@ if __name__ == "__main__":
                 # log.info("temperature [controller]: {}".format(controller.get_temperature()))
                 log.info("debug register          : {}".format(controller.get_debug_register()))
 
-                if brightness_2 is not None and brightness_2 >= 0.0001:
+                if brightness_2 is not None and brightness_2 >= 0.00001:
 
                     # take images faster
 
-                    log.debug("request interval increase (brightness: {:.5f} > {})".format(
-                        brightness_2, 0.0001))
+                    log.debug("request interval increase (brightness: {:.6f} > {})".format(
+                        brightness_2, 0.00001))
                     controller.increase_interval()
 
                 elif brightness_1 is not None and brightness_1 < 0.01:
 
                     # take images slower
 
-                    log.debug("request interval reduction (brightness: {:.5f} < {})".format(
+                    log.debug("request interval reduction (brightness: {:.6f} < {})".format(
                         brightness_1, 0.01))
                     controller.reduce_interval()
 
