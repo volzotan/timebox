@@ -13,10 +13,10 @@
 // #define TEMP_SENSOR_AVAILABLE
 
 #define SERIAL Serial1
-#define SERIAL_DEBUG Serial1
+#define SERIAL_DEBUG SerialUSB
 
 #ifdef DEBUG
-  #define DEBUG_PRINT(x) SERIAL_DEBUG.print("["); SERIAL_DEBUG.print(millis()/1000); SERIAL_DEBUG.print("] "); SERIAL_DEBUG.println (x)
+  #define DEBUG_PRINT(x) SERIAL_DEBUG.print("["); SERIAL_DEBUG.print(getMillis()/1000); SERIAL_DEBUG.print("] "); SERIAL_DEBUG.println (x)
 #else
   #define DEBUG_PRINT(x)
 #endif
@@ -213,10 +213,10 @@ void loop() {
                 
                 DEBUG_PRINT("start [IDLE -> TRIGGER_START]");
                 state = STATE_TRIGGER_START;
+            } else {
+                // sleep 
+                wait(1);
             }
-
-            // sleep 
-            wait(1);
 
             break;
         }

@@ -85,7 +85,7 @@ void processCommand(char inChar) {
 
 void executeCommand() {
     #ifdef DEBUG
-        SerialUSB.print("=> ");
+        DEBUG_PRINT("=> ");
         SerialUSB.println(serialCommand);
     #endif
     
@@ -108,7 +108,7 @@ void executeCommand() {
                     errorSerial(ERRORCODE_INVALID_PARAM);
                     break;
                 }
-                postTriggerWaitDelayed = millis() + serialParam; 
+                postTriggerWaitDelayed = getMillis() + serialParam; 
                 DEBUG_PRINT("postTriggerWaitDelayed set");
             } else {
                 switchZeroOn(false);    
@@ -197,8 +197,16 @@ void errorSerial(int errcode) {
     resetSerial();
     SERIAL.print("E ");
     SERIAL.println(errcode);
+
+    #ifdef DEBUG
+        DEBUG_PRINT(">> sent ERROR");
+    #endif
 }
 
 void okSerial() {
     SERIAL.println("K");
+
+    #ifdef DEBUG
+        DEBUG_PRINT(">> sent OK");
+    #endif
 }

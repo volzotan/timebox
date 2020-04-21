@@ -61,19 +61,19 @@ int lastIndexOf(const char * s, char target) {
 }
 
 long getMillis() {
-    return millis() + rtc.getY2kEpoch() * 1000;
+    return rtc.getY2kEpoch() * 1000;
 }
 
 void wait(int seconds) {
 
     // #ifdef DEBUG
 
-    //     for (int i = 0; i < (int) seconds; ++i) {
-    //         delay(1000);
-    //         DEBUG_PRINT("> sleep");
-    //     }
+        // for (int i = 0; i < (int) seconds; ++i) {
+        //     delay(1000);
+        //     DEBUG_PRINT("> sleep");
+        // }
         
-    //     alarmFired();
+        // alarmFired();
 
     // #else
 
