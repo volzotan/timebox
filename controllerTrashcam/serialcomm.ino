@@ -120,7 +120,7 @@ void executeCommand() {
         case 'U': // Uptime 
             //errorSerial(ERRORCODE_NOT_AVAILABLE, ser);
             SERIAL.print("K ");
-            SERIAL.println(millis());
+            SERIAL.println(getMillis());
         break;   
 
         case 'T': // Temperature
@@ -163,7 +163,7 @@ void executeCommand() {
         break; 
 
         case 'R': // Reduce Interval
-            trigger_reduced_till = millis() + TRIGGER_INTERVAL_RED * 1 + 30*1000;
+            trigger_reduced_till = getMillis() + TRIGGER_INTERVAL_RED * 1 + 30*1000;
             trigger_increased_till = -1;
 
             // replace already existing next trigger
@@ -173,7 +173,7 @@ void executeCommand() {
         
         case 'I': // Increase Interval
             trigger_reduced_till = -1;
-            trigger_increased_till = millis() + TRIGGER_INTERVAL_INC * 3 + 30*1000;
+            trigger_increased_till = getMillis() + TRIGGER_INTERVAL_INC * 3 + 30*1000;
 
             // replace already existing next trigger
             nextTrigger = currentTrigger + TRIGGER_INTERVAL_INC; 

@@ -60,26 +60,34 @@ int lastIndexOf(const char * s, char target) {
     return ret;
 }
 
+long getMillis() {
+    return millis() + rtc.getY2kEpoch() * 1000;
+}
+
 void wait(int seconds) {
 
-    #ifdef DEBUG
+    // #ifdef DEBUG
 
-        for (int i = 0; i < (int) seconds; ++i) {
-            delay(1000);
-            DEBUG_PRINT("> sleep");
-        }
+    //     for (int i = 0; i < (int) seconds; ++i) {
+    //         delay(1000);
+    //         DEBUG_PRINT("> sleep");
+    //     }
         
-        alarmFired();
+    //     alarmFired();
 
-    #else
+    // #else
 
-        long epoch = rtc.getEpoch();
+        long epoch = rtc.getEpoch(); // do not use zero based epoch (Y2kEpoch)
         epoch += long(seconds);
         rtc.setAlarmEpoch(epoch);
+        rtc.attachInterrupt(alarmFired);
         rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
         rtc.standbyMode();
 
-    #endif
+        rtc.disableAlarm();
+        DEBUG_PRINT("wakeup");
+
+    // #endif
 
     // for (int i = 0; i < (int) seconds; ++i) {
     //   Sleepy::loseSomeTime(1000);

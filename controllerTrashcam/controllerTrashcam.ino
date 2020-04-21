@@ -13,9 +13,10 @@
 // #define TEMP_SENSOR_AVAILABLE
 
 #define SERIAL Serial1
+#define SERIAL_DEBUG Serial1
 
 #ifdef DEBUG
-  #define DEBUG_PRINT(x) SerialUSB.print("["); SerialUSB.print(millis()/1000); SerialUSB.print("] "); SerialUSB.println (x)
+  #define DEBUG_PRINT(x) SERIAL_DEBUG.print("["); SERIAL_DEBUG.print(millis()/1000); SERIAL_DEBUG.print("] "); SERIAL_DEBUG.println (x)
 #else
   #define DEBUG_PRINT(x)
 #endif
@@ -56,6 +57,8 @@ int serialParam2            = -1;
 // ---------------------------
 
 RTCZero rtc;
+long now = -1;
+
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 
 // ---------------------------
@@ -65,10 +68,9 @@ void setup() {
     SerialUSB.begin(9600);
     SERIAL.begin(9600);
 
-    rtc.begin();
-    rtc.attachInterrupt(alarmFired);
-
     resetSerial();
+
+    rtc.begin(true); // reset internal timer
 
     DEBUG_PRINT("INIT");
     DEBUG_PRINT("DEBUG MODE ON");
@@ -156,7 +158,7 @@ void setup() {
     DEBUG_PRINT("setup done");
 
     // let's go
-    nextTrigger = millis() + 1000;
+    nextTrigger = getMillis() + 1000;
 
 }
 
@@ -181,14 +183,16 @@ void loop() {
                 // state = STATE_LOOP;
             }   
 
+            now = getMillis();
+
             // time for new trigger event?
-            if (millis() >= nextTrigger) {
+            if (now >= nextTrigger) {
                 currentTrigger = nextTrigger; 
 
                 int interval_length = TRIGGER_INTERVAL;
 
                 if (trigger_reduced_till > 0) {
-                    if (millis() < trigger_reduced_till) {
+                    if (now < trigger_reduced_till) {
                         interval_length = TRIGGER_INTERVAL_RED;
                         DEBUG_PRINT("interval in reduced trigger state");
                     } else {
@@ -196,7 +200,7 @@ void loop() {
                         DEBUG_PRINT("interval switched from reduced to regular");
                     }
                 } else if (trigger_increased_till > 0) {
-                    if (millis() < trigger_increased_till) {
+                    if (now < trigger_increased_till) {
                         interval_length = TRIGGER_INTERVAL_INC;
                         DEBUG_PRINT("interval in increased trigger state");
                     } else {
@@ -249,28 +253,30 @@ void loop() {
         // if so: waiting for X to pass
         case STATE_TRIGGER_WAIT: {
 
-            if (millis() >= currentTrigger + TRIGGER_MAX_ACTIVE) {
+            now = getMillis();
+
+            if (now >= currentTrigger + TRIGGER_MAX_ACTIVE) {
 
                 switchZeroOn(false);
                 postTriggerWaitDelayed = -1;
                 trigger_ended_dirty = true;
                 DEBUG_PRINT("trigger max active done [TRIGGER_WAIT -> IDLE]");
                 DEBUG_PRINT("uptime [ms]: ");
-                DEBUG_PRINT(millis()-currentTrigger);
+                DEBUG_PRINT(now-currentTrigger);
                 state = STATE_IDLE;
-            } else if (postTriggerWaitDelayed > 0 && 
-                millis() >= postTriggerWaitDelayed) {
+            } else if (postTriggerWaitDelayed > 0 && now >= postTriggerWaitDelayed) {
 
                 switchZeroOn(false);
                 postTriggerWaitDelayed = -1;
                 trigger_ended_dirty = false;
                 DEBUG_PRINT("trigger done by request [TRIGGER_WAIT -> IDLE]");
                 DEBUG_PRINT("uptime [ms]:");
-                DEBUG_PRINT(millis()-currentTrigger);
+                DEBUG_PRINT(now-currentTrigger);
                 state = STATE_IDLE;
             }
 
-            // stay active
+            // stay active and do not enter deep sleep since communication
+            // via UART will happen
 
             break;
         }
@@ -281,9 +287,7 @@ void loop() {
     }
 }
 
-void alarmFired() {
-
-}
+void alarmFired() {}
 
 void stopAndShutdown() {
 
@@ -292,6 +296,6 @@ void stopAndShutdown() {
     switchZeroOn(false);
 
     while(true) {
-        wait(1);
+        rtc.standbyMode();
     }
 }
