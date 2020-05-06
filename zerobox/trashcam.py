@@ -646,6 +646,7 @@ if __name__ == "__main__":
                 log.info("battery                 : {}".format(controller.get_battery_status()))
                 # log.info("temperature [controller]: {}".format(controller.get_temperature()))
                 log.info("debug register          : {}".format(controller.get_debug_register()))
+                log.info("next invocation         : {}".format(controller.get_next_invocation()))
 
                 if brightness_2 is not None and brightness_2 >= 0.00001:
 

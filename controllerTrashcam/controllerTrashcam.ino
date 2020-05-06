@@ -72,6 +72,9 @@ void setup() {
 
     rtc.begin(true); // reset internal timer
 
+    // rtc.setHours(4);
+    // rtc.setMinutes(50);
+
     DEBUG_PRINT("INIT");
     DEBUG_PRINT("DEBUG MODE ON");
 
@@ -211,6 +214,12 @@ void loop() {
 
                 nextTrigger += interval_length; 
                 
+                // sanity check
+                while (nextTrigger < now) {
+                    nextTrigger += interval_length; 
+                    DEBUG_PRINT("ERROR: nextTrigger in past. adjusting...")
+                }
+
                 DEBUG_PRINT("start [IDLE -> TRIGGER_START]");
                 state = STATE_TRIGGER_START;
             } else {

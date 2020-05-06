@@ -115,6 +115,7 @@ class TimeboxController(Controller):
     CMD_UPTIME          = "U"
     CMD_TEMPERATURE     = "T"
     CMD_DEBUG_REGISTER  = "D"
+    CMD_NEXT_INVOCATION = "N"
 
     CMD_CAM_ON          = "C 1"
     CMD_CAM_OFF         = "C 0"
@@ -264,6 +265,13 @@ class TimeboxController(Controller):
     def get_debug_register(self):
         try:
             return self._send_command(self.CMD_DEBUG_REGISTER)
+        except Exception as e:
+            log.debug(e)
+            raise e
+
+    def get_next_invocation(self):
+        try:
+            return self._send_command(self.CMD_NEXT_INVOCATION)
         except Exception as e:
             log.debug(e)
             raise e

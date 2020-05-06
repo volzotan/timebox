@@ -12,6 +12,7 @@
  *  Z  ---  Turn Zero On/Off                (Z 0 / Z 1)
 
  *  D  ---  Read Debug Registers
+ *  N  ---  Next Invocation
 
  *  R  ---  Reduce Interval
  *  I  ---  Increase Interval
@@ -159,11 +160,16 @@ void executeCommand() {
             SERIAL.print("K ");
             SERIAL.print(trigger_ended_dirty);
             SERIAL.println();
-            
+        break; 
+
+        case 'N': // Next Invocation
+            SERIAL.print("K ");
+            SERIAL.print(nextTrigger);
+            SERIAL.println();
         break; 
 
         case 'R': // Reduce Interval
-            trigger_reduced_till = getMillis() + TRIGGER_INTERVAL_RED * 1 + 30*1000;
+            trigger_reduced_till = getMillis() + TRIGGER_INTERVAL_RED * 1 + 30*1000L;
             trigger_increased_till = -1;
 
             // replace already existing next trigger
@@ -173,7 +179,7 @@ void executeCommand() {
         
         case 'I': // Increase Interval
             trigger_reduced_till = -1;
-            trigger_increased_till = getMillis() + TRIGGER_INTERVAL_INC * 3 + 30*1000;
+            trigger_increased_till = getMillis() + TRIGGER_INTERVAL_INC * 3 + 30*1000L;
 
             // replace already existing next trigger
             nextTrigger = currentTrigger + TRIGGER_INTERVAL_INC; 

@@ -61,7 +61,7 @@ int lastIndexOf(const char * s, char target) {
 }
 
 long getMillis() {
-    return rtc.getY2kEpoch() * 1000;
+    return rtc.getY2kEpoch() * 1000L;
 }
 
 void wait(int seconds) {
@@ -77,11 +77,14 @@ void wait(int seconds) {
 
     // #else
 
-        long epoch = rtc.getEpoch(); // do not use zero based epoch (Y2kEpoch)
-        epoch += long(seconds);
-        rtc.setAlarmEpoch(epoch);
+        // rtc.setAlarmEpoch(rtc.getEpoch() + seconds); // do not use zero based epoch (Y2kEpoch)
+
+        int s = rtc.getSeconds() + seconds;
+        s = s % 60;
+        rtc.setAlarmSeconds(s);
+
         rtc.attachInterrupt(alarmFired);
-        rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
+        rtc.enableAlarm(rtc.MATCH_SS);
         rtc.standbyMode();
 
         rtc.disableAlarm();
