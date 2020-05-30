@@ -32,14 +32,19 @@ SHUTDOWN_ON_COMPLETE            = True
 CHECK_FOR_INTERVAL_REDUCE       = True
 CHECK_FOR_INTERVAL_INCREASE     = True 
 
+INCREASE_INTERVAL_ABOVE         = 0.00001
+REDUCE_INTERVAL_BELOW           = 0.01
+
 # very slow. gzip takes even with lowest settings ~13s for one jpeg+raw image     
 COMPRESS_CAPTURE_1              = False 
+EVEN_ODD_DELETION_CAPTURE_1     = False
 
-IMAGE_FORMAT                    = "jpeg" # JPG format # ~ 4.5 mb | 14 mb (incl. bayer)
-# IMAGE_FORMAT                    = "rgb" # 24-bit RGB format # ~ 23 mb
-# IMAGE_FORMAT                    = "yuv" # YUV420 format
-# IMAGE_FORMAT                    = "png" # PNG format # ~ 9 mb
+IMAGE_FORMAT                    = "jpeg"    # JPG format # V2: ~ 4.5 mb | 14 mb (incl. raw) // HQ: ~ 5 mb | 24 mb (incl. raw) 
+# IMAGE_FORMAT                    = "rgb"   # 24-bit RGB format # V2: ~ 23 mb
+# IMAGE_FORMAT                    = "yuv"   # YUV420 format
+# IMAGE_FORMAT                    = "png"   # PNG format # V2: ~ 9 mb
 WRITE_RAW                       = True
+MODULO_RAW                      = 10        # only every n-th image contains RAW data, set to None to use WRITE_RAW
 
 BASE_DIR                        = "/media/storage/"
 OUTPUT_DIR_1                    = BASE_DIR + "captures_1"
@@ -58,8 +63,8 @@ MIN_FREE_SPACE                  = 300
 # ND_FILTER                       = 10 # stops
 
 # EV values, ND-filter-value corrected
-REDUCE_INTERVAL_EV_THRESHOLD    = 3
-INCREASE_INTERVAL_EV_THRESHOLD  = 8 # 10
+# REDUCE_INTERVAL_EV_THRESHOLD    = 3
+# INCREASE_INTERVAL_EV_THRESHOLD  = 8 # 10
 
 # PERSISTENT MODE
 INTERVAL                        = 60 # in sec
@@ -207,7 +212,7 @@ def get_filename(extensions): # returns(path, filename.ext)
                 break
 
         if not duplicate_found:
-            return (OUTPUT_DIR_1, filename_base + extensions[0])
+            return (OUTPUT_DIR_1, filename_base + extensions[0], i)
 
     raise Exception("no filenames left!")
 
@@ -253,18 +258,19 @@ def trigger():
     camera.meter_mode = "spot"
     camera.exposure_compensation = EXPOSURE_COMPENSATION
 
-    try:
-        camera.resolution = (3280, 2464) # V2 8MP
-        camera.framerate = Fraction(1, 1)
+    resolutions = {}
+    resolutions["HQ"] = [[4056, 3040], Fraction(1, 1)]
+    resolutions["V2"] = [[3280, 2464], Fraction(1, 1)]
+    resolutions["V1"] = [[2592, 1944], Fraction(1, 1)]
 
-    except picamera.exc.PiCameraValueError as e:
-        log.warning("fallback to V1 camera resolution")
-
-        camera.resolution = (2592, 1944) # V1 5MP
-        camera.framerate = Fraction(1, 1)
-
-    except Exception as e:
-        log.error("setting camera resolution failed (unknown reasons): {}".format(e))
+    for key in resolutions.keys():
+        try:
+            camera.resolution = resolutions[key][0]
+            camera.framerate = resolutions[key][1]
+            log.debug("camera resolution set to [{}]: {}".format(key, resolutions[key][0]))
+            break
+        except picamera.exc.PiCameraValueError as e:
+            log.warning("failing setting camera resolution for {}, attempting fallback".format(key))
 
     # camera.exposure_mode = "verylong"
 
@@ -273,19 +279,26 @@ def trigger():
 
     log.debug("------ exposure 1 ------")
 
-    filename = get_filename([IMAGE_FORMAT, "jpg.gz", "jpeg.gz"])
-    full_filename = os.path.join(*filename)
+    filename_path, filename, filename_iteration = get_filename([IMAGE_FORMAT, "jpg.gz", "jpeg.gz"])
+    full_filename = os.path.join(filename_path, filename)
 
-    camera.capture(full_filename, format=IMAGE_FORMAT, bayer=WRITE_RAW)
+    capture_raw = WRITE_RAW
+    if MODULO_RAW is not None and filename_iteration % MODULO_RAW == 0:
+        capture_raw = True
+    else:
+        capture_raw = False
+
+    camera.capture(full_filename, format=IMAGE_FORMAT, bayer=capture_raw)
     
     # log_capture_info(camera, full_filename)
     # print_exposure_settings(camera)
     
     log_capture_info(camera, full_filename)
     first_exposure_ev = read_exif_data(full_filename)
-    image_info.append([full_filename, first_exposure_ev])
+    image_info.append([full_filename, first_exposure_ev, filename_iteration])
 
     log.info("brightness              : {:.2f} EV".format(first_exposure_ev))
+    log.info("contains raw data       : {}".format(capture_raw))
     # if ND_FILTER is not None:
     #     log.info("brightness (incl ND): {:.2f} EV".format(first_exposure_ev+ND_FILTER))
     # print_exposure_settings(camera)
@@ -311,11 +324,11 @@ def trigger():
 
     sleep(0.5)
 
-    full_filename_2 = os.path.join(OUTPUT_DIR_2, filename[1]) #[:-4] + "_2" + ".jpg")
+    full_filename_2 = os.path.join(OUTPUT_DIR_2, filename) #[:-4] + "_2" + ".jpg")
     camera.capture(full_filename_2, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_2)
 
-    image_info.append([full_filename_2, None])
+    image_info.append([full_filename_2, None, filename_iteration])
 
     # read_exif_data(full_filename_2)
     # print_exposure_settings(camera)
@@ -326,11 +339,11 @@ def trigger():
 
     sleep(0.1)
 
-    full_filename_3 = os.path.join(OUTPUT_DIR_3, filename[1])
+    full_filename_3 = os.path.join(OUTPUT_DIR_3, filename)
     camera.capture(full_filename_3, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_3)
 
-    image_info.append([full_filename_3, None])
+    image_info.append([full_filename_3, None, filename_iteration])
 
     log.debug("------ exposure 4 ------")
 
@@ -338,11 +351,11 @@ def trigger():
 
     sleep(0.1)
 
-    full_filename_4 = os.path.join(OUTPUT_DIR_4, filename[1])
+    full_filename_4 = os.path.join(OUTPUT_DIR_4, filename)
     camera.capture(full_filename_4, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_4)
 
-    image_info.append([full_filename_4, None])
+    image_info.append([full_filename_4, None, filename_iteration])
 
     # log.debug("------ exposure 5 ------")
 
@@ -428,8 +441,12 @@ if __name__ == "__main__":
     args = vars(ap.parse_args())
 
     # log.info("ND FILTER       : {} stops".format(ND_FILTER))
-    log.info("PERSISTENT MODE : {}".format(args["persistent_mode"]))
-    log.info("STREAM MODE     : {}".format(args["stream_mode"]))
+    log.info("PERSISTENT MODE   : {}".format(args["persistent_mode"]))
+    log.info("STREAM MODE       : {}".format(args["stream_mode"]))
+    log.info(" ")
+    log.info("WRITE RAW         : {}".format(WRITE_RAW))
+    log.info("MODULO RAW        : {}".format(MODULO_RAW))
+    log.info("EVEN ODD DELETION : {}".format(EVEN_ODD_DELETION_CAPTURE_1))
 
     log.info("--------------------------")
 
@@ -638,6 +655,14 @@ if __name__ == "__main__":
         except Exception as e:
             log.error("compressing capture_1 image failed: {}".format(e))
 
+    if EVEN_ODD_DELETION_CAPTURE_1:
+        iteration = image_info[0][2]
+        filename_capture_1 = image_info[0][0]
+        if iteration % 2 == 1:
+            os.remove(filename_capture_1)
+            log.info("EVEN_ODD_DELETION_CAPTURE_1 deleted: {}".format(filename_capture_1))
+            open(filename_capture_1, 'a').close() # create empty file so the filename won't be available on next iteration
+
     if SHUTDOWN_ON_COMPLETE:
 
         if controller is not None:
@@ -648,20 +673,20 @@ if __name__ == "__main__":
                 log.info("debug register          : {}".format(controller.get_debug_register()))
                 log.info("next invocation         : {}".format(controller.get_next_invocation()))
 
-                if brightness_2 is not None and brightness_2 >= 0.00001:
+                if brightness_2 is not None and brightness_2 >= INCREASE_INTERVAL_ABOVE:
 
                     # take images faster
 
                     log.debug("request interval increase (brightness: {:.6f} > {})".format(
-                        brightness_2, 0.00001))
+                        brightness_2, INCREASE_INTERVAL_ABOVE))
                     controller.increase_interval()
 
-                elif brightness_1 is not None and brightness_1 < 0.01:
+                elif brightness_1 is not None and brightness_1 < REDUCE_INTERVAL_BELOW:
 
                     # take images slower
 
                     log.debug("request interval reduction (brightness: {:.6f} < {})".format(
-                        brightness_1, 0.01))
+                        brightness_1, REDUCE_INTERVAL_BELOW))
                     controller.reduce_interval()
 
                 controller.shutdown(delay=15000)
