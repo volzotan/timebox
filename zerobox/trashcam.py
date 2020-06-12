@@ -173,6 +173,9 @@ def log_capture_info(camera, filename):
     log.info("{:24s}: {:4.2f}".format("analog gain", float(camera.analog_gain)))
     log.info("{:24s}: {:4.2f}".format("digital gain", float(camera.digital_gain)))
 
+    awb_gains = camera.awb_gains
+    log.info("{:24s}: {} {:4.2f} | {:4.2f}".format("awb", camera.awb_mode, float(awb_gains[0]), float(awb_gains[1])))
+
 
 def calculate_brightness(filename):
 
@@ -311,6 +314,12 @@ def trigger():
     camera.framerate = Fraction(10, 1)
     camera.exposure_compensation = 0
 
+    # set a fixed AWB mode since 'auto' will fail on very dark exposures, resulting
+    # in too cold white-balance settings (blue-greenish flickering in the sun streakes)
+    camera.awb_mode = "sunlight"
+    # camera.awb_mode = "off"
+    # camera.awb_gains = (1.5, 0.9)
+
     # before actually disabling exposure mode (and thus disabling automatic gain control)
     # set ISO to a low value. AGC will reduce analog and digital gain and afterwards we 
     # can set the exposure mode to off. If that's not done the first (quite dark) exposure
@@ -318,7 +327,7 @@ def trigger():
     # and 3rd exposures will be extremly noisy (and thus will result in jpegs with high 
     # filesizes)
     camera.iso = SECOND_EXPOSURE_ISO
-    sleep(1)
+    sleep(0.5)
     camera.exposure_mode = "off"
     camera.shutter_speed = SECOND_EXPOSURE_SHUTTER_SPEED
 
@@ -337,7 +346,7 @@ def trigger():
 
     camera.shutter_speed = THIRD_EXPOSURE_SHUTTER_SPEED
 
-    sleep(0.1)
+    sleep(0.5)
 
     full_filename_3 = os.path.join(OUTPUT_DIR_3, filename)
     camera.capture(full_filename_3, format=IMAGE_FORMAT)
@@ -349,7 +358,7 @@ def trigger():
 
     camera.shutter_speed = FOURTH_EXPOSURE_SHUTTER_SPEED
 
-    sleep(0.1)
+    sleep(0.5)
 
     full_filename_4 = os.path.join(OUTPUT_DIR_4, filename)
     camera.capture(full_filename_4, format=IMAGE_FORMAT)
