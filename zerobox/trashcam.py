@@ -11,6 +11,7 @@ import argparse
 import subprocess
 import traceback
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 import exifread
 import picamera
@@ -298,7 +299,8 @@ def trigger():
     
     log_capture_info(camera, full_filename)
     first_exposure_ev = read_exif_data(full_filename)
-    image_info.append([full_filename, first_exposure_ev, filename_iteration])
+    future_brightness_1 = pool.submit(calculate_brightness, (full_filename))
+    image_info.append([full_filename, first_exposure_ev, filename_iteration, future_brightness_1])
 
     log.info("brightness              : {:.2f} EV".format(first_exposure_ev))
     log.info("contains raw data       : {}".format(capture_raw))
@@ -337,7 +339,8 @@ def trigger():
     camera.capture(full_filename_2, format=IMAGE_FORMAT)
     log_capture_info(camera, full_filename_2)
 
-    image_info.append([full_filename_2, None, filename_iteration])
+    future_brightness_2 = pool.submit(calculate_brightness, (full_filename_2))
+    image_info.append([full_filename_2, None, filename_iteration, future_brightness_2])
 
     # read_exif_data(full_filename_2)
     # print_exposure_settings(camera)
@@ -390,7 +393,7 @@ def trigger():
 if __name__ == "__main__":
 
     # we need to use timestamp milliseconds because we may change system time later
-    start = datetime.now().timestamp()
+    start_global = datetime.now().timestamp()
 
     # ---------------------------------------------------------------------------------------
 
@@ -484,7 +487,8 @@ if __name__ == "__main__":
         pass
 
     image_info = None
-    
+    pool = ThreadPoolExecutor(2)
+
     try:
         controller = TimeboxController.find_by_portname(SERIAL_PORT)
         
@@ -512,7 +516,7 @@ if __name__ == "__main__":
 
             log.info("running for: " + msg)
 
-            start += millis/1000.0
+            start_global += millis/1000.0
 
             d = datetime.fromtimestamp(secs)
             log.debug("setting system time to {}".format(d.strftime('%Y-%m-%d %H:%M:%S')))
@@ -558,9 +562,6 @@ if __name__ == "__main__":
             image_info = trigger()
 
         log.info("--------------------------")
-
-        diff = datetime.now().timestamp() - start
-        log.debug("total runtime           : {:.3f} sec".format(diff))
 
     except Exception as e:
         log.error("error: [{}] {}".format(type(e), e))
@@ -626,12 +627,20 @@ if __name__ == "__main__":
 
             if CHECK_FOR_INTERVAL_REDUCE:
                 filename_capture_1 = image_info[0][0]
-                brightness_1 = calculate_brightness(filename_capture_1)
+                future_brightness_1 = image_info[0][3]
+
+                # brightness_1 = calculate_brightness(filename_capture_1)
+                brightness_1 = future_brightness_1.result(timeout=5)
+
                 log.info("brightness of capture_1 : {:8.6f}".format(brightness_1))
 
             if CHECK_FOR_INTERVAL_INCREASE:
                 filename_capture_2 = image_info[1][0]
-                brightness_2 = calculate_brightness(filename_capture_2)
+                future_brightness_2 = image_info[1][3]
+
+                # brightness_2 = calculate_brightness(filename_capture_2)
+                brightness_2 = future_brightness_2.result(timeout=5)
+
                 log.info("brightness of capture_2 : {:8.6f}".format(brightness_2))
 
             # option C:
@@ -726,6 +735,11 @@ if __name__ == "__main__":
     subprocess.call(["sync"])
     diff = (datetime.now() - start).total_seconds()
     print("sync done. took: {:.3f} sec".format(diff))
+
+    print("--------------------------")
+
+    diff = datetime.now().timestamp() - start_global
+    print("total runtime           : {:.3f} sec".format(diff))
 
     sleep(1.0)
 
