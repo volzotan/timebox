@@ -1,6 +1,7 @@
 #include <RTCZero.h>
 #include <Wire.h>
 #include "Adafruit_MCP9808.h"
+#include <Servo.h>
 
 #include "global.h"
 #include "constants.h"
@@ -63,6 +64,10 @@ Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 
 // ---------------------------
 
+Servo serv;
+
+// ---------------------------
+
 void setup() {
 
     SerialUSB.begin(9600);
@@ -118,6 +123,7 @@ void setup() {
         #else
             DEBUG_PRINT("stopping aborted (no SHUTDOWN_ON_LOW_BATTERY)");
         #endif
+
     }
 
     #ifdef DEBUG
@@ -217,7 +223,7 @@ void loop() {
                 // sanity check
                 while (nextTrigger < now) {
                     nextTrigger += interval_length; 
-                    DEBUG_PRINT("ERROR: nextTrigger in past. adjusting...")
+                    DEBUG_PRINT("ERROR: nextTrigger in past. adjusting...");
                 }
 
                 DEBUG_PRINT("start [IDLE -> TRIGGER_START]");

@@ -28,6 +28,7 @@ void initPins() {
     pinMode(PIN_ZERO_FAULT,      INPUT);  
 
     pinMode(PIN_ZERO_EN,         OUTPUT);
+    pinMode(PIN_SERVO,           OUTPUT);
 
     #ifdef HOST_DEFAULT_POWERED_ON
         digitalWrite(PIN_ZERO_EN, HIGH);
@@ -66,16 +67,16 @@ long getMillis() {
 
 void wait(int seconds) {
 
-    // #ifdef DEBUG
+    #ifdef DEBUG
 
-        // for (int i = 0; i < (int) seconds; ++i) {
-        //     delay(1000);
-        //     DEBUG_PRINT("> sleep");
-        // }
+        for (int i = 0; i < (int) seconds; ++i) {
+            delay(1000);
+            DEBUG_PRINT("> sleep");
+        }
         
-        // alarmFired();
+        alarmFired();
 
-    // #else
+    #else
 
         // rtc.setAlarmEpoch(rtc.getEpoch() + seconds); // do not use zero based epoch (Y2kEpoch)
 
@@ -90,7 +91,7 @@ void wait(int seconds) {
         rtc.disableAlarm();
         DEBUG_PRINT("wakeup");
 
-    // #endif
+    #endif
 
     // for (int i = 0; i < (int) seconds; ++i) {
     //   Sleepy::loseSomeTime(1000);

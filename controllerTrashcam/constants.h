@@ -4,6 +4,7 @@
 #define PIN_BUTTON                        11 // PA16
 #define PIN_ZERO_EN                        9 // PA07
 #define PIN_ZERO_FAULT                    A4 // PA05
+#define PIN_SERVO                          6 // PA20
 
 // ----------- OPTIONS -----------
 
