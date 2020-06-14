@@ -1,0 +1,1 @@
+adalink -v atsamd21g18 -p jlink -h samd21_sam_ba.hex
