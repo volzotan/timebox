@@ -27,7 +27,7 @@ SECOND_EXPOSURE_ISO             = 25
 THIRD_EXPOSURE_SHUTTER_SPEED    = SECOND_EXPOSURE_SHUTTER_SPEED*(2**7)
 FOURTH_EXPOSURE_SHUTTER_SPEED   = SECOND_EXPOSURE_SHUTTER_SPEED*(2**11)
 FIFTH_EXPOSURE_SHUTTER_SPEED    = 2*1000*1000
-EXPOSURE_COMPENSATION           = 2 # 6 = +1 stop
+EXPOSURE_COMPENSATION           = 4 # 6 = +1 stop
 
 SHUTDOWN_ON_COMPLETE            = True 
 CHECK_FOR_INTERVAL_REDUCE       = True
@@ -257,15 +257,18 @@ def trigger():
     image_info = []
 
     # starts hidden preview for 3A automatically
-    camera = picamera.PiCamera() 
+    camera = picamera.PiCamera(sensor_mode=3) 
+
+    camera.exposure_mode = "verylong"
     
-    camera.meter_mode = "spot"
+    camera.meter_mode = "average"
     camera.exposure_compensation = EXPOSURE_COMPENSATION
+    # camera.iso = 400
 
     resolutions = {}
-    resolutions["HQ"] = [[4056, 3040], Fraction(1, 1)]
-    resolutions["V2"] = [[3280, 2464], Fraction(1, 1)]
-    resolutions["V1"] = [[2592, 1944], Fraction(1, 1)]
+    resolutions["HQ"] = [[4056, 3040], Fraction(1, 2)]
+    resolutions["V2"] = [[3280, 2464], Fraction(1, 2)]
+    resolutions["V1"] = [[2592, 1944], Fraction(1, 2)]
 
     for key in resolutions.keys():
         try:
@@ -275,8 +278,6 @@ def trigger():
             break
         except picamera.exc.PiCameraValueError as e:
             log.warning("failing setting camera resolution for {}, attempting fallback".format(key))
-
-    # camera.exposure_mode = "verylong"
 
     # give the 3A algorithms some time for warmup
     sleep(1)
@@ -311,8 +312,8 @@ def trigger():
     log.debug("------ exposure 2 ------")
 
     # increase framerate, otherwise capture will block even on short exposures 
-    # for several seconds (for some reason too fast rates (> 16fps) will result 
-    # in 0-value-images)
+    # for several seconds (sensor mode 3 supports framerates of up to 15fps)
+    # (>=16fps will result in 0-value images))
     camera.framerate = Fraction(10, 1)
     camera.exposure_compensation = 0
 
@@ -630,7 +631,7 @@ if __name__ == "__main__":
                 future_brightness_1 = image_info[0][3]
 
                 # brightness_1 = calculate_brightness(filename_capture_1)
-                brightness_1 = future_brightness_1.result(timeout=5)
+                brightness_1 = future_brightness_1.result(timeout=8)
 
                 log.info("brightness of capture_1 : {:8.6f}".format(brightness_1))
 
@@ -639,7 +640,7 @@ if __name__ == "__main__":
                 future_brightness_2 = image_info[1][3]
 
                 # brightness_2 = calculate_brightness(filename_capture_2)
-                brightness_2 = future_brightness_2.result(timeout=5)
+                brightness_2 = future_brightness_2.result(timeout=8)
 
                 log.info("brightness of capture_2 : {:8.6f}".format(brightness_2))
 
