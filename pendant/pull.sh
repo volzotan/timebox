@@ -1,0 +1,1 @@
+rsync -av pi:/home/pi/pendant/storage .

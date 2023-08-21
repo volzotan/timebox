@@ -1,0 +1,1 @@
+rsync -av --exclude "storage/*" * pi:/home/pi/pendant 
