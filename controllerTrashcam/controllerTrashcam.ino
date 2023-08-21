@@ -1,17 +1,17 @@
 #include <RTCZero.h>
+
 #include <Wire.h>
 #include "Adafruit_MCP9808.h"
-#include <Servo.h>
+#include <Adafruit_NeoPixel.h>
 
-#include "global.h"
-#include "constants.h"
+#define DEBUG
 
-// #define DEBUG
-
-#define SHUTDOWN_ON_LOW_BATTERY
+// #define SHUTDOWN_ON_LOW_BATTERY
+// #define DEEP_SLEEP
 // #define HOST_DEFAULT_POWERED_ON
 // #define WAIT_ON_BOOT_FOR_SERIAL
-// #define TEMP_SENSOR_AVAILABLE
+#define TEMP_SENSOR_AVAILABLE
+#define LIPO_3S
 
 #define SERIAL Serial1
 #define SERIAL_DEBUG SerialUSB
@@ -22,10 +22,12 @@
   #define DEBUG_PRINT(x)
 #endif
 
+#include "global.h"
+#include "constants.h"
+
 // ---------------------------
 
 int state                       = STATE_IDLE;
-// int state                       = STATE_LOOP;
 
 long trigger_done               = 0;
 
@@ -47,6 +49,8 @@ boolean trigger_ended_dirty     = false;        // zero was shutdown by force (m
 // #define TRIGGER_WAIT_DELAYED    1   *1000    // wait for X seconds after zero requests shutdown [ms]
 #define TRIGGER_COUNT           10000           // max number of triggers
 
+#define STREAM_MODE_MAX_LIFETIME 5*60*1000
+
 // ---------------------------
 
 char *inputBuffer           = (char*) malloc(sizeof(char) * 100);
@@ -60,11 +64,12 @@ int serialParam2            = -1;
 RTCZero rtc;
 long now = -1;
 
-Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+Adafruit_NeoPixel pixels(1, PIN_PIXEL, NEO_GRB + NEO_KHZ800);
 
-// ---------------------------
-
-Servo serv;
+#ifdef TEMP_SENSOR_AVAILABLE
+    Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+    float temp = 0;
+#endif 
 
 // ---------------------------
 
@@ -84,6 +89,8 @@ void setup() {
     DEBUG_PRINT("DEBUG MODE ON");
 
     initPins();
+
+    pixels.begin();
 
     #ifdef WAIT_ON_BOOT_FOR_SERIAL
         while (!SerialUSB) {;}
@@ -115,6 +122,8 @@ void setup() {
             stopAndShutdown();
 
             // #ifndef DEBUG
+            //     led(50, 0, 0);
+            //     delay(1000);
             //     stopAndShutdown();
             // #else
             //     DEBUG_PRINT("stopping aborted (DEBUG mode on)");
@@ -128,24 +137,35 @@ void setup() {
 
     #ifdef DEBUG
     
+        pixels.clear();
+
         for (int i=0; i<50; i++) {
             SerialUSB.print(".");
+            if (i%2 == 0) {
+                led(0, 50, 50);
+            } else {
+                led(0,  0, 0);
+            }
             delay(100);
         }
         SerialUSB.println();
+        pixels.clear();
 
         DEBUG_PRINT("-----------------");
         DEBUG_PRINT("Battery pin value:");
         analogRead(PIN_BATT_DIRECT);
         delay(100);
         DEBUG_PRINT(analogRead(PIN_BATT_DIRECT));
-        DEBUG_PRINT("Battery voltage:");
+        DEBUG_PRINT("Battery [v]:");
         DEBUG_PRINT(getBatteryVoltage());
-        DEBUG_PRINT("Battery percentage:");
+        DEBUG_PRINT("Battery [%]:");
         DEBUG_PRINT(getBatteryPercentage());
-        DEBUG_PRINT("Temperature:");
+        DEBUG_PRINT("Temperature [C]:");
         #ifdef TEMP_SENSOR_AVAILABLE
-            // TODO
+            temp = tempsensor.readTempC();
+            if (temp == temp) { // is not NaN
+                DEBUG_PRINT(temp);
+            }
         #else:
             DEBUG_PRINT("(temp sensor not available)");
         #endif
@@ -161,14 +181,35 @@ void setup() {
         DEBUG_PRINT("-----------------");
     #endif
 
-    // wait X seconds without disabling USB to allow uploads
-    delay(5000);
+    // wait 5 seconds without disabling USB to allow uploads and check for stream-mode
+    long bootDelay = millis() + 5000;
+    boolean enterStreamMode = false;
+    while (millis() < bootDelay) {
+        if (buttonPressed(PIN_BUTTON)) { // stream mode
+            enterStreamMode = true;
+        }
 
-    DEBUG_PRINT("setup done");
+        // TODO: flash LED to signal regular start 
+    }
 
-    // let's go
-    nextTrigger = getMillis() + 1000;
+    if (enterStreamMode) {
 
+        switchZeroOn(true);
+        state = STATE_STREAM;
+
+        DEBUG_PRINT("entering stream mode");
+        led(0, 0, 50);
+
+        // TODO: show stream state via LED
+
+        // TODO: shutdown after 5min
+
+    } else {
+        DEBUG_PRINT("setup done");
+
+        // let's go
+        nextTrigger = getMillis() + 1000;
+    }
 }
 
 void loop() { 
@@ -177,8 +218,18 @@ void loop() {
     switch(state) {
 
         // do nothing and wait for incoming serial commands
-        case STATE_LOOP: {
+        case STATE_STREAM: {
             break;
+
+            if (millis() > STREAM_MODE_MAX_LIFETIME) {
+                DEBUG_PRINT("stream mode: max lifetime reached");
+
+                // TODO: LED red
+
+                stopAndShutdown();
+            } 
+
+            delay(100);
         }
 
         // do nothing and check if it's time to fire a trigger event
@@ -230,7 +281,7 @@ void loop() {
                 state = STATE_TRIGGER_START;
             } else {
                 // sleep 
-                wait(1);
+                wait();
             }
 
             break;
@@ -309,6 +360,8 @@ void stopAndShutdown() {
     DEBUG_PRINT("STOP AND SHUTDOWN");
 
     switchZeroOn(false);
+    pixels.clear();
+    pixels.show();
 
     while(true) {
         rtc.standbyMode();

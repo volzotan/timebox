@@ -2825,8 +2825,8 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 </pass>
 </autorouter>
 <elements>
-<element name="VD1" library="SparkFun-Passives" package="1206" value="10k" x="17.018" y="21.209" smashed="yes" rot="R270"/>
-<element name="VD2" library="SparkFun-Passives" package="1206" value="6.2k" x="14.732" y="21.209" smashed="yes" rot="R90"/>
+<element name="VD1" library="SparkFun-Passives" package="1206" value="100k" x="17.018" y="21.209" smashed="yes" rot="R270"/>
+<element name="VD2" library="SparkFun-Passives" package="1206" value="62k" x="14.732" y="21.209" smashed="yes" rot="R90"/>
 <element name="C4" library="SparkFun-Passives" package="0805" value="22pF" x="15.621" y="22.606" smashed="yes" rot="MR90"/>
 <element name="C5" library="SparkFun-Passives" package="0805" value="22pF" x="12.827" y="22.606" smashed="yes" rot="MR90"/>
 <element name="Y1" library="SparkFun-FreqCtrl" package="CRYSTAL-SMD-3.2X1.5MM" value="32.768kHz" x="14.224" y="25.654" smashed="yes" rot="MR180">

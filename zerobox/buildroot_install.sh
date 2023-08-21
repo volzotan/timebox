@@ -1,4 +1,8 @@
-pip3 install -r /home/pi/zerobox/requirements.txt
+pip3 install -r /home/pi/zerobox/compcam_requirements.txt
+pip3 install -r /home/pi/zerobox/timebox_requirements.txt -I 
+# pip needs i == ignore, otherwise it will try to 
+# re-install spidev which fails because GCC is missing
+# (python-spidev is provided by buildroot)
 
 # cp /home/pi/zerobox/oneshot.service /etc/systemd/system/
 

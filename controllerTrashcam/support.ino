@@ -2,14 +2,14 @@
 // --------------------------------   MISC   -------------------------------- //
 
 int buttonPressed(int button) {
-    for (int i = 0; i < 3; i++) {
-        if (digitalRead(button)) {
+    for (int i = 0; i < 10; i++) {
+        if (!digitalRead(button)) {
             return false;
         }
         delay(10);
     }
 
-    while (!digitalRead(button)) {}
+    while (digitalRead(button)) {}
     delay(10);
 
     return true;
@@ -28,6 +28,7 @@ void initPins() {
     pinMode(PIN_ZERO_FAULT,      INPUT);  
 
     pinMode(PIN_ZERO_EN,         OUTPUT);
+    pinMode(PIN_PIXEL,           OUTPUT);
     pinMode(PIN_SERVO,           OUTPUT);
 
     #ifdef HOST_DEFAULT_POWERED_ON
@@ -65,44 +66,31 @@ long getMillis() {
     return rtc.getY2kEpoch() * 1000L;
 }
 
-void wait(int seconds) {
+void wait() {
 
-    #ifdef DEBUG
+    #ifdef DEEP_SLEEP
 
-        for (int i = 0; i < (int) seconds; ++i) {
-            delay(1000);
-            DEBUG_PRINT("> sleep");
-        }
-        
-        alarmFired();
-
-    #else
-
-        // rtc.setAlarmEpoch(rtc.getEpoch() + seconds); // do not use zero based epoch (Y2kEpoch)
-
-        int s = rtc.getSeconds() + seconds;
+        int s = rtc.getSeconds() + 1;
         s = s % 60;
         rtc.setAlarmSeconds(s);
 
         rtc.attachInterrupt(alarmFired);
         rtc.enableAlarm(rtc.MATCH_SS);
+        delay(10);
         rtc.standbyMode();
 
         rtc.disableAlarm();
-        DEBUG_PRINT("wakeup");
+        DEBUG_PRINT("> wakeup");
+
+    #else 
+
+        delay(1000);
+        DEBUG_PRINT("> sleep");
+        
+        alarmFired();
 
     #endif
-
-    // for (int i = 0; i < (int) seconds; ++i) {
-    //   Sleepy::loseSomeTime(1000);
-    // }
-
-    // Sleepy::loseSomeTime((int) ((seconds - ((int) seconds)) * 1000));
 }
-
-// -------------------------------- MISC -------------------------------- //
-
-// -------------------------------- OPERATIONS -------------------------------- //
 
 void switchZeroOn(boolean switchOn) {
     if (switchOn) {
@@ -110,6 +98,11 @@ void switchZeroOn(boolean switchOn) {
     } else {
         digitalWrite(PIN_ZERO_EN, LOW);  
     }
+}
+
+void led(int r, int g, int b) {
+    pixels.setPixelColor(0, pixels.Color(r, g, b));
+    pixels.show();
 }
 
 // -------------------------------- BATTERY -------------------------------- //
@@ -125,7 +118,7 @@ boolean checkBattHealth() {
         return true;
     }
 
-    if (c0 > 2.0 && c0 < LIPO_CELL_MIN*2) {
+    if (c0 > 2.0 && c0 < LIPO_CELL_MIN * LIPO_CELL_NUM) {
         DEBUG_PRINT("Battery voltage below threshold!");
         DEBUG_PRINT(String(c0));
       
@@ -147,7 +140,7 @@ float getBatteryPercentage() {
     float voltage = voltageDivider((float) analogRead(PIN_BATT_DIRECT));
 
     if (voltage > 1.0) {
-        return (voltage - LIPO_CELL_MIN * 2) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * 2) / 100.0);
+        return (voltage - LIPO_CELL_MIN * LIPO_CELL_NUM) / (((LIPO_CELL_MAX - LIPO_CELL_MIN) * LIPO_CELL_NUM) / 100.0);
     } else {
         return -1;  
     }

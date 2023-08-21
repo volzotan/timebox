@@ -5,6 +5,7 @@
 #define PIN_ZERO_EN                        9 // PA07
 #define PIN_ZERO_FAULT                    A4 // PA05
 #define PIN_SERVO                          6 // PA20
+#define PIN_PIXEL                         10 // PA18
 
 // ----------- OPTIONS -----------
 
@@ -17,7 +18,13 @@
 
 #define VDBASEVOLTAGE                    3.3
 #define VDRESISTOR1                      100
-#define VDRESISTOR2                       62
+#ifndef LIPO_3S
+    #define VDRESISTOR2                   62
+    #define LIPO_CELL_NUM                  2
+#else
+    #define VDRESISTOR2                   33
+    #define LIPO_CELL_NUM                  3
+#endif
 
 // ----------- ERROR CODES -----------
 
@@ -31,7 +38,7 @@
 
 // ----------- ERROR CODES -----------
 
-#define STATE_LOOP                       11
+#define STATE_STREAM                     11
 #define STATE_IDLE                       12
 #define STATE_TRIGGER_START              13
 #define STATE_TRIGGER_WAIT               14

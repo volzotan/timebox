@@ -1,6 +1,6 @@
 /* Commandlist
  *
- *  K  ---  Knock
+ *  K  ---  Knock | returns state (regular/stream mode)
  *
  *  B  ---  Battery
  *    8.00    80
@@ -93,7 +93,8 @@ void executeCommand() {
     switch(serialCommand) {
 
         case 'K': // Ping / Knock
-            okSerial();
+            SERIAL.print("K ");
+            SERIAL.println(state);
         break;
 
         case 'B': // Battery Health
@@ -129,7 +130,7 @@ void executeCommand() {
             #ifdef TEMP_SENSOR_AVAILABLE
                 tempsensor.wake();
 
-                float temp = tempsensor.readTempC();
+                temp = tempsensor.readTempC();
                 if (temp == temp) { // is not NaN
                     SERIAL.print("K ");
                     SERIAL.print(temp, 4);
@@ -158,6 +159,12 @@ void executeCommand() {
 
         case 'D': // Debug Registers
             SERIAL.print("K ");
+            SERIAL.print(trigger_done);
+            SERIAL.print(" ");
+            SERIAL.print(trigger_reduced_till);
+            SERIAL.print(" ");
+            SERIAL.print(trigger_increased_till);
+            SERIAL.print(" ");
             SERIAL.print(trigger_ended_dirty);
             SERIAL.println();
         break; 

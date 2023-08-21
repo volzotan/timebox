@@ -3,4 +3,5 @@
 arduino-cli core install arduino:samd
 arduino-cli lib install "Adafruit Unified Sensor"
 arduino-cli lib install "Adafruit MCP9808 Library"
+arduino-cli lib install "Adafruit NeoPixel"
 arduino-cli lib install "RTCZero"

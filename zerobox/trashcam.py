@@ -36,7 +36,8 @@ CHECK_FOR_INTERVAL_INCREASE     = True
 INCREASE_INTERVAL_ABOVE         = 0.00001
 REDUCE_INTERVAL_BELOW           = 0.01
 
-# very slow. gzip takes even with lowest settings ~13s for one jpeg+raw image     
+# very slow. gzip takes even with lowest 
+# settings ~13s for one jpeg+raw image     
 COMPRESS_CAPTURE_1              = False 
 EVEN_ODD_DELETION_CAPTURE_1     = False
 
@@ -48,33 +49,27 @@ WRITE_RAW                       = True
 MODULO_RAW                      = 10        # only every n-th image contains RAW data, set to None to use WRITE_RAW
 
 BASE_DIR                        = "/media/storage/"
-OUTPUT_DIR_1                    = BASE_DIR + "captures_1"
-OUTPUT_DIR_2                    = BASE_DIR + "captures_2"
-OUTPUT_DIR_3                    = BASE_DIR + "captures_3"
-OUTPUT_DIR_4                    = BASE_DIR + "captures_4"
-OUTPUT_DIR_5                    = BASE_DIR + "captures_5"
+OUTPUT_DIR_1                    = BASE_DIR + "captures_regular"
+OUTPUT_DIR_2                    = BASE_DIR + "captures_low1"
+OUTPUT_DIR_3                    = BASE_DIR + "captures_low2"
+OUTPUT_DIR_4                    = BASE_DIR + "captures_low3"
+OUTPUT_DIR_5                    = BASE_DIR + "captures_low4"
 OUTPUT_FILENAME                 = "cap"
 
-LOG_FILE                        = BASE_DIR + "log_trashcam.log"
+LOG_FILE                        = BASE_DIR + "log_zkam.log"
 
 SERIAL_PORT                     = "/dev/ttyAMA0"
 
 MIN_FREE_SPACE                  = 300
-
-# ND_FILTER                       = 10 # stops
-
-# EV values, ND-filter-value corrected
-# REDUCE_INTERVAL_EV_THRESHOLD    = 3
-# INCREASE_INTERVAL_EV_THRESHOLD  = 8 # 10
 
 # PERSISTENT MODE
 INTERVAL                        = 60 # in sec
 MAX_ITERATIONS                  = 3000
 
 """                      
-┌┬┐┬─┐┌─┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
- │ ├┬┘├─┤└─┐├─┤│  ├─┤│││
- ┴ ┴└─┴ ┴└─┘┴ ┴└─┘┴ ┴┴ ┴
+┌─┐┌─┐┬┌┬┐┬─┐┌─┐┌─┐┌─┐┌─┐┬─┐┬┌─┌─┐┌┬┐┌─┐┬─┐┌─┐
+┌─┘├┤ │ │ ├┬┘├─┤├┤ ├┤ ├┤ ├┬┘├┴┐├─┤│││├┤ ├┬┘├─┤
+└─┘└─┘┴ ┴ ┴└─┴ ┴└  └  └─┘┴└─┴ ┴┴ ┴┴ ┴└─┘┴└─┴ ┴
 
 INFO:
 
@@ -433,20 +428,20 @@ if __name__ == "__main__":
     # except Exception as e:
     #     log.info("disabling wifi error: {}".format(e))
 
-    # # TODO: tvservice off
-    # try:
-    #     subprocess.call(["tvservice", "-o"])    
-    # except Exception as e:
-    #     log.info("disabling tvservice error: {}".format(e))
+    # tvservice off
+    try:
+        subprocess.call(["tvservice", "-o"])    
+    except Exception as e:
+        log.info("disabling tvservice error: {}".format(e))
 
     # ---------------------------------------------------------------------------------------
 
     log.info("")
-    log.info("--------------------------")
-    log.info(" ┌┬┐┬─┐┌─┐┌─┐┬ ┬┌─┐┌─┐┌┬┐ ")
-    log.info("  │ ├┬┘├─┤└─┐├─┤│  ├─┤│││ ")
-    log.info("  ┴ ┴└─┴ ┴└─┘┴ ┴└─┘┴ ┴┴ ┴ ")
-    log.info("--------------------------")
+    log.info("--------------------------------------------------")
+    log.info("  ┌─┐┌─┐┬┌┬┐┬─┐┌─┐┌─┐┌─┐┌─┐┬─┐┬┌─┌─┐┌┬┐┌─┐┬─┐┌─┐  ")
+    log.info("  ┌─┘├┤ │ │ ├┬┘├─┤├┤ ├┤ ├┤ ├┬┘├┴┐├─┤│││├┤ ├┬┘├─┤  ")
+    log.info("  └─┘└─┘┴ ┴ ┴└─┴ ┴└  └  └─┘┴└─┴ ┴┴ ┴┴ ┴└─┘┴└─┴ ┴  ")
+    log.info("--------------------------------------------------")
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--persistent-mode", type=bool, default=False, help="")
@@ -461,7 +456,7 @@ if __name__ == "__main__":
     log.info("MODULO RAW        : {}".format(MODULO_RAW))
     log.info("EVEN ODD DELETION : {}".format(EVEN_ODD_DELETION_CAPTURE_1))
 
-    log.info("--------------------------")
+    log.info("--------------------------------------------------")
 
     try: 
         os.makedirs(OUTPUT_DIR_1)
@@ -497,22 +492,22 @@ if __name__ == "__main__":
 
             log.debug("controller found: {}".format(controller))
 
-            millis = int(controller.get_uptime()) # 1008343
-            secs = int(millis/1000)
+            millis  = int(controller.get_uptime()) # 1008343
+            secs    = int(millis/1000)
 
             subprocess.run(["date", "-s", "@{}".format(secs)], check=True)
 
-            seconds = float(millis) / 1000.0
-            minutes = seconds / 60.0
-            hours   = minutes / 60.0
-            days    = hours / 24.0
+            seconds = math.floor(float(millis) / 1000.0)
+            minutes = math.floor(seconds / 60.0)
+            hours   = math.floor(minutes / 60.0)
+            days    = math.floor(hours / 24.0)
 
             msg = "{:.0f} sec".format(seconds % 60)
-            if minutes > 1:
+            if minutes >= 1:
                 msg = "{:.0f} min, ".format(minutes % 60) + msg
-            if hours > 1:
+            if hours >= 1:
                 msg = "{:.0f} h, ".format(hours % 24) + msg
-            if days > 1:
+            if days >= 1:
                 msg = "{:.0f} d, ".format(days) + msg
 
             log.info("running for: " + msg)
@@ -521,6 +516,24 @@ if __name__ == "__main__":
 
             d = datetime.fromtimestamp(secs)
             log.debug("setting system time to {}".format(d.strftime('%Y-%m-%d %H:%M:%S')))
+
+            status = controller.ping()
+
+            try:
+                status = int(status)
+                if status == TimeboxController.STATE_STREAM:
+
+                    log.info("entering stream mode")
+                    subprocess.call(["mjpg_stream.sh"], shell=True)
+
+                    log.debug("logging shutdown")
+                    logging.shutdown()
+
+                    sleep(1)
+                    exit(0)
+
+            except Exception as e:
+                log.error("parsing controller status failed: {}".format(e))
         else:
             log.warning("setting system time failed, no controller found")
     except Exception as e:
@@ -591,6 +604,7 @@ if __name__ == "__main__":
     # option B: calculate brightness (or non-zero pixels) of capture_2 or _3
     #  problem: requires 2-3s per image! (total time with option B from powerup
     #           to request-for-shutdown is 37s)
+    #           solved: just do it in another thread
     #
     # option C: get the brightest pixel in capture_2
     #           if > than threshold, sun must be present
@@ -680,7 +694,8 @@ if __name__ == "__main__":
         if iteration % 2 == 1:
             os.remove(filename_capture_1)
             log.info("EVEN_ODD_DELETION_CAPTURE_1 deleted: {}".format(filename_capture_1))
-            open(filename_capture_1, 'a').close() # create empty file so the filename won't be available on next iteration
+            # create empty file so the filename won't be available on next iteration
+            open(filename_capture_1, 'a').close() 
 
     if SHUTDOWN_ON_COMPLETE:
 
@@ -717,6 +732,7 @@ if __name__ == "__main__":
                 logging.shutdown()
 
                 subprocess.call(["sync"])
+                subprocess.call(["umount {}".format(BASE_DIR)])
                 
                 # important, damage to filesystem: 
                 # wait a few sec before poweroff!

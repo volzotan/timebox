@@ -131,6 +131,8 @@ class TimeboxController(Controller):
 
     CMD_SHUTDOWN        = "S"
 
+    STATE_STREAM        = 11
+
     SERIAL_BAUDRATE     = 9600
     SERIAL_TIMEOUT      = 1.0
 
@@ -177,8 +179,9 @@ class TimeboxController(Controller):
     def ping(self):
         try:
             response = self._send_command(self.CMD_PING)
+            return response
         except Exception as e:
-            print(e)
+            log.error(e)
             raise e
 
     def get_battery_status(self):
